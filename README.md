@@ -30,8 +30,6 @@ El objetivo del sistema es optimizar la gestión del soporte técnico, ya que me
 
 ---
 
----
-
 ## Modelos del sistema
 
 El diseño de la base de datos se realizó en diferentes niveles para asegurar una correcta estructura, integridad de la información y escalabilidad del sistema.
