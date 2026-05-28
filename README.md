@@ -1,6 +1,4 @@
-# Sistema de Gestión de Soporte Técnico y Tickets para Morales Tech
-
-Sistema web orientado a la gestión de incidencias, tickets, inventario y ventas para empresas de soporte técnico.
+# Sistema de Gestión de Soporte Técnico y Tickets para clientes
 
 ---
 
