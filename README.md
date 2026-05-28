@@ -1,80 +1,170 @@
-# Morales-Tech
+# Sistema de Gestión de Soporte Técnico y Tickets para Morales Tech
+
+Sistema web orientado a la gestión de incidencias, tickets, inventario y ventas para empresas de soporte técnico.
+
+---
 
 ## Descripción del proyecto
 
-Este proyecto se da principalmente porque muchas empresas de soporte técnico presentan problemas en la gestión de incidencias, ya que utilizan procesos manuales o herramientas no integradas. Esto afecta directamente a la organización, debido a que se genera pérdida de información, baja trazabilidad y falta de control en los tickets.
+Este proyecto se da principalmente porque muchas empresas de soporte técnico presentan problemas en la gestión de incidencias, ya que utilizan procesos manuales o herramientas no integradas. Esto afecta directamente a la organización, debido a que se genera pérdida de información, baja trazabilidad y falta de control sobre los tickets.
 
-Por ello, se propone el desarrollo de un sistema web que permita gestionar de manera ordenada los procesos de soporte técnico, integrando funciones como registro de incidencias, seguimiento de tickets, inventario y ventas. Esto permite mejorar la eficiencia operativa y brindar mayor transparencia al cliente.
+Por ello, se desarrolla un sistema web que permite centralizar procesos como registro de incidencias, seguimiento de tickets, gestión de inventario y ventas. Esto permite mejorar la organización, reducir errores y tener un mejor control del servicio brindado al cliente.
 
 ---
 
 ## Objetivo
 
-El objetivo de este sistema es optimizar la gestión del soporte técnico mediante procesos estructurados, ya que al tener un sistema centralizado, se mejora el control, la organización y la toma de decisiones dentro de la empresa.
+El objetivo del sistema es optimizar la gestión del soporte técnico, ya que mediante procesos estructurados se logra mejorar la eficiencia operativa y la toma de decisiones dentro de la empresa.
 
 ---
 
-## Usuarios del sistema
+## Stack tecnológico
 
-- Administradores (personal técnico)
-- Clientes
-
-Esto permite que cada usuario tenga funciones específicas dentro del sistema, evitando desorden y mejorando la gestión general.
+| Capa | Tecnología |
+|---|---|
+| Frontend | HTML5 + CSS3 + JavaScript |
+| Backend | PHP |
+| Base de datos | MySQL |
+| Entorno | XAMPP |
+| Herramientas | VS Code + GitHub |
 
 ---
 
-## Tecnologías utilizadas
+## Estructura del proyecto
 
-Este sistema se desarrolla utilizando las siguientes tecnologías:
+```
 
-### Frontend
-- HTML5
-- CSS3
-- JavaScript
+Morales-Tech/
+├── img/
+├── index.php
+├── login.php
+├── login\_staff.php
+├── registro.php
+├── registro\_staff.php
+├── dashboard.php
+├── inicio\_clientes.php
+├── inventario.php
+├── ventas.php
+├── tickets.php
+├── tickets\_cliente.php
+├── nuevo\_ticket.php
+├── nuevo\_ticket\_cliente.php
+├── nueva\_venta.php
+├── consulta\_tickets.php
+├── script.js
+├── styles.css
+└── README.md
 
-### Backend
-- PHP (XAMPP)
-
-### Base de datos
-- MySQL  
-
-### Herramientas
-- Visual Studio Code  
-- MySQL Workbench  
-- GitHub
+```
 
 ---
 
 ## Funcionalidades principales
 
-Este sistema se enfoca en cubrir las siguientes funcionalidades:
-
 - Registro de usuarios  
-- Login de clientes y trabajadores  
-- Creación y seguimiento de tickets  
+- Inicio de sesión (clientes y administradores)  
+- Creación de tickets  
+- Consulta de tickets  
 - Gestión de inventario  
 - Registro de ventas  
-- Consultas de tickets por clientes  
 
-Esto permite que la empresa pueda trabajar de forma más ordenada, evitando errores y mejorando el control de la información.
+Esto permite que la empresa trabaje de forma más ordenada, evitando errores y mejorando el control de la información.
 
 ---
 
-## 🔐 Seguridad
+## Seguridad y validaciones
 
-El sistema implementa controles de seguridad, ya que es necesario proteger la información y evitar accesos no autorizados. Entre estos controles están:
+Este sistema implementa controles básicos de seguridad, ya que es necesario proteger la información y evitar accesos no autorizados.
 
 - Autenticación de usuarios  
-- Control por roles  
+- Manejo de sesiones (login / logout)  
 - Validación de formularios  
-- Manejo de sesiones  
-- Protección de datos  
+- Restricción de acceso por roles  
 
-Esto ayuda a reducir riesgos y garantizar un uso adecuado del sistema. [1](https://utpedupe-my.sharepoint.com/personal/u21310384_utp_edu_pe/Documents/Microsoft%20Copilot%20Chat%20Files/APF2_Grupo2_IntegradorII.pdf)  
+**Regla importante:**  
+Solo se pueden registrar administradores cuyos correos terminen en:
+
+```
+
+@morales-techs.com
+
+```
+
+Esto se da como medida de seguridad, ya que permite validar que solo personal autorizado acceda al sistema administrativo.
 
 ---
 
-## 📁 Estructura del proyecto
+## Credenciales de acceso (DEMO)
 
-Actualmente el proyecto cuenta principalmente con el frontend y la estructura inicial:
+### Cliente
 
+```
+
+Correo: <demo@gmail.com>
+Contraseña: demo
+
+```
+
+Esto permite probar la funcionalidad de consulta de tickets y acceso al sistema como usuario cliente.
+
+---
+
+### Administrador
+
+Los administradores deben registrarse cumpliendo la siguiente condición:
+
+```
+
+<correo@morales-techs.com>
+
+````
+
+Esto permite validar el acceso y evitar que cualquier usuario pueda ingresar como administrador.
+
+---
+
+## Ejecución del proyecto (modo local)
+
+### Requisitos
+- XAMPP instalado  
+- Apache y MySQL activos  
+
+### Pasos
+
+```bash
+1. Clonar el repositorio
+git clone https://github.com/JuanEztevan/Morales-Tech.git
+
+2. Copiar la carpeta en htdocs
+C:/xampp/htdocs/
+
+3. Iniciar Apache y MySQL desde XAMPP
+
+4. Abrir en navegador
+http://localhost/Morales-Tech
+````
+
+***
+
+## Encargados del proyecto
+
+Este repositorio es trabajado por:
+
+- **Juan Esteban Carmona Rodríguez** → Encargado del frontend  
+- **Julio Moisés Salazar** → Encargado del backend  
+- **Lyan Torres Coello** → Encargado del backend  
+
+Cada uno se enfoca en su área para avanzar de forma más ordenada en el desarrollo del sistema.
+
+
+***
+
+## Estado del proyecto
+
+Actualmente el proyecto se encuentra en desarrollo, ya que se ha implementado principalmente el frontend y parte del backend en PHP. Sin embargo, aún se puede mejorar la integración con la base de datos y optimizar el rendimiento general.
+
+***
+
+## Conclusión
+
+Este sistema permite mejorar la gestión del soporte técnico, ya que organiza los procesos, reduce errores y facilita el control de los tickets. Además, mejora la atención al cliente y aporta mayor orden dentro de la empresa.
