@@ -6,9 +6,11 @@ Sistema web orientado a la gestión de incidencias, tickets, inventario y ventas
 
 ## Descripción del proyecto
 
-Este proyecto se da principalmente porque muchas empresas de soporte técnico presentan problemas en la gestión de incidencias, ya que utilizan procesos manuales o herramientas no integradas. Esto afecta directamente a la organización, debido a que se genera pérdida de información, baja trazabilidad y falta de control sobre los tickets.
+Este proyecto fue desarrollado para Morales Tech con el objetivo de mejorar la gestión de su servicio de soporte técnico.
 
-Por ello, se desarrolla un sistema web que permite centralizar procesos como registro de incidencias, seguimiento de tickets, gestión de inventario y ventas. Esto permite mejorar la organización, reducir errores y tener un mejor control del servicio brindado al cliente.
+El sistema permite centralizar procesos como el registro de incidencias, seguimiento de tickets, gestión de inventario y control de ventas. Además, cuenta con un portal de clientes para la consulta de solicitudes y un portal administrativo para la gestión interna.
+
+Esto permite mejorar el control de la información, reducir errores operativos y optimizar el servicio brindado al cliente.
 
 ---
 
@@ -30,11 +32,55 @@ El objetivo del sistema es optimizar la gestión del soporte técnico, ya que me
 
 ---
 
+---
+
+## Modelos del sistema
+
+El diseño de la base de datos se realizó en diferentes niveles para asegurar una correcta estructura, integridad de la información y escalabilidad del sistema.
+
+### Diagrama Entidad-Relación (Modelo de Chen)
+
+Representa las entidades principales del sistema y sus relaciones.
+
+Repositorio:
+https://drive.google.com/drive/folders/16gUmI9sODCDdvnKL1kYzFbFsX5C2YPbv
+
+---
+
+### Modelo Lógico
+
+Representa la estructura lógica de la base de datos, definiendo tablas, atributos y relaciones.
+
+Diseño:
+https://www.figma.com/board/cyBHNyJY4t1wcJznU8Fmjd/Modelo-L%C3%B3gico---Morales-Tech
+
+---
+
+### Modelo Físico
+
+Implementación real en base de datos MySQL mediante script SQL.
+
+```
+docs/database/script.sql
+```
+
+Este modelo permite la creación de tablas, relaciones y restricciones necesarias para el funcionamiento del sistema.
+
+---
+
 ## Estructura del proyecto
 
 ```
 
 Morales-Tech/
+├── docs/
+│   ├── diagrams/
+│   │   ├── modelo_er.png
+│   │   ├── modelo_logico.jpg
+│   │   ├── modelo_fisico.jpg
+│   │
+│   ├── database/
+│   │   ├── script.sql
 ├── img/
 ├── index.php
 ├── login.php
