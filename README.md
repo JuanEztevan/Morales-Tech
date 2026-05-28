@@ -59,16 +59,58 @@ Morales-Tech/
 
 ---
 
-## Funcionalidades principales
 
-- Registro de usuarios  
-- Inicio de sesión (clientes y administradores)  
-- Creación de tickets  
-- Consulta de tickets  
-- Gestión de inventario  
-- Registro de ventas  
+## Flujo de uso del sistema
 
-Esto permite que la empresa trabaje de forma más ordenada, evitando errores y mejorando el control de la información.
+El sistema se divide en dos accesos principales:
+
+### Portal de clientes (público)
+
+El flujo inicia en la landing page:
+
+```
+http://localhost/Morales-Tech/index.php
+```
+
+Desde esta vista, el sistema permite dos tipos de interacción:
+
+**Sin iniciar sesión:**
+- Visualizar los servicios ofrecidos por la empresa
+- Consultar tickets mediante `consulta_tickets.php`
+
+**Con autenticación:**
+- Registrarse como cliente
+- Iniciar sesión
+
+Una vez que el cliente inicia sesión, es redirigido a su portal (dashboard), donde puede:
+
+- Consultar sus tickets recientes  
+- Solicitar nuevas cotizaciones o tickets  
+- Gestionar su información básica  
+
+Este flujo permite que el cliente interactúe con el sistema de forma progresiva, empezando desde una vista pública hasta acceder a sus funcionalidades privadas.
+
+---
+
+
+### Portal de administradores (acceso privado)
+
+El acceso al panel administrativo se realiza desde:
+
+```
+http://localhost/Morales-Tech/login_staff.php
+```
+
+Este acceso no está expuesto directamente en el flujo principal, ya que corresponde a una sección privada del sistema.
+
+Una vez autenticado, el administrador puede:
+
+- Gestionar tickets  
+- Administrar inventario  
+- Registrar ventas  
+- Controlar la información general del sistema  
+
+Este flujo está orientado únicamente al personal autorizado.
 
 ---
 
