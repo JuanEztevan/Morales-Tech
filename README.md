@@ -38,19 +38,19 @@ Morales-Tech/
 ├── img/
 ├── index.php
 ├── login.php
-├── login\_staff.php
+├── login_staff.php
 ├── registro.php
-├── registro\_staff.php
+├── registro_staff.php
 ├── dashboard.php
-├── inicio\_clientes.php
+├── inicio_clientes.php
 ├── inventario.php
 ├── ventas.php
 ├── tickets.php
-├── tickets\_cliente.php
-├── nuevo\_ticket.php
-├── nuevo\_ticket\_cliente.php
-├── nueva\_venta.php
-├── consulta\_tickets.php
+├── tickets_cliente.php
+├── nuevo_ticket.php
+├── nuevo_ticket_cliente.php
+├── nueva_venta.php
+├── consulta_tickets.php
 ├── script.js
 ├── styles.css
 └── README.md
@@ -86,7 +86,7 @@ Solo se pueden registrar administradores cuyos correos terminen en:
 
 ```
 
-@morales-techs.com
+@moralestechs.com
 
 ```
 
@@ -100,7 +100,7 @@ Esto se da como medida de seguridad, ya que permite validar que solo personal au
 
 ```
 
-Correo: <demo@gmail.com>
+Correo: demo@gmail.com
 Contraseña: demo
 
 ```
@@ -115,7 +115,7 @@ Los administradores deben registrarse cumpliendo la siguiente condición:
 
 ```
 
-<correo@morales-techs.com>
+correo@moralestechs.com
 
 ````
 
