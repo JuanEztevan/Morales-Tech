@@ -62,8 +62,6 @@ Ubicación: `docs/database/script.sql`
 
 Este modelo permite la creación de tablas, relaciones y restricciones necesarias para el correcto funcionamiento del sistema.
 
----
-
 ## Funcionalidades Principales
 
 ### Página Pública (Landing Page)
@@ -87,8 +85,6 @@ Este modelo permite la creación de tablas, relaciones y restricciones necesaria
 - **Módulo Tickets**: Visualización general, cambio de estado y registro manual de tickets.
 - **Módulo Inventario**: Gestión de productos, stock y registro de nuevos items.
 - **Módulo Ventas**: Registro de ventas por ticket o ventas independientes, con selección de método de pago (Efectivo, Yape, Transferencia).
-
----
 
 ## Estructura del Proyecto
 
@@ -164,15 +160,26 @@ Morales-Tech/
 
 ## Capturas de Pantalla
 
-*(Agrega aquí varias capturas representativas del sistema)*
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/2b27e5ee-a4c4-4147-ba27-22b0fe8a03ed" />
 
-## Encargados del Proyecto
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/e9ac734d-c13f-453b-a739-7d9ac942dfb5" />
+
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/c9dbafe1-2a6d-4b27-9764-6237412ba645" />
+
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/cd889db7-75a4-406a-b958-4e073ffa204f" />
+
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/ec78b1e8-2b49-44ef-87fe-d8d9b67f9701" />
+
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/c0e6b712-6e2f-4cca-b097-0262e7d89082" />
+
+
+## Encargados del GitHub
 - Juan Esteban Carmona Rodríguez – Frontend
 - Julio Moisés Salazar – Backend
 - Lyan Torres Coello – Backend
 
 **Curso: Integrador II - Sistemas**  
-**Profesor: **  
+**Profesor: José Andrés Valle Fuente**  
 **Semestre:** 2026-1
 
 ## Limitaciones y Trabajo Futuro
