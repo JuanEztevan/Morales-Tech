@@ -1,80 +1,105 @@
-# Sistema de Gestión de Soporte Técnico y Tickets para clientes
+# Sistema de Gestión de Soporte Técnico y Tickets para Clientes
 
----
+## Tabla de Contenidos
+- [Descripción del Proyecto](#descripción-del-proyecto)
+- [Objetivos](#objetivos)
+- [Stack Tecnológico](#stack-tecnológico)
+- [Modelos del Sistema](#modelos-del-sistema)
+- [Funcionalidades Principales](#funcionalidades-principales)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Instalación y Ejecución](#instalación-y-ejecución)
+- [Medidas de Seguridad](#medidas-de-seguridad)
+- [Credenciales de Prueba](#credenciales-de-prueba)
+- [Capturas de Pantalla](#capturas-de-pantalla)
+- [Encargados del Proyecto](#encargados-del-proyecto)
+- [Limitaciones y Trabajo Futuro](#limitaciones-y-trabajo-futuro)
 
-## Descripción del proyecto
+## Descripción del Proyecto
 
-Este proyecto fue desarrollado para Morales Tech con el objetivo de mejorar la gestión de su servicio de soporte técnico.
+Este proyecto fue desarrollado para Morales Tech con el propósito de mejorar la gestión del servicio de soporte técnico. 
 
-El sistema permite centralizar procesos como el registro de incidencias, seguimiento de tickets, gestión de inventario y control de ventas. Además, cuenta con un portal de clientes para la consulta de solicitudes y un portal administrativo para la gestión interna.
+El sistema centraliza el registro y seguimiento de tickets, la gestión de inventario, el control de ventas y proporciona un portal para que los clientes consulten y soliciten cotizaciones de servicios.
 
-Esto permite mejorar el control de la información, reducir errores operativos y optimizar el servicio brindado al cliente.
+## Objetivos
 
----
+### Objetivo General
+Optimizar la gestión del soporte técnico mediante un sistema web que permita el registro, seguimiento y control eficiente de incidencias, cotizaciones y ventas.
 
-## Objetivo
+### Objetivos Específicos (SMART)
+- Implementar un módulo completo de tickets con registro, asignación y seguimiento en al menos 5 estados diferentes.
+- Desarrollar dos portales diferenciados (clientes y administradores) con autenticación por roles.
+- Diseñar e implementar una base de datos con al menos 8 tablas interrelacionadas.
+- Crear un flujo de cotización por pasos que integre selección de dispositivos, servicios y generación de resumen con IGV.
 
-El objetivo del sistema es optimizar la gestión del soporte técnico, ya que mediante procesos estructurados se logra mejorar la eficiencia operativa y la toma de decisiones dentro de la empresa.
+## Stack Tecnológico
 
----
+| Capa          | Tecnología                  |
+|---------------|-----------------------------|
+| Frontend      | HTML5 + CSS3 + JavaScript   |
+| Backend       | PHP                         |
+| Base de datos | MySQL                       |
+| Entorno       | XAMPP (Apache + MySQL)      |
+| Herramientas  | Visual Studio Code + GitHub |
 
-## Stack tecnológico
-
-| Capa | Tecnología |
-|---|---|
-| Frontend | HTML5 + CSS3 + JavaScript |
-| Backend | PHP |
-| Base de datos | MySQL |
-| Entorno | XAMPP |
-| Herramientas | VS Code + GitHub |
-
----
-
-## Modelos del sistema
+## Modelos del Sistema
 
 El diseño de la base de datos se realizó en diferentes niveles para asegurar una correcta estructura, integridad de la información y escalabilidad del sistema.
 
-### Diagrama Entidad-Relación (Modelo de Chen)
-
+### Diagrama Entidad-Relación (Modelo Conceptual)
 Representa las entidades principales del sistema y sus relaciones.
 
-Repositorio:
-https://drive.google.com/drive/folders/16gUmI9sODCDdvnKL1kYzFbFsX5C2YPbv
-
----
+**Enlace:** [Ver Diagramas en Google Drive](https://drive.google.com/drive/folders/16gUmI9sODCDdvnKL1kYzFbFsX5C2YPbv)
 
 ### Modelo Lógico
-
 Representa la estructura lógica de la base de datos, definiendo tablas, atributos y relaciones.
 
-Diseño:
-https://www.figma.com/board/cyBHNyJY4t1wcJznU8Fmjd/Modelo-L%C3%B3gico---Morales-Tech
-
----
+**Enlace:** [Ver Modelo Lógico en Figma](https://www.figma.com/board/cyBHNyJY4t1wcJznU8Fmjd/Modelo-L%C3%B3gico---Morales-Tech)
 
 ### Modelo Físico
-
 Implementación real en base de datos MySQL mediante script SQL.
 
-```
-docs/database/script.sql
-```
+Ubicación: `docs/database/script.sql`
 
-Este modelo permite la creación de tablas, relaciones y restricciones necesarias para el funcionamiento del sistema.
+Este modelo permite la creación de tablas, relaciones y restricciones necesarias para el correcto funcionamiento del sistema.
 
 ---
 
-## Estructura del proyecto
+## Funcionalidades Principales
 
-```
+### Página Pública (Landing Page)
+- Accesible sin iniciar sesión en `index.php`.
+- Visualización de servicios ofrecidos por Morales Tech.
+- Consulta pública del estado de tickets (`consulta_tickets.php`).
 
+### Portal de Clientes (Privado)
+- Requiere inicio de sesión.
+- Visualización de tickets recientes con sus estados (Recibido, En diagnóstico, En reparación, Completado).
+- Registro de **Nuevo Ticket** a través de un asistente por pasos:
+  - Selección de dispositivo (PC de Escritorio o Laptop).
+  - Descripción del problema y sistema operativo (obligatorio).
+  - Campos adicionales para laptops (marca, modelo y serie - opcionales).
+  - Selección de servicios básicos y adicionales.
+  - Resumen final de cotización con desglose de precios, total e IGV.
+
+### Portal Administrativo (Privado)
+- Acceso exclusivo mediante `login_staff.php` (solo correos con `@moralestechs.com`).
+- Dashboard principal con resumen, KPIs y gráficos.
+- **Módulo Tickets**: Visualización general, cambio de estado y registro manual de tickets.
+- **Módulo Inventario**: Gestión de productos, stock y registro de nuevos items.
+- **Módulo Ventas**: Registro de ventas por ticket o ventas independientes, con selección de método de pago (Efectivo, Yape, Transferencia).
+
+---
+
+## Estructura del Proyecto
+
+```bash
 Morales-Tech/
+├── backend/
 ├── docs/
 │   ├── diagrams/
 │   │   ├── modelo_er.png
 │   │   ├── modelo_logico.jpg
 │   │   ├── modelo_fisico.jpg
-│   │
 │   ├── database/
 │   │   ├── script.sql
 ├── img/
@@ -96,159 +121,61 @@ Morales-Tech/
 ├── script.js
 ├── styles.css
 └── README.md
-
 ```
 
----
-
-
-## Flujo de uso del sistema
-
-El sistema se divide en dos accesos principales:
-
-### Portal de clientes (público)
-
-El flujo inicia en la landing page:
-
-```
-http://localhost/Morales-Tech/index.php
-```
-
-Desde esta vista, el sistema permite dos tipos de interacción:
-
-**Sin iniciar sesión:**
-- Visualizar los servicios ofrecidos por la empresa
-- Consultar tickets mediante `consulta_tickets.php`
-
-**Con autenticación:**
-- Registrarse como cliente
-- Iniciar sesión
-
-Una vez que el cliente inicia sesión, es redirigido a su portal (dashboard), donde puede:
-
-- Consultar sus tickets recientes  
-- Solicitar nuevas cotizaciones o tickets  
-- Gestionar su información básica  
-
-Este flujo permite que el cliente interactúe con el sistema de forma progresiva, empezando desde una vista pública hasta acceder a sus funcionalidades privadas.
-
----
-
-
-### Portal de administradores (acceso privado)
-
-El acceso al panel administrativo se realiza desde:
-
-```
-http://localhost/Morales-Tech/login_staff.php
-```
-
-Este acceso no está expuesto directamente en el flujo principal, ya que corresponde a una sección privada del sistema.
-
-Una vez autenticado, el administrador puede:
-
-- Gestionar tickets  
-- Administrar inventario  
-- Registrar ventas  
-- Controlar la información general del sistema  
-
-Este flujo está orientado únicamente al personal autorizado.
-
----
-
-## Seguridad y validaciones
-
-Este sistema implementa controles básicos de seguridad, ya que es necesario proteger la información y evitar accesos no autorizados.
-
-- Autenticación de usuarios  
-- Manejo de sesiones (login / logout)  
-- Validación de formularios  
-- Restricción de acceso por roles  
-
-**Regla importante:**  
-Solo se pueden registrar administradores cuyos correos terminen en:
-
-```
-
-@moralestechs.com
-
-```
-
-Esto se da como medida de seguridad, ya que permite validar que solo personal autorizado acceda al sistema administrativo.
-
----
-
-## Credenciales de acceso (DEMO)
-
-### Cliente
-
-```
-
-Correo: demo@gmail.com
-Contraseña: demo
-
-```
-
-Esto permite probar la funcionalidad de consulta de tickets y acceso al sistema como usuario cliente.
-
----
-
-### Administrador
-
-Los administradores deben registrarse cumpliendo la siguiente condición:
-
-```
-
-correo@moralestechs.com
-
-````
-
-Esto permite validar el acceso y evitar que cualquier usuario pueda ingresar como administrador.
-
----
-
-## Ejecución del proyecto (modo local)
+## Instalación y Ejecución
 
 ### Requisitos
-- XAMPP instalado  
-- Apache y MySQL activos  
+- XAMPP instalado
+- Apache y MySQL activos
 
 ### Pasos
 
-```bash
-1. Clonar el repositorio
-git clone https://github.com/JuanEztevan/Morales-Tech.git
+1. Clonar el repositorio:
+   ```bash
+   git clone https://github.com/JuanEztevan/Morales-Tech.git
+   ```
 
-2. Copiar la carpeta en htdocs
-C:/xampp/htdocs/
+2. Copiar la carpeta a `C:/xampp/htdocs/Morales-Tech`
 
-3. Iniciar Apache y MySQL desde XAMPP
+3. Iniciar Apache y MySQL desde XAMPP.
 
-4. Abrir en navegador
-http://localhost/Morales-Tech
-````
+4. Importar la base de datos:
+   - Acceder a `http://localhost/phpmyadmin`
+   - Crear base de datos `morales_tech`
+   - Importar el archivo `docs/database/script.sql`
 
-***
+5. Acceder al sistema en: `http://localhost/Morales-Tech`
 
-## Encargados del proyecto
+## Medidas de Seguridad
+- Autenticación con sesiones PHP
+- Validación de formularios en frontend y backend
+- Restricción de acceso por roles
+- Validación de dominio para cuentas administrativas (`@moralestechs.com`)
 
-Este repositorio es trabajado por:
+## Credenciales de Prueba
 
-- **Juan Esteban Carmona Rodríguez** → Encargado del frontend  
-- **Julio Moisés Salazar** → Encargado del backend  
-- **Lyan Torres Coello** → Encargado del backend  
+**Cliente:**
+- Correo: `demo@gmail.com`
+- Contraseña: `demo`
 
-Cada uno se enfoca en su área para avanzar de forma más ordenada en el desarrollo del sistema.
+**Administrador:**
+- Registrarse usando un correo que termine en `@moralestechs.com`
 
+## Capturas de Pantalla
 
-***
+*(Agrega aquí varias capturas representativas del sistema)*
 
-## Estado del proyecto
+## Encargados del Proyecto
+- Juan Esteban Carmona Rodríguez – Frontend
+- Julio Moisés Salazar – Backend
+- Lyan Torres Coello – Backend
 
-Actualmente el proyecto se encuentra en desarrollo, ya que se ha implementado principalmente el frontend y parte del backend en PHP. Sin embargo, aún se puede mejorar la integración con la base de datos y optimizar el rendimiento general.
+**Curso: Integrador II - Sistemas**  
+**Profesor: **  
+**Semestre:** 2026-1
 
-***
-
-## Conclusión
-
-Este sistema permite mejorar la gestión del soporte técnico, ya que organiza los procesos, reduce errores y facilita el control de los tickets. Además, mejora la atención al cliente y aporta mayor orden dentro de la empresa.
+## Limitaciones y Trabajo Futuro
+- Sistema diseñado para entorno local.
+- No incluye pasarela de pagos real.
+- Mejoras futuras: notificaciones por correo, reportes PDF y despliegue en producción.
