@@ -160,17 +160,14 @@ Morales-Tech/
 
 ## Capturas de Pantalla
 
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/2b27e5ee-a4c4-4147-ba27-22b0fe8a03ed" />
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/b47b6d0b-5bec-4ad3-8051-b5b7db6379a0" />
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/57ea19d8-63fd-4304-84d6-5096b0f7b027" />
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/26caea33-0ec0-4a92-8659-ef368686f4b5" />
 
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/e9ac734d-c13f-453b-a739-7d9ac942dfb5" />
-
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/c9dbafe1-2a6d-4b27-9764-6237412ba645" />
-
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/cd889db7-75a4-406a-b958-4e073ffa204f" />
-
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/ec78b1e8-2b49-44ef-87fe-d8d9b67f9701" />
-
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/c0e6b712-6e2f-4cca-b097-0262e7d89082" />
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/9ec25c4a-24b2-4024-a279-5b57d0e89488" />
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/db67af13-3387-42cd-bdd0-deefb4b9c89a" />
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/3532f293-fd73-420c-b3cf-25d0d3fe8cb4" />
+<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/bf90b6cc-2397-4c92-9c4d-9f5ae5ed22c2" />
 
 
 ## Encargados del GitHub
