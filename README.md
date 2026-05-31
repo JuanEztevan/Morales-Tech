@@ -185,4 +185,5 @@ Morales-Tech/
 ## Limitaciones y Trabajo Futuro
 - Sistema diseñado para entorno local.
 - No incluye pasarela de pagos real.
-- Mejoras futuras: notificaciones por correo, reportes PDF y despliegue en producción.
+- Actualmente no se cuenta con un módulo automatizado de recuperación de contraseña (olvidé mi contraseña). En el portal de trabajadores, las credenciales son gestionadas de forma interna, por lo que en caso de olvido el usuario debe comunicarse con el área de TI mediante el correo ti@moralestechs.com o acercarse a soporte interno.
+- Mejoras futuras: implementación de recuperación de contraseña mediante validación con pregunta de seguridad definida durante el registro, además de generación de reportes PDF y despliegue en producción.
