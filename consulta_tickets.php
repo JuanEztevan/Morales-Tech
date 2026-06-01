@@ -190,7 +190,7 @@
             <div class="rc-details-grid">
               <div class="rc-detail-item">
                 <div class="rc-detail-key">Técnico asignado</div>
-                <div class="rc-detail-val">Ángel Morales</div>
+                <div class="rc-detail-val">Arnie Leyva</div>
               </div>
               <div class="rc-detail-item">
                 <div class="rc-detail-key">Fecha de ingreso</div>
