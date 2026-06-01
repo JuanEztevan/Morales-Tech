@@ -167,8 +167,6 @@ Morales-Tech/
 <img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/9ec25c4a-24b2-4024-a279-5b57d0e89488" />
 <img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/db67af13-3387-42cd-bdd0-deefb4b9c89a" />
 <img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/3532f293-fd73-420c-b3cf-25d0d3fe8cb4" />
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/bf90b6cc-2397-4c92-9c4d-9f5ae5ed22c2" />
-
 
 ## Encargados del GitHub
 - Juan Esteban Carmona Rodríguez – Frontend
