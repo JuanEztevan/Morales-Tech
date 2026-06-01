@@ -156,7 +156,8 @@ Morales-Tech/
 - Contraseña: `demo`
 
 **Administrador:**
-- Registrarse usando un correo que termine en `@moralestechs.com`
+- Correo: `demo@moralestechs.com`
+- Contraseña: `demo`
 
 ## Capturas de Pantalla
 
