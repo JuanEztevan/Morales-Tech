@@ -1,12 +1,42 @@
 <?php
+session_start();
+
+if (!isset($_SESSION['idAdmin'])) {
+    header("Location: login_staff.php");
+    exit;
+}
 // session_start();
 // include("includes/auth.php");
-$nombre_usuario  = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Juan Carmona';
-$rol_usuario     = 'Trabajador';
-$partes          = explode(' ', trim($nombre_usuario));
-$inicial         = strtoupper(substr($partes[0], 0, 1));
-$nombre_display  = $partes[0] ?? 'Juan';
-$apellido_display= $partes[1] ?? 'Carmona';
+require_once 'conexion.php';
+
+$idAdmin = $_SESSION['idAdmin'];
+
+$sql = "SELECT nombres, apellidos, email
+        FROM ADMIN
+        WHERE idAdmin = ?";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $idAdmin);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    $admin = $result->fetch_assoc();
+
+    $nombre_usuario   = $admin['nombres'] . ' ' . $admin['apellidos'];
+    $nombre_display   = $admin['nombres'];
+    $apellido_display = $admin['apellidos'];
+
+} else {
+    session_destroy();
+    header("Location: login_staff.php");
+    exit;
+}
+
+$rol_usuario = 'Administrador';
+
+$inicial = strtoupper(substr($nombre_display, 0, 1));
 $hora   = (int) date('H');
 $saludo = $hora < 12 ? 'Buenos días' : ($hora < 19 ? 'Buenas tardes' : 'Buenas noches');
 

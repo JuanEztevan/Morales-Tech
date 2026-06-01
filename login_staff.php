@@ -1,16 +1,56 @@
 <?php
 // session_start();
+session_start();
+require_once 'conexion.php';
+
 $error = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     $email = trim($_POST['email'] ?? '');
     $pass  = $_POST['password'] ?? '';
+
+    // Validar dominio corporativo
     if (!str_ends_with($email, '@moralestechs.com')) {
+
         $error = 'Ingresa tu correo corporativo institucional para continuar.';
-    } elseif ($email === 'demo@moralestechs.com' && $pass === 'demo') {
-        header('Location: dashboard.php');
-        exit;
+
     } else {
-        $error = 'Credenciales incorrectas. Verifica tus datos e intenta de nuevo.';
+
+        $stmt = $conn->prepare("
+            SELECT idAdmin, nombres, apellidos, email, password
+            FROM ADMIN
+            WHERE email = ?
+        ");
+
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+
+        $resultado = $stmt->get_result();
+
+        if ($resultado->num_rows > 0) {
+
+            $admin = $resultado->fetch_assoc();
+
+            if (password_verify($pass, $admin['password'])) {
+
+                $_SESSION['idAdmin']    = $admin['idAdmin'];
+                $_SESSION['nombres']   = $admin['nombres'];
+                $_SESSION['apellidos'] = $admin['apellidos'];
+                $_SESSION['email']     = $admin['email'];
+
+                header("Location: dashboard.php");
+                exit;
+
+            } else {
+
+                $error = 'Credenciales incorrectas. Verifica tus datos e intenta de nuevo.';
+            }
+
+        } else {
+
+            $error = 'Credenciales incorrectas. Verifica tus datos e intenta de nuevo.';
+        }
     }
 }
 ?>

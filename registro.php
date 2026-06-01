@@ -1,4 +1,10 @@
 <?php
+require_once 'conexion.php';
+
+$error   = '';
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') 
 // session_start();
 $error   = '';
 $success = '';
@@ -24,11 +30,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Las contraseñas no coinciden.';
     } elseif ($ruc && strlen($ruc) !== 11) {
         $error = 'El RUC debe tener exactamente 11 dígitos.';
-    } else {
-        // TODO: guardar en BD
-        header('Location: login.php?registered=1');
-        exit;
-    }
+    } 
+    else {
+
+      // Verificar si el correo ya existe
+      $stmt = $conn->prepare("SELECT idCliente FROM CLIENTE WHERE email = ?");
+      $stmt->bind_param("s", $correo);
+      $stmt->execute();
+      $resultado = $stmt->get_result();
+  
+      if ($resultado->num_rows > 0) {
+          $error = "El correo ya está registrado.";
+      } else {
+  
+          // Encriptar contraseña
+          $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+  
+          // Insertar cliente
+          $stmt = $conn->prepare("
+              INSERT INTO CLIENTE
+              (nombres, apellidos, email, password, numTelefono, numDNI, numRUC)
+              VALUES (?, ?, ?, ?, ?, ?, ?)
+          ");
+  
+          $stmt->bind_param(
+              "sssssss",
+              $nombres,
+              $apellidos,
+              $correo,
+              $passwordHash,
+              $telefono,
+              $dni,
+              $ruc
+          );
+  
+          if ($stmt->execute()) {
+              header("Location: login.php?registered=1");
+              exit;
+          } else {
+              $error = "Error al registrar usuario.";
+          }
+      }
+  }
 }
 ?>
 <!DOCTYPE html>

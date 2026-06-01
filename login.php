@@ -1,12 +1,44 @@
 <?php
 // session_start();
+session_start();
+require_once 'conexion.php';
+
 $error = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     $email = trim($_POST['email'] ?? '');
     $pass  = $_POST['password'] ?? '';
-    if ($email === 'demo@gmail.com' && $pass === 'demo') {
-        header('Location: inicio_clientes.php');
-        exit;
+
+    $stmt = $conn->prepare("
+        SELECT idCliente, nombres, apellidos, email, password
+        FROM CLIENTE
+        WHERE email = ?
+    ");
+
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+
+    $resultado = $stmt->get_result();
+
+    if ($resultado->num_rows > 0) {
+
+        $cliente = $resultado->fetch_assoc();
+
+        if (password_verify($pass, $cliente['password'])) {
+
+            $_SESSION['idCliente'] = $cliente['idCliente'];
+            $_SESSION['nombres'] = $cliente['nombres'];
+            $_SESSION['apellidos'] = $cliente['apellidos'];
+            $_SESSION['email'] = $cliente['email'];
+
+            header("Location: inicio_clientes.php");
+            exit;
+
+        } else {
+            $error = 'Correo o contraseña incorrectos. Verifica tus datos.';
+        }
+
     } else {
         $error = 'Correo o contraseña incorrectos. Verifica tus datos.';
     }

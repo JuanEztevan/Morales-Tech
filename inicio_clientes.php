@@ -1,9 +1,17 @@
 <?php
+require_once 'conexion.php';
 // session_start();
 // include("includes/auth_cliente.php");
-$nombre_cliente = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Esteban Demo';
-$partes         = explode(' ', trim($nombre_cliente));
-$nombre_corto   = $partes[0];
+session_start();
+
+if (!isset($_SESSION['idCliente'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$nombre_cliente = $_SESSION['nombres'];
+$partes = explode(' ', trim($nombre_cliente));
+$nombre_corto = $partes[0];
 $hora           = (int) date('H');
 $saludo         = $hora < 12 ? 'Buenos días' : ($hora < 19 ? 'Buenas tardes' : 'Buenas noches');
 

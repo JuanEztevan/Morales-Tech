@@ -1,4 +1,10 @@
 <?php
+require_once 'conexion.php';
+
+// session_start();
+$error   = '';
+$success = false;
+$old     = [];
 // session_start();
 $error   = '';
 $success = false;
@@ -23,10 +29,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'La contraseña debe tener al menos 8 caracteres.';
     } elseif ($pass !== $pass2) {
         $error = 'Las contraseñas no coinciden.';
-    } else {
-        // TODO: insertar en BD
-        $success = true;
-    }
+    } 
+    else {
+
+      // Verificar si el correo ya existe
+      $stmt = $conn->prepare(
+          "SELECT idAdmin FROM ADMIN WHERE email = ?"
+      );
+  
+      $stmt->bind_param("s", $old['email']);
+      $stmt->execute();
+  
+      $resultado = $stmt->get_result();
+  
+      if ($resultado->num_rows > 0) {
+  
+          $error = 'Ya existe una cuenta registrada con ese correo.';
+  
+      } else {
+  
+          // Encriptar contraseña
+          $passwordHash = password_hash($pass, PASSWORD_DEFAULT);
+  
+          // Registrar administrador
+          $stmt = $conn->prepare("
+              INSERT INTO ADMIN
+              (nombres, apellidos, email, password, dni)
+              VALUES (?, ?, ?, ?, ?)
+          ");
+  
+          $stmt->bind_param(
+              "sssss",
+              $old['nombres'],
+              $old['apellidos'],
+              $old['email'],
+              $passwordHash,
+              $old['dni']
+          );
+  
+          if ($stmt->execute()) {
+  
+              $success = true;
+  
+          } else {
+  
+              $error = 'Ocurrió un error al registrar la cuenta.';
+          }
+      }
+  }
 }
 ?>
 <!DOCTYPE html>
