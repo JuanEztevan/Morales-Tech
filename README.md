@@ -163,7 +163,6 @@ Morales-Tech/
 
 <img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/b47b6d0b-5bec-4ad3-8051-b5b7db6379a0" />
 <img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/57ea19d8-63fd-4304-84d6-5096b0f7b027" />
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/26caea33-0ec0-4a92-8659-ef368686f4b5" />
 
 <img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/9ec25c4a-24b2-4024-a279-5b57d0e89488" />
 <img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/db67af13-3387-42cd-bdd0-deefb4b9c89a" />
