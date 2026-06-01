@@ -1,8 +1,3 @@
-/* ══════════════════════════════════════════
-   MORALES TECH — script.js
-   JavaScript unificado para todas las páginas
-   ══════════════════════════════════════════ */
-
 /* ── Navbar scroll ── */
 (function initNavbar() {
   const navbar = document.getElementById('navbar');
