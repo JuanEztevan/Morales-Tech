@@ -8,10 +8,10 @@ $inicial        = strtoupper(substr($partes[0], 0, 1));
 $nombre_corto   = $partes[0];
 
 $tickets_disponibles = [
-    ["id"=>"MT-8842","cliente"=>"Valeria Ramírez", "servicio"=>"Mantenimiento correctivo",     "subtotal"=>90],
-    ["id"=>"MT-8843","cliente"=>"Andrés Ochante",  "servicio"=>"Repotenciación (mano de obra)","subtotal"=>50],
-    ["id"=>"MT-8844","cliente"=>"Diana Calderón",  "servicio"=>"Diagnóstico",                  "subtotal"=>30],
-    ["id"=>"MT-8845","cliente"=>"Brenda Benites",  "servicio"=>"Mantenimiento preventivo",     "subtotal"=>60],
+    ["id"=>"MT-8842","nombres"=>"Rohan",  "apellidos"=>"Kishibe",   "servicio"=>"Mantenimiento correctivo",      "subtotal"=>90,  "tipo_equipo"=>"Laptop",         "marca"=>"HP",    "modelo"=>"Pavilion 15-eh2", "serie"=>"5CD2345XYZ", "so"=>"Windows 11 Home"],
+    ["id"=>"MT-8843","nombres"=>"Joseph",   "apellidos"=>"Joestar",   "servicio"=>"Repotenciación (mano de obra)", "subtotal"=>50,  "tipo_equipo"=>"PC de Escritorio","marca"=>"",      "modelo"=>"",                "serie"=>"",           "so"=>"Windows 10 Pro"],
+    ["id"=>"MT-8844","nombres"=>"Karly Marina",    "apellidos"=>"Loaiza",  "servicio"=>"Diagnóstico",                   "subtotal"=>30,  "tipo_equipo"=>"Laptop",         "marca"=>"Apple", "modelo"=>"",                "serie"=>"",           "so"=>"macOS Ventura"],
+    ["id"=>"MT-8845","nombres"=>"Ariana",   "apellidos"=>"Grande Butera",   "servicio"=>"Mantenimiento preventivo",      "subtotal"=>60,  "tipo_equipo"=>"Laptop",         "marca"=>"Lenovo","modelo"=>"IdeaPad 3",       "serie"=>"PF2K9A12",   "so"=>"Windows 11 Home"],
 ];
 
 $productos = [
@@ -135,7 +135,7 @@ $productos = [
             </div>
           </div>
 
-          <!-- 2A. Ticket asociado -->
+          <!-- 2A. Ticket asociado — SELECTOR INTACTO -->
           <div class="nv-card" id="nv-bloque-ticket">
             <div class="nv-card__header">
               <div class="ntk-step-card__icon">
@@ -152,21 +152,138 @@ $productos = [
                 <option value="">Seleccionar ticket…</option>
                 <?php foreach ($tickets_disponibles as $t): ?>
                 <option value="<?= $t['id'] ?>"
-                        data-cliente="<?= htmlspecialchars($t['cliente']) ?>"
+                        data-nombres="<?= htmlspecialchars($t['nombres']) ?>"
+                        data-apellidos="<?= htmlspecialchars($t['apellidos']) ?>"
                         data-servicio="<?= htmlspecialchars($t['servicio']) ?>"
-                        data-subtotal="<?= $t['subtotal'] ?>">
+                        data-subtotal="<?= $t['subtotal'] ?>"
+                        data-tipo="<?= htmlspecialchars($t['tipo_equipo']) ?>"
+                        data-marca="<?= htmlspecialchars($t['marca']) ?>"
+                        data-modelo="<?= htmlspecialchars($t['modelo']) ?>"
+                        data-serie="<?= htmlspecialchars($t['serie']) ?>"
+                        data-so="<?= htmlspecialchars($t['so']) ?>">
                   <?= htmlspecialchars($t['id']) ?>
                 </option>
                 <?php endforeach; ?>
               </select>
             </div>
-            <div class="nv-ticket-info" id="nv-ticket-info">
-              <div class="nv-ticket-info__text">
-                <div class="nv-ticket-info__label">Cliente · Servicio</div>
-                <div class="nv-ticket-info__value" id="nv-ticket-info-text">—</div>
+          </div>
+
+          <!-- 2A-EXTRA. Datos del dispositivo + Detalles del Equipo -->
+          <div class="nv-card nv-hidden" id="nv-bloque-dispositivo">
+
+            <!-- Datos del Ticket -->
+            <div class="nv-device-section">
+              <div class="nv-device-section__title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+                Datos del Ticket
               </div>
-              <div class="nv-ticket-info__price" id="nv-ticket-info-price">S/ 0</div>
+              <div class="nv-device-info-grid">
+                <div class="nv-device-info-item">
+                  <span class="nv-device-info-item__label">N° de Ticket</span>
+                  <span class="nv-device-info-item__value" id="nv-di-ticket">—</span>
+                </div>
+                <div class="nv-device-info-item">
+                  <span class="nv-device-info-item__label">Cliente</span>
+                  <span class="nv-device-info-item__value" id="nv-di-cliente">—</span>
+                </div>
+                <div class="nv-device-info-item">
+                  <span class="nv-device-info-item__label">Servicio solicitado</span>
+                  <span class="nv-device-info-item__value" id="nv-di-servicio">—</span>
+                </div>
+                <div class="nv-device-info-item">
+                  <span class="nv-device-info-item__label">Subtotal</span>
+                  <span class="nv-device-info-item__value nv-device-info-item__value--price" id="nv-di-subtotal">S/ —</span>
+                </div>
+              </div>
             </div>
+
+            <!-- Divisor -->
+            <div class="nv-device-divider"></div>
+
+            <!-- Detalles del Equipo -->
+            <div class="nv-device-section">
+              <div class="nv-device-section__head">
+                <div class="nv-device-section__title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+                  Detalles del Equipo
+                </div>
+                <!-- Botón Editar / Guardar -->
+                <div class="nv-equipo-edit-btns" id="nv-equipo-edit-btns">
+                  <button class="nv-equipo-btn nv-equipo-btn--edit" id="nv-btn-editar" onclick="nvEquipoEditar()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Editar
+                  </button>
+                  <button class="nv-equipo-btn nv-equipo-btn--save nv-hidden" id="nv-btn-guardar" onclick="nvEquipoGuardar()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Guardar
+                  </button>
+                  <button class="nv-equipo-btn nv-equipo-btn--cancel nv-hidden" id="nv-btn-cancelar" onclick="nvEquipoCancelar()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+
+              <!-- MODO VISTA -->
+              <div id="nv-equipo-view">
+                <div class="nv-device-info-grid" id="nv-equipo-view-grid">
+                  <!-- Marca (solo Laptop) -->
+                  <div class="nv-device-info-item nv-field-laptop-only" id="nv-view-marca-wrap">
+                    <span class="nv-device-info-item__label">Marca</span>
+                    <span class="nv-device-info-item__value" id="nv-view-marca">—</span>
+                  </div>
+                  <!-- Modelo (solo Laptop) -->
+                  <div class="nv-device-info-item nv-field-laptop-only" id="nv-view-modelo-wrap">
+                    <span class="nv-device-info-item__label">Modelo</span>
+                    <span class="nv-device-info-item__value nv-device-info-item__value--empty" id="nv-view-modelo">—</span>
+                  </div>
+                  <!-- N° de Serie (solo Laptop) -->
+                  <div class="nv-device-info-item nv-field-laptop-only" id="nv-view-serie-wrap">
+                    <span class="nv-device-info-item__label">N° de Serie</span>
+                    <span class="nv-device-info-item__value nv-device-info-item__value--empty" id="nv-view-serie">—</span>
+                  </div>
+                  <!-- Sistema Operativo (siempre) -->
+                  <div class="nv-device-info-item">
+                    <span class="nv-device-info-item__label">Sistema Operativo</span>
+                    <span class="nv-device-info-item__value" id="nv-view-so">—</span>
+                  </div>
+                </div>
+                <!-- Tipo de equipo badge -->
+                <div class="nv-equipo-type-badge" id="nv-equipo-type-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+                  <span id="nv-equipo-type-text">—</span>
+                </div>
+              </div>
+
+              <!-- MODO EDICIÓN -->
+              <div id="nv-equipo-edit" class="nv-hidden">
+                <!-- Marca (solo Laptop) -->
+                <div class="ntk-form-group nv-field-laptop-only" id="nv-edit-marca-wrap">
+                  <label>Marca</label>
+                  <input type="text" id="nv-edit-marca" class="ntk-input" placeholder="Ej: HP, Lenovo, Dell…">
+                </div>
+                <!-- Modelo (solo Laptop) -->
+                <div class="ntk-form-group nv-field-laptop-only" id="nv-edit-modelo-wrap">
+                  <label>Modelo <span class="ntk-label-opt">opcional</span></label>
+                  <input type="text" id="nv-edit-modelo" class="ntk-input" placeholder="Ej: Pavilion 15-eh2">
+                </div>
+                <!-- N° de Serie (solo Laptop) -->
+                <div class="ntk-form-group nv-field-laptop-only" id="nv-edit-serie-wrap">
+                  <label>N° de Serie <span class="ntk-label-opt">opcional</span></label>
+                  <input type="text" id="nv-edit-serie" class="ntk-input" placeholder="Ej: 5CD2345XYZ">
+                </div>
+                <!-- Sistema Operativo (siempre editable) -->
+                <div class="ntk-form-group">
+                  <label>Sistema Operativo</label>
+                  <input type="text" id="nv-edit-so" class="ntk-input" placeholder="Ej: Windows 11 Home">
+                </div>
+                <p class="nv-edit-hint">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Los campos opcionales pueden quedar vacíos y completarse después.
+                </p>
+              </div>
+            </div>
+
           </div>
 
           <!-- 2B. Cliente directo -->
