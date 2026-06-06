@@ -1128,10 +1128,11 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
 (function initNuevaVenta() {
   if (!document.getElementById('nv-bloque-ticket')) return;
 
-  let nvTipoVenta   = 'ticket';
-  let nvMetodo      = 'Yape';
-  let nvTicketData  = null;
-  let nvProdCounter = 0;
+  let nvTipoVenta     = 'ticket';
+  let nvMetodo        = 'Yape';
+  let nvTicketData    = null;
+  let nvProdCounter   = 0;
+  let nvEquipoSnapshot = null; // copia de datos antes de entrar en edición
 
   /* ── Selector tipo ── */
   window.nvSelTipo = function(tipo, el) {
@@ -1140,8 +1141,9 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     el.classList.add('selected');
     el.blur();
 
-    const bT = document.getElementById('nv-bloque-ticket');
-    const bC = document.getElementById('nv-bloque-cliente');
+    const bT   = document.getElementById('nv-bloque-ticket');
+    const bC   = document.getElementById('nv-bloque-cliente');
+    const bD   = document.getElementById('nv-bloque-dispositivo');
     const pTitle = document.getElementById('nv-prod-card-title');
     const pSub   = document.getElementById('nv-prod-card-sub');
 
@@ -1153,11 +1155,11 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     } else {
       bT.classList.add('nv-hidden');
       bC.classList.remove('nv-hidden');
+      if (bD)  bD.classList.add('nv-hidden');
       if (pTitle) pTitle.textContent = 'Productos';
       if (pSub)   pSub.textContent   = 'Selecciona los productos que desea el cliente';
       nvTicketData = null;
-      const info = document.getElementById('nv-ticket-info');
-      if (info) info.classList.remove('visible');
+      nvEquipoCancelar();
       const sel = document.getElementById('nv-sel-ticket');
       if (sel) sel.selectedIndex = 0;
     }
@@ -1168,23 +1170,156 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   window.nvOnTicketChange = function() {
     const sel  = document.getElementById('nv-sel-ticket');
     const opt  = sel?.options[sel.selectedIndex];
-    const info = document.getElementById('nv-ticket-info');
+    const bloq = document.getElementById('nv-bloque-dispositivo');
+
     if (!sel || !sel.value) {
-      if (info) info.classList.remove('visible');
-      nvTicketData = null; nvUpdateQuote(); return;
+      if (bloq)  bloq.classList.add('nv-hidden');
+      nvTicketData = null;
+      nvEquipoCancelar();
+      nvUpdateQuote();
+      return;
     }
+
+    const nombres   = opt.dataset.nombres   || '';
+    const apellidos = opt.dataset.apellidos  || '';
+
     nvTicketData = {
-      cliente:  opt.dataset.cliente,
+      id:       sel.value,
+      nombres:  nombres,
+      apellidos: apellidos,
+      cliente:  (nombres + ' ' + apellidos).trim(),
       servicio: opt.dataset.servicio,
       subtotal: parseFloat(opt.dataset.subtotal),
+      tipo:     opt.dataset.tipo   || '',
+      marca:    opt.dataset.marca  || '',
+      modelo:   opt.dataset.modelo || '',
+      serie:    opt.dataset.serie  || '',
+      so:       opt.dataset.so     || '',
     };
-    const tText  = document.getElementById('nv-ticket-info-text');
-    const tPrice = document.getElementById('nv-ticket-info-price');
-    if (tText)  tText.textContent  = nvTicketData.cliente + ' · ' + nvTicketData.servicio;
-    if (tPrice) tPrice.textContent = 'S/ ' + nvTicketData.subtotal.toFixed(2);
-    if (info)   info.classList.add('visible');
+
+    // Rellenar bloque de datos del dispositivo, limpiar edición previa y asegurar modo vista
+    nvEquipoSnapshot = null;    // descartar snapshot de cualquier ticket anterior
+    nvEquipoRenderView();
+    nvEquipoVolverVistaUI();
+    if (bloq) bloq.classList.remove('nv-hidden');
+
     nvUpdateQuote();
   };
+
+  /* ── Renderiza el bloque en modo vista ── */
+  window.nvEquipoRenderView = function() {
+    if (!nvTicketData) return;
+
+    const esLaptop = nvTicketData.tipo !== 'PC de Escritorio';
+    const setTxt   = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+    // Datos del ticket
+    setTxt('nv-di-ticket',   nvTicketData.id);
+    setTxt('nv-di-cliente',  nvTicketData.cliente);
+    setTxt('nv-di-servicio', nvTicketData.servicio);
+    setTxt('nv-di-subtotal', 'S/ ' + nvTicketData.subtotal.toFixed(2));
+
+    // Badge tipo
+    setTxt('nv-equipo-type-text', nvTicketData.tipo);
+
+    // Campos de vista
+    const viewMarca  = document.getElementById('nv-view-marca');
+    const viewModelo = document.getElementById('nv-view-modelo');
+    const viewSerie  = document.getElementById('nv-view-serie');
+    const viewSO     = document.getElementById('nv-view-so');
+
+    if (viewMarca)  viewMarca.textContent  = nvTicketData.marca  || '—';
+    if (viewModelo) viewModelo.textContent = nvTicketData.modelo || '(sin registrar)';
+    if (viewSerie)  viewSerie.textContent  = nvTicketData.serie  || '(sin registrar)';
+    if (viewSO)     viewSO.textContent     = nvTicketData.so     || '—';
+
+    // Estilos vacío
+    if (viewModelo) viewModelo.classList.toggle('nv-device-info-item__value--empty', !nvTicketData.modelo);
+    if (viewSerie)  viewSerie.classList.toggle('nv-device-info-item__value--empty',  !nvTicketData.serie);
+
+    // Mostrar/ocultar campos solo-laptop en modo vista (nv-device-info-item → flex)
+    document.querySelectorAll('.nv-field-laptop-only.nv-device-info-item').forEach(el => {
+      el.classList.toggle('nv-visible', esLaptop);
+    });
+
+    // Mostrar/ocultar campos solo-laptop en modo edición (ntk-form-group → block)
+    document.querySelectorAll('.nv-field-laptop-only.ntk-form-group').forEach(el => {
+      el.classList.toggle('nv-form-visible', esLaptop);
+    });
+  };
+
+  /* ── Entrar en modo edición ── */
+  window.nvEquipoEditar = function() {
+    if (!nvTicketData) return;
+    const esLaptop = nvTicketData.tipo !== 'PC de Escritorio';
+
+    // Snapshot para cancelar
+    nvEquipoSnapshot = {
+      marca:  nvTicketData.marca,
+      modelo: nvTicketData.modelo,
+      serie:  nvTicketData.serie,
+      so:     nvTicketData.so,
+    };
+
+    // Cargar inputs
+    const setInput = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    setInput('nv-edit-marca',  nvTicketData.marca);
+    setInput('nv-edit-modelo', nvTicketData.modelo);
+    setInput('nv-edit-serie',  nvTicketData.serie);
+    setInput('nv-edit-so',     nvTicketData.so);
+
+    // Toggle vistas
+    document.getElementById('nv-equipo-view')?.classList.add('nv-hidden');
+    document.getElementById('nv-equipo-edit')?.classList.remove('nv-hidden');
+    document.getElementById('nv-btn-editar')?.classList.add('nv-hidden');
+    document.getElementById('nv-btn-guardar')?.classList.remove('nv-hidden');
+    document.getElementById('nv-btn-cancelar')?.classList.remove('nv-hidden');
+
+    // Foco en primer campo activo
+    const primerInput = esLaptop
+      ? document.getElementById('nv-edit-marca')
+      : document.getElementById('nv-edit-so');
+    primerInput?.focus();
+  };
+
+  /* ── Guardar cambios del equipo ── */
+  window.nvEquipoGuardar = function() {
+    if (!nvTicketData) return;
+    const esLaptop = nvTicketData.tipo !== 'PC de Escritorio';
+    const getVal   = id => (document.getElementById(id)?.value.trim() || '');
+
+    nvTicketData.so = getVal('nv-edit-so');
+    if (esLaptop) {
+      nvTicketData.marca  = getVal('nv-edit-marca');
+      nvTicketData.modelo = getVal('nv-edit-modelo');
+      nvTicketData.serie  = getVal('nv-edit-serie');
+    }
+    nvEquipoSnapshot = null;
+    nvEquipoRenderView();
+    nvEquipoVolverVistaUI();
+  };
+
+  /* ── Cancelar edición ── */
+  window.nvEquipoCancelar = function() {
+    if (nvEquipoSnapshot && nvTicketData) {
+      nvTicketData.marca  = nvEquipoSnapshot.marca;
+      nvTicketData.modelo = nvEquipoSnapshot.modelo;
+      nvTicketData.serie  = nvEquipoSnapshot.serie;
+      nvTicketData.so     = nvEquipoSnapshot.so;
+      nvEquipoSnapshot = null;
+      nvEquipoRenderView();
+    }
+    nvEquipoVolverVistaUI();
+  };
+
+  /* ── Helper: restaurar UI modo vista ── */
+  function nvEquipoVolverVistaUI() {
+    document.getElementById('nv-equipo-view')?.classList.remove('nv-hidden');
+    document.getElementById('nv-equipo-edit')?.classList.add('nv-hidden');
+    document.getElementById('nv-btn-editar')?.classList.remove('nv-hidden');
+    document.getElementById('nv-btn-guardar')?.classList.add('nv-hidden');
+    document.getElementById('nv-btn-cancelar')?.classList.add('nv-hidden');
+  }
 
   /* ── Productos ── */
   window.nvAgregarProd = function() {
@@ -1324,4 +1459,333 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   /* Escuchar cambios en nombre cliente directo */
   const cliNombre = document.getElementById('nv-cli-nombre');
   if (cliNombre) cliNombre.addEventListener('input', nvUpdateQuote);
+})();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ════════════════════════════════════════════════════════════
+   MULTI-STEP FORMS — registro.php & registro_staff.php
+   Añadir al final de script.js (o incluir como bloque separado)
+   ════════════════════════════════════════════════════════════ */
+
+(function initMultiStep() {
+
+  /* ── Campos que se validan en cada paso ── */
+  const STEP_FIELDS = {
+    // registro.php (cliente)
+    'reg-form': {
+      1: ['nombres', 'apellidos', 'dni', 'telefono', 'correo'],
+      2: ['password', 'confirm', 'pregunta1', 'respuesta1', 'pregunta2', 'respuesta2', 'pregunta3', 'respuesta3'],
+    },
+  };
+
+  /* ─────────────────────────────────────────
+     msNext(formId, currentStep)
+     Valida el paso actual y avanza al siguiente
+  ───────────────────────────────────────────*/
+  window.msNext = function(formId, currentStep) {
+    const form       = document.getElementById(formId);
+    const nextStep   = currentStep + 1;
+    const panelCurr  = document.getElementById('ms-panel-' + currentStep);
+    const panelNext  = document.getElementById('ms-panel-' + nextStep);
+
+    if (!form || !panelCurr || !panelNext) return;
+
+    // ── Validación de campos del paso actual ──
+    const fieldsToCheck = (STEP_FIELDS[formId] && STEP_FIELDS[formId][currentStep])
+      ? STEP_FIELDS[formId][currentStep]
+      : [];
+
+    // Recoge todos los inputs/selects requeridos dentro del panel actual
+    const requiredEls = panelCurr.querySelectorAll('input[required], select[required]');
+    let firstInvalid  = null;
+
+    requiredEls.forEach(el => {
+      const val = el.value.trim();
+      if (!val) {
+        el.classList.add('ms-field--error');
+        if (!firstInvalid) firstInvalid = el;
+        el.addEventListener('input', function onInput() {
+          el.classList.remove('ms-field--error');
+          el.removeEventListener('input', onInput);
+        }, { once: true });
+      } else {
+        el.classList.remove('ms-field--error');
+      }
+    });
+
+    if (firstInvalid) {
+      firstInvalid.focus();
+      msShakePanel(panelCurr);
+      return;
+    }
+
+    // ── Validación específica del paso 1 (cliente): correo ──
+    if (currentStep === 1) {
+      const correoEl = document.getElementById('correo');
+      if (correoEl) {
+        const emailVal = correoEl.value.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+          correoEl.classList.add('ms-field--error');
+          correoEl.focus();
+          msShakePanel(panelCurr);
+          return;
+        }
+      }
+
+      // DNI solo 8 dígitos
+      const dniEl = document.getElementById('dni');
+      if (dniEl && !/^\d{8}$/.test(dniEl.value.trim())) {
+        dniEl.classList.add('ms-field--error');
+        dniEl.focus();
+        msShakePanel(panelCurr);
+        return;
+      }
+
+      // Teléfono solo 9 dígitos
+      const telEl = document.getElementById('telefono');
+      if (telEl && !/^\d{9}$/.test(telEl.value.trim())) {
+        telEl.classList.add('ms-field--error');
+        telEl.focus();
+        msShakePanel(panelCurr);
+        return;
+      }
+
+      // RUC opcional: si tiene algo, debe ser 11 dígitos
+      const rucEl = document.getElementById('ruc');
+      if (rucEl && rucEl.value.trim() && !/^\d{11}$/.test(rucEl.value.trim())) {
+        rucEl.classList.add('ms-field--error');
+        rucEl.focus();
+        msShakePanel(panelCurr);
+        return;
+      }
+    }
+
+    // ── Validación específica paso 1 (staff): email corporativo & DNI ──
+    if (currentStep === 1) {
+      const emailEl = document.getElementById('email');
+      if (emailEl) {
+        if (!emailEl.value.trim().endsWith('@moralestechs.com')) {
+          emailEl.classList.add('ms-field--error');
+          emailEl.focus();
+          msShakePanel(panelCurr);
+          return;
+        }
+      }
+    }
+
+    // ── Avanzar ──
+    panelCurr.classList.add('ms-panel--hidden');
+    panelNext.classList.remove('ms-panel--hidden');
+
+    msUpdateStepper(nextStep);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Foco en el primer campo del siguiente panel
+    const firstInput = panelNext.querySelector('input:not([type=hidden]), select');
+    if (firstInput) setTimeout(() => firstInput.focus(), 80);
+  };
+
+  /* ─────────────────────────────────────────
+     msBack(targetStep)
+     Regresa al paso anterior sin validar
+  ───────────────────────────────────────────*/
+  window.msBack = function(targetStep) {
+    const nextStep   = targetStep + 1;
+    const panelPrev  = document.getElementById('ms-panel-' + targetStep);
+    const panelCurr  = document.getElementById('ms-panel-' + nextStep);
+
+    if (!panelPrev || !panelCurr) return;
+
+    panelCurr.classList.add('ms-panel--hidden');
+    panelPrev.classList.remove('ms-panel--hidden');
+
+    msUpdateStepper(targetStep);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  /* ─────────────────────────────────────────
+     msUpdateStepper(activeStep)
+     Actualiza los dots y conectores visuales
+  ───────────────────────────────────────────*/
+  function msUpdateStepper(activeStep) {
+    const totalSteps = document.querySelectorAll('[id^="ms-dot-"]').length;
+
+    for (let i = 1; i <= totalSteps; i++) {
+      const dot       = document.getElementById('ms-dot-' + i);
+      const connector = document.getElementById('ms-connector-' + i);
+      if (!dot) continue;
+
+      dot.classList.remove('ms-step--active', 'ms-step--done');
+
+      if (i < activeStep)       dot.classList.add('ms-step--done');
+      else if (i === activeStep) dot.classList.add('ms-step--active');
+
+      if (connector) {
+        connector.classList.toggle('ms-connector--done', i < activeStep);
+      }
+    }
+  }
+
+  /* ─────────────────────────────────────────
+     msShakePanel(panel)
+     Sacudida visual de error
+  ───────────────────────────────────────────*/
+  function msShakePanel(panel) {
+    panel.style.animation = 'none';
+    panel.offsetHeight; // reflow
+    panel.style.animation = 'ms-shake .35s ease';
+    setTimeout(() => panel.style.animation = '', 400);
+  }
+
+  /* ─────────────────────────────────────────
+     Resalte visual de campos con error (CSS)
+  ───────────────────────────────────────────*/
+  (function injectErrorStyle() {
+    if (document.getElementById('ms-error-style')) return;
+    const style = document.createElement('style');
+    style.id = 'ms-error-style';
+    style.textContent = `
+      .ms-field--error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239,68,68,.18) !important;
+      }
+      @keyframes ms-shake {
+        0%,100% { transform: translateX(0); }
+        20%      { transform: translateX(-6px); }
+        40%      { transform: translateX(6px); }
+        60%      { transform: translateX(-4px); }
+        80%      { transform: translateX(4px); }
+      }
+    `;
+    document.head.appendChild(style);
+  })();
+
+  /* ─────────────────────────────────────────
+     Restaurar paso desde PHP (tras error POST)
+  ───────────────────────────────────────────*/
+  function restoreStepFromServer() {
+    const startStep = typeof MS_START_STEP !== 'undefined' ? MS_START_STEP : 1;
+    if (startStep <= 1) return;
+
+    for (let i = 1; i < startStep; i++) {
+      const panel = document.getElementById('ms-panel-' + i);
+      if (panel) panel.classList.add('ms-panel--hidden');
+    }
+    const targetPanel = document.getElementById('ms-panel-' + startStep);
+    if (targetPanel) targetPanel.classList.remove('ms-panel--hidden');
+
+    msUpdateStepper(startStep);
+  }
+
+  // Ejecutar al cargar
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', restoreStepFromServer);
+  } else {
+    restoreStepFromServer();
+  }
+
+})();
+
+/* ════════════════════════════════════════════════════════════
+   VALIDACIÓN DE DOMINIO CORPORATIVO (registro_staff.php)
+   (ya existía parcialmente — se mantiene compatible)
+   ════════════════════════════════════════════════════════════ */
+window.adminCheckDomain = function(input) {
+  const hint = document.getElementById('domain-hint');
+  if (!hint) return;
+  const val = input.value.trim();
+  if (!val) { hint.style.display = 'none'; return; }
+  const isOk = val.endsWith('@moralestechs.com');
+  hint.style.display = 'flex';
+  hint.style.color   = isOk ? '#22c55e' : '#f87171';
+  hint.querySelector('svg').style.stroke = isOk ? '#22c55e' : '#f87171';
+};
+
+/* ════════════════════════════════════════════════════════════
+   FUERZA DE CONTRASEÑA — versión admin (registro_staff.php)
+   ════════════════════════════════════════════════════════════ */
+window.adminUpdateStrength = function(val) {
+  const wrap  = document.getElementById('admin-pw-strength');
+  const label = document.getElementById('admin-pw-strength-label');
+  const bars  = document.querySelectorAll('.admin-pw-strength__bar');
+  if (!wrap || !bars.length) return;
+
+  wrap.style.display = val.length ? 'flex' : 'none';
+
+  let score = 0;
+  if (val.length >= 8)                                   score++;
+  if (val.length >= 12)                                  score++;
+  if (/[A-Z]/.test(val) && /[a-z]/.test(val))          score++;
+  if (/[0-9]/.test(val) || /[^A-Za-z0-9]/.test(val))  score++;
+
+  const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
+  const labels = ['Débil','Regular','Buena','Fuerte'];
+
+  bars.forEach((bar, i) => {
+    bar.style.background = i < score ? colors[score - 1] : 'rgba(0,0,0,.12)';
+  });
+  if (label) {
+    label.textContent = val.length ? labels[Math.max(0, score - 1)] : '';
+    label.style.color = colors[Math.max(0, score - 1)];
+  }
+
+  window.adminCheckMatch();
+};
+
+window.adminCheckMatch = function() {
+  const pw  = document.getElementById('password');
+  const pw2 = document.getElementById('password2');
+  if (!pw || !pw2) return;
+  // Feedback visual sutil en el campo de confirmación
+  if (!pw2.value) { pw2.style.borderColor = ''; return; }
+  pw2.style.borderColor = pw.value === pw2.value ? '#22c55e' : '#ef4444';
+};
+
+/* ════════════════════════════════════════════════════════════
+   TOGGLES DE CONTRASEÑA — registro_staff.php
+   ════════════════════════════════════════════════════════════ */
+(function initStaffPasswordToggles() {
+  setupPasswordToggle('pw-toggle-reg1', 'password',  'eye-show-reg1', 'eye-hide-reg1');
+  setupPasswordToggle('pw-toggle-reg2', 'password2', 'eye-show-reg2', 'eye-hide-reg2');
+})();
+
+/* ════════════════════════════════════════════════════════════
+   RECUPERAR CONTRASEÑA — clientes (recuperar_contrasena.php)
+   Toggles de contraseña para paso 3
+   ════════════════════════════════════════════════════════════ */
+(function initRecuperarPage() {
+  // IDs de toggles en el paso 3 del formulario de clientes
+  setupPasswordToggle('pw-toggle-1', 'password', 'eye1-show', 'eye1-hide');
+  setupPasswordToggle('pw-toggle-2', 'confirm',  'eye2-show', 'eye2-hide');
+})();
+
+
+/* ════════════════════════════════════════════════════════════
+   RECUPERAR CONTRASEÑA — staff (recuperar_contra_staff.php)
+   Toggles de contraseña para paso 3 (variante admin)
+   ════════════════════════════════════════════════════════════ */
+(function initRecuperarStaffPage() {
+  setupPasswordToggle('pw-toggle-rec1', 'password',  'eye-show-rec1', 'eye-hide-rec1');
+  setupPasswordToggle('pw-toggle-rec2', 'password2', 'eye-show-rec2', 'eye-hide-rec2');
 })();
