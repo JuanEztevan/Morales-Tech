@@ -48,7 +48,7 @@ Optimizar la gestión del soporte técnico mediante un sistema web que permita e
 
 El diseño de la base de datos se realizó en diferentes niveles para asegurar una correcta estructura, integridad de la información y escalabilidad del sistema.
 
-### Diagrama Entidad-Relación (Modelo Conceptual)
+### Diagrama Entidad-Relación (Modelo Conceptual – Notación Chen)
 Representa las entidades principales del sistema y sus relaciones.
 
 **Enlace:** [Ver Diagramas en Google Drive](https://drive.google.com/drive/folders/16gUmI9sODCDdvnKL1kYzFbFsX5C2YPbv)
