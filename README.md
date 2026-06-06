@@ -5,6 +5,7 @@
 - [Objetivos](#objetivos)
 - [Stack Tecnológico](#stack-tecnológico)
 - [Modelos del Sistema](#modelos-del-sistema)
+- [Prototipos de Interfaz](#prototipos-de-interfaz)
 - [Funcionalidades Principales](#funcionalidades-principales)
 - [Estructura del Proyecto](#estructura-del-proyecto)
 - [Instalación y Ejecución](#instalación-y-ejecución)
@@ -26,10 +27,12 @@ El sistema centraliza el registro y seguimiento de tickets, la gestión de inven
 Optimizar la gestión del soporte técnico mediante un sistema web que permita el registro, seguimiento y control eficiente de incidencias, cotizaciones y ventas.
 
 ### Objetivos Específicos (SMART)
-- Implementar un módulo completo de tickets con registro, asignación y seguimiento en al menos 5 estados diferentes.
-- Desarrollar dos portales diferenciados (clientes y administradores) con autenticación por roles.
-- Diseñar e implementar una base de datos con al menos 8 tablas interrelacionadas.
-- Crear un flujo de cotización por pasos que integre selección de dispositivos, servicios y generación de resumen con IGV.
+- Implementar un sistema de gestión de tickets con registro, seguimiento y control de estados (Recibido, Diagnóstico, Reparación, Completado).
+- Desarrollar dos portales diferenciados (clientes y administradores) con autenticación segura basada en roles.
+- Diseñar e implementar una base de datos relacional con más de 10 tablas interconectadas que gestionen clientes, equipos, servicios, cotizaciones, tickets e inventario.
+- Implementar un sistema de cotización que permita asociar múltiples servicios a un equipo, generando automáticamente subtotal, IGV y total.
+- Desarrollar un módulo de historial de equipos por cliente, permitiendo visualizar servicios realizados y seguimiento técnico.
+- Implementar un sistema de recuperación de contraseña mediante validación de preguntas de seguridad.
 
 ## Stack Tecnológico
 
@@ -62,6 +65,26 @@ Ubicación: `docs/database/script.sql`
 
 Este modelo permite la creación de tablas, relaciones y restricciones necesarias para el correcto funcionamiento del sistema.
 
+## Prototipos de Interfaz
+
+Durante el desarrollo del sistema se trabajaron dos versiones de prototipos, reflejando la evolución del diseño de la interfaz de usuario.
+
+### Prototipo v1 – Alta Fidelidad (Figma)
+Primer diseño visual del sistema con enfoque en la apariencia final y experiencia de usuario.
+
+**Enlace:**  
+https://www.figma.com/design/2CoKb19rchhnD5PpjKrTjQ/Morales-Tech---Integrador-II---v1?node-id=0-1
+
+---
+
+### Prototipo v2 – Baja Fidelidad (Balsamiq)
+Wireframe estructural utilizado para replantear la distribución de componentes y mejorar la usabilidad.
+
+Este prototipo sirvió como base para redefinir el diseño final implementado en el sistema.
+
+**Enlace:**  
+https://balsamiq.cloud/sty85pm/pppo8zi
+
 ## Funcionalidades Principales
 
 ### Página Pública (Landing Page)
@@ -78,6 +101,10 @@ Este modelo permite la creación de tablas, relaciones y restricciones necesaria
   - Campos adicionales para laptops (marca, modelo y serie - opcionales).
   - Selección de servicios básicos y adicionales.
   - Resumen final de cotización con desglose de precios, total e IGV.
+- Sección **Mis Equipos** (`equipos_cliente.php`):
+  - Visualización del historial de equipos registrados por el cliente.
+  - Consulta de servicios asociados a cada equipo.
+  - Seguimiento histórico de atenciones realizadas.
 
 ### Portal Administrativo (Privado)
 - Acceso exclusivo mediante `login_staff.php` (solo correos con `@moralestechs.com`).
@@ -144,20 +171,24 @@ Morales-Tech/
 5. Acceder al sistema en: `http://localhost/Morales-Tech`
 
 ## Medidas de Seguridad
-- Autenticación con sesiones PHP
-- Validación de formularios en frontend y backend
-- Restricción de acceso por roles
-- Validación de dominio para cuentas administrativas (`@moralestechs.com`)
+- Autenticación mediante sesiones PHP.
+- Validación de formularios en frontend y backend.
+- Restricción de acceso basada en roles (cliente y administrador).
+- Validación de dominio para cuentas administrativas (`@moralestechs.com`).
+- Implementación de **preguntas de seguridad (3)** durante el registro de clientes y administradores.
+- Módulo de **recuperación de contraseña**:
+  - Validación mediante correo o DNI.
+  - Verificación de respuestas a preguntas de seguridad.
+  - Restablecimiento de contraseña solo si todas las respuestas son correctas.
 
 ## Credenciales de Prueba
 
 **Cliente:**
 - Correo: `demo@gmail.com`
-- Contraseña: `demo`
+- Contraseña: `DemoUs3r`
 
 **Administrador:**
-- Correo: `demo@moralestechs.com`
-- Contraseña: `demo`
+- Registrar una cuenta con: `@moralestechs.com`
 
 ## Capturas de Pantalla
 
@@ -178,7 +209,9 @@ Morales-Tech/
 **Semestre:** 2026-1
 
 ## Limitaciones y Trabajo Futuro
-- Sistema diseñado para entorno local.
+- Sistema actualmente diseñado para entorno local.
 - No incluye pasarela de pagos real.
-- Actualmente no se cuenta con un módulo automatizado de recuperación de contraseña (olvidé mi contraseña). En el portal de trabajadores, las credenciales son gestionadas de forma interna, por lo que en caso de olvido el usuario debe comunicarse con el área de TI mediante el correo ti@moralestechs.com o acercarse a soporte interno.
-- Mejoras futuras: implementación de recuperación de contraseña mediante validación con pregunta de seguridad definida durante el registro, además de generación de reportes PDF y despliegue en producción.
+- La seguridad se basa en preguntas de seguridad, lo cual podría mejorarse hacia métodos más robustos (tokens, verificación por correo, autenticación multifactor).
+- Mejoras futuras:
+  - Generación de reportes en PDF.
+  - Despliegue en entorno productivo.
