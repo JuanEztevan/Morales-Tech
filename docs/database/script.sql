@@ -1,6 +1,6 @@
-CREATE DATABASE MoralesTechDB;
+CREATE DATABASE morales_tech;
 
-USE MoralesTechDB;
+USE morales_tech;
 
 -- tabla cliente
 CREATE TABLE CLIENTE (
@@ -12,6 +12,12 @@ CREATE TABLE CLIENTE (
     numTelefono VARCHAR(20),
     numDNI VARCHAR(8),
     numRUC VARCHAR(11)
+    pregunta1 VARCHAR(255) NOT NULL,
+    respuesta1 VARCHAR(255) NOT NULL,
+    pregunta2 VARCHAR(255) NOT NULL,
+    respuesta2 VARCHAR(255) NOT NULL,
+    pregunta3 VARCHAR(255) NOT NULL,
+    respuesta3 VARCHAR(255) NOT NULL
 );
 
 -- tabla admin
@@ -22,6 +28,12 @@ CREATE TABLE ADMIN (
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     dni VARCHAR(8) NOT NULL
+    pregunta1 VARCHAR(255) NOT NULL,
+    respuesta1 VARCHAR(255) NOT NULL,
+    pregunta2 VARCHAR(255) NOT NULL,
+    respuesta2 VARCHAR(255) NOT NULL,
+    pregunta3 VARCHAR(255) NOT NULL,
+    respuesta3 VARCHAR(255) NOT NULL
 );
 
 -- tabla servicio
