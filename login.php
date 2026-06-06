@@ -171,7 +171,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </button>
         </div>
       </div>
-
+      <a href="recuperar_contrasena.php" class="forgot-link">
+        ¿Olvidaste tu contraseña?
+      </a>
       <button type="submit" class="btn-auth-submit">
         Iniciar sesión
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -182,7 +184,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <div class="auth-divider"><span>o</span></div>
-
     <div class="auth-card-footer">
       ¿Aún no tienes cuenta? <a href="registro.php">Regístrate aquí</a><br>
       <a href="consulta_tickets.php">Consultar estado de mi ticket</a>
