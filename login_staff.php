@@ -153,7 +153,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </button>
           </div>
         </div>
-
+        <a href="recuperar_contra_staff.php" class="forgot-link forgot-link--light"
+                style="margin-top:14px;">
+                ¿Olvidaste tu contraseña?
+        </a>
         <button type="submit" class="admin-btn-submit">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
           Ingresar al sistema
@@ -166,21 +169,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
         Crear cuenta de colaborador
       </a>
-
-      <div class="admin-ti-note">
-        <div class="admin-ti-note__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <div>
-          <div class="admin-ti-note__title">¿Olvidaste tu contraseña?</div>
-          <div class="admin-ti-note__text">
-            Las credenciales son gestionadas por el administrador del sistema. Comunícate con el área de TI en
-            <a href="mailto:ti@moralestechs.com">ti@moralestechs.com</a>
-            o acércate a soporte interno.
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 
