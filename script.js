@@ -358,6 +358,65 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   window.cerrarOverlay = function(e) { if (e.target === overlay) cerrarModal(); };
 })();
 
+/* ── Modal de detalle de ticket (inicio_clientes) ── */
+(function initDetalleTicketModal() {
+  const overlay = document.getElementById('modal-detalle-ticket');
+  if (!overlay) return;
+
+  window.verDetalleTicket = function(codigo) {
+    const t = (typeof TICKETS_DETALLE !== 'undefined') ? TICKETS_DETALLE[codigo] : null;
+    if (!t) return;
+
+    document.getElementById('dt-codigo').textContent = '#' + t.codigo;
+    document.getElementById('dt-estado').textContent = t.estado;
+    document.getElementById('dt-fecha').textContent  = t.fecha;
+
+    const left = document.getElementById('dt-summary-left');
+    if (left) {
+      left.innerHTML = `
+        <div class="wizard-summary-block">
+          <div class="wizard-summary-block__label">Dispositivo</div>
+          <div class="wizard-summary-block__value">
+            <strong>${t.equipo}</strong>${t.so ? ' · ' + t.so : ''}
+            ${t.observaciones ? '<br><span style="font-size:12px;color:#6b74a8;font-style:italic">' + t.observaciones + '</span>' : ''}
+          </div>
+        </div>
+        <div class="wizard-summary-block">
+          <div class="wizard-summary-block__label">Solicitante</div>
+          <div class="wizard-summary-block__value">
+            <strong>${DT_CLIENTE_NOMBRE}</strong><br>
+            <span style="color:#6b74a8">${DT_CLIENTE_EMAIL}</span>
+          </div>
+        </div>`;
+    }
+
+    const quoteBox = document.getElementById('dt-summary-quote');
+    if (quoteBox) {
+      quoteBox.innerHTML = `
+        <div class="wizard-quote-box__title">Cotización</div>
+        ${t.servicios.map(s => `
+          <div class="wizard-quote-item">
+            <span class="wizard-quote-item__name">${s.nombre}</span>
+            <span class="wizard-quote-item__price">S/ ${s.precio.toFixed(2)}</span>
+          </div>`).join('')}
+        <hr class="wizard-q-divider">
+        <div class="wizard-q-row"><span>Subtotal</span><span>S/ ${t.subtotal.toFixed(2)}</span></div>
+        <div class="wizard-q-row"><span>IGV (18%)</span><span>S/ ${t.igv.toFixed(2)}</span></div>
+        <hr class="wizard-q-divider">
+        <div class="wizard-q-total">
+          <span class="wizard-q-total__label">Total</span>
+          <span class="wizard-q-total__amount">S/ ${t.total.toFixed(2)}</span>
+        </div>
+        <p class="wizard-quote-note">* Cotización referencial. El precio final puede variar según diagnóstico.</p>`;
+    }
+
+    overlay.classList.add('show');
+  };
+
+  window.cerrarDetalleTicket  = function() { overlay.classList.remove('show'); };
+  window.cerrarDetalleOverlay = function(e) { if (e.target === overlay) cerrarDetalleTicket(); };
+})();
+
 /* ── Wizard (nuevo_ticket_cliente) ── */
 (function initWizard() {
   if (!document.getElementById('step-1')) return;
@@ -510,14 +569,50 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
       <p class="wizard-quote-note">* Cotización referencial. El precio final puede variar según diagnóstico.</p>`;
   }
 
-  /* Enviar solicitud */
+  /* Enviar solicitud: guarda equipo + cotización + servicios + ticket en la BD */
   window.enviarSolicitud = function() {
-    const modal = document.getElementById('modal-success');
-    if (modal) {
-      modal.style.opacity      = '1';
-      modal.style.pointerEvents = 'all';
-      modal.classList.add('show');
+    const tipo     = document.getElementById('tipo_dispositivo').value;
+    const esLaptop = tipo === 'Laptop';
+    const marca  = (esLaptop ? document.getElementById('marca')?.value  : '') || '';
+    const modelo = (esLaptop ? document.getElementById('modelo')?.value : '') || '';
+    const serie  = (esLaptop ? document.getElementById('serie')?.value  : '') || '';
+    const so     = (esLaptop
+      ? document.getElementById('so-laptop')?.value
+      : document.getElementById('so-pc')?.value) || '';
+    const observaciones = document.getElementById('observaciones')?.value || '';
+    const servicios = getItems().map(i => ({ nombre: i.name, precio: i.price }));
+
+    const btn = document.querySelector('.btn-wizard-send');
+    const textoOriginal = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = 'Enviando…'; }
+
+    function restaurarBoton() {
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = textoOriginal; }
     }
+
+    fetch('nuevo_ticket_cliente.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo, marca, modelo, serie, so, observaciones, servicios })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const modal = document.getElementById('modal-success');
+          if (modal) {
+            modal.style.opacity      = '1';
+            modal.style.pointerEvents = 'all';
+            modal.classList.add('show');
+          }
+        } else {
+          alert(data.message || 'No se pudo enviar la solicitud. Inténtalo de nuevo.');
+          restaurarBoton();
+        }
+      })
+      .catch(() => {
+        alert('Ocurrió un error de conexión. Inténtalo de nuevo.');
+        restaurarBoton();
+      });
   };
 })();
 

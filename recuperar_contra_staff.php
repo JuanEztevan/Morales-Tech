@@ -1,13 +1,10 @@
 <?php
-// ── Sesión SIEMPRE al inicio ──
 session_start();
 require_once 'conexion.php';
 $error     = '';
 $step      = intval($_POST['step'] ?? 1);
 $startStep = 1;
-// ════════════════════════════════════════
 // PASO 1 → verificar correo o DNI
-// ════════════════════════════════════════
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
     $identificador = trim($_POST['identificador'] ?? '');
     if (!$identificador) {
@@ -50,9 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
         }
     }
 }
-// ════════════════════════════════════════
 // PASO 2 → verificar respuestas
-// ════════════════════════════════════════
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
     $r1 = trim($_POST['respuesta1'] ?? '');
     $r2 = trim($_POST['respuesta2'] ?? '');
@@ -94,9 +89,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
         }
     }
 }
-// ════════════════════════════════════════
 // PASO 3 → guardar nueva contraseña
-// ════════════════════════════════════════
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 3) {
     $nueva   = $_POST['password']  ?? '';
     $confirm = $_POST['password2'] ?? '';
@@ -235,13 +228,6 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
           </button>
         </div><!-- /ms-panel-1 -->
         <!-- ══════════ PASO 2 ══════════ -->
-        <!--
-          FIX: Los inputs NO llevan "required" porque el navegador intenta
-          enfocarlos aunque el panel esté oculto (ms-panel--hidden), lo que
-          lanza el error "invalid form control with name='respuestaX' is not
-          focusable". La validación de que no estén vacíos la hace PHP en el
-          servidor (bloque PASO 2 arriba).
-        -->
         <div class="ms-panel ms-panel--hidden" id="ms-panel-2">
           <div class="ms-sq-section-label" style="justify-content: center;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
@@ -401,9 +387,7 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
   </div>
 </div><!-- /admin-split -->
 <script>
-/* ─────────────────────────────────────────────────────────────
-   RECUPERAR CONTRASEÑA — STAFF
-   ─────────────────────────────────────────────────────────── */
+/* RECUPERAR CONTRASEÑA — STAFF */
 var MS_START_STEP  = <?= (int)$startStep ?>;
 var MS_TOTAL_STEPS = 3;
 var _staffActivePanel = MS_START_STEP;

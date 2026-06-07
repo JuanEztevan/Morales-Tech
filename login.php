@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
       </div>
       <a href="recuperar_contrasena.php" class="forgot-link">
-        ¿Olvidaste tu contraseña?
+        ¿Olvidaste tu contraseña? <!-- Botón nuevo para redirigir a Recuperar contrasela -->
       </a>
       <button type="submit" class="btn-auth-submit">
         Iniciar sesión
