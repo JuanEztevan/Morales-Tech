@@ -1,8 +1,133 @@
 <?php
-// session_start();
-// include("includes/auth_cliente.php");
-$nombre_cliente = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Esteban Carmona';
-$email_cliente  = isset($_SESSION['email'])  ? $_SESSION['email']  : 'esteban@email.com';
+session_start();
+require_once 'conexion.php';
+
+if (!isset($_SESSION['idCliente'])) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'message' => 'Debes iniciar sesión para enviar una solicitud.']);
+        exit;
+    }
+    header("Location: login.php");
+    exit;
+}
+
+/* Envío del wizard "Nueva cotización": guarda equipo + cotización + servicios + ticket */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+
+    $datos = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($datos)) {
+        echo json_encode(['success' => false, 'message' => 'Datos inválidos.']);
+        exit;
+    }
+
+    $idCliente     = (int) $_SESSION['idCliente'];
+    $tipoEquipo    = trim($datos['tipo'] ?? '');
+    $marca         = trim($datos['marca'] ?? '');
+    $modelo        = trim($datos['modelo'] ?? '');
+    $serie         = trim($datos['serie'] ?? '');
+    $so            = trim($datos['so'] ?? '');
+    $observaciones = trim($datos['observaciones'] ?? '');
+    $servicios     = is_array($datos['servicios'] ?? null) ? $datos['servicios'] : [];
+
+    if ($tipoEquipo === '' || !$servicios) {
+        echo json_encode(['success' => false, 'message' => 'Selecciona el tipo de equipo y al menos un servicio.']);
+        exit;
+    }
+
+    $resAdmin = $conn->query("SELECT idAdmin FROM ADMIN ORDER BY idAdmin LIMIT 1");
+    if (!$resAdmin || $resAdmin->num_rows === 0) {
+        echo json_encode(['success' => false, 'message' => 'No hay un administrador disponible para asignar la solicitud.']);
+        exit;
+    }
+    $idAdmin = (int) $resAdmin->fetch_assoc()['idAdmin'];
+
+    $subtotal = 0.0;
+    foreach ($servicios as $s) {
+        $subtotal += (float) ($s['precio'] ?? 0);
+    }
+    $igv      = round($subtotal * 0.18, 2);
+    $total    = round($subtotal + $igv, 2);
+    $subtotal = round($subtotal, 2);
+
+    $conn->begin_transaction();
+    $ok = true;
+    $codigo = '';
+    $idCotizacion = 0;
+
+    // 1. EQUIPO
+    $stmt = $conn->prepare(
+        "INSERT INTO EQUIPO (idCliente, tipoEquipo, marca, modelo, numSerie, sistemaOperativo, observaciones)
+         VALUES (?, ?, ?, ?, ?, ?, ?)"
+    );
+    $stmt->bind_param("issssss", $idCliente, $tipoEquipo, $marca, $modelo, $serie, $so, $observaciones);
+    $ok = $stmt->execute();
+    $idEquipo = $stmt->insert_id;
+    $stmt->close();
+
+    // 2. COTIZACION
+    if ($ok) {
+        $stmt = $conn->prepare(
+            "INSERT INTO COTIZACION (idCliente, idEquipo, idAdmin, subtotal, igv, total)
+             VALUES (?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param("iiiddd", $idCliente, $idEquipo, $idAdmin, $subtotal, $igv, $total);
+        $ok = $stmt->execute();
+        $idCotizacion = $stmt->insert_id;
+        $stmt->close();
+    }
+
+    // 3. COTIZACION_SERVICIO (mapea el nombre del servicio a su idServicio)
+    if ($ok) {
+        $stmtServicio = $conn->prepare("SELECT idServicio FROM SERVICIO WHERE nomServicio = ? LIMIT 1");
+        $stmtRel      = $conn->prepare("INSERT INTO COTIZACION_SERVICIO (idCotizacion, idServicio) VALUES (?, ?)");
+        foreach ($servicios as $s) {
+            $nombre = trim($s['nombre'] ?? '');
+            if ($nombre === '') continue;
+            $stmtServicio->bind_param("s", $nombre);
+            $stmtServicio->execute();
+            $fila = $stmtServicio->get_result()->fetch_assoc();
+            if (!$fila) continue;
+            $idServicio = (int) $fila['idServicio'];
+            $stmtRel->bind_param("ii", $idCotizacion, $idServicio);
+            if (!$stmtRel->execute()) { $ok = false; break; }
+        }
+        $stmtServicio->close();
+        $stmtRel->close();
+    }
+
+    // 4. TICKET con código único MT-XXXXXX
+    if ($ok) {
+        do {
+            $codigo = 'MT-' . strtoupper(bin2hex(random_bytes(3)));
+            $check  = $conn->prepare("SELECT idTicket FROM TICKET WHERE codigo = ? LIMIT 1");
+            $check->bind_param("s", $codigo);
+            $check->execute();
+            $existe = $check->get_result()->num_rows > 0;
+            $check->close();
+        } while ($existe);
+
+        $estado = 'Recibido';
+        $stmt = $conn->prepare("INSERT INTO TICKET (idCotizacion, codigo, estado) VALUES (?, ?, ?)");
+        $stmt->bind_param("iss", $idCotizacion, $codigo, $estado);
+        $ok = $stmt->execute();
+        $stmt->close();
+    }
+
+    if ($ok) {
+        $conn->commit();
+        echo json_encode(['success' => true, 'codigo' => $codigo], JSON_UNESCAPED_UNICODE);
+    } else {
+        $conn->rollback();
+        echo json_encode(['success' => false, 'message' => 'No se pudo guardar la solicitud. Inténtalo de nuevo.']);
+    }
+    exit;
+}
+
+$nombre_cliente = trim($_SESSION['nombres'] . ' ' . $_SESSION['apellidos']);
+$email_cliente  = $_SESSION['email'];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -41,6 +166,12 @@ $email_cliente  = isset($_SESSION['email'])  ? $_SESSION['email']  : 'esteban@em
             </a>
           </li>
           <li>
+            <a href="equipos_cliente.php">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Mis equipos
+            </a>
+          </li>
+          <li>
             <a href="nuevo_ticket_cliente.php" class="active">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
               Nueva cotización
@@ -70,6 +201,10 @@ $email_cliente  = isset($_SESSION['email'])  ? $_SESSION['email']  : 'esteban@em
   <a href="tickets_cliente.php" onclick="closeDashMenu()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
     Mis tickets
+  </a>
+  <a href="equipos_cliente.php" onclick="closeDashMenu()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Mis equipos
   </a>
   <a href="nuevo_ticket_cliente.php" onclick="closeDashMenu()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>

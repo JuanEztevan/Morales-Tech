@@ -1,63 +1,97 @@
 <?php
-// session_start();
-// include("includes/auth_cliente.php");
-$nombre_cliente = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Esteban Demo';
+require_once 'conexion.php';
+session_start();
+
+if (!isset($_SESSION['idCliente'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$nombre_cliente = $_SESSION['nombres'];
 $partes         = explode(' ', trim($nombre_cliente));
 $nombre_corto   = $partes[0];
 
+function fecha_es($fechaSql) {
+    $meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    $ts = strtotime($fechaSql);
+    return date('j', $ts) . ' ' . $meses[date('n', $ts) - 1] . ' ' . date('Y', $ts);
+}
+
 /* ══════════════════════════════════════════
-   DATOS DE EQUIPOS DEL CLIENTE
-   En producción estos vendrían de la BD.
+   EQUIPOS DEL CLIENTE + SU HISTORIAL DE SERVICIOS
    ══════════════════════════════════════════ */
-$equipos = [
-    [
-        "id"            => "EQ-001",
-        "tipo"          => "Laptop",
-        "marca"         => "HP",
-        "modelo"        => "Pavilion 15-eg2xxx",
-        "serie"         => "5CD2350KXY",
-        "so"            => "Windows 11 Home",
-        "fecha_reg"     => "10 ene 2024",
-        "tickets"       => [
-            ["id"=>"MT-8842","servicio"=>"Reparación","adicionales"=>["Limpieza profunda"],"estado"=>"En diagnóstico","fecha"=>"20 may 2025","total"=>"S/ 115.00","obs"=>"La laptop no enciende correctamente y presenta pantalla azul al iniciar."],
-            ["id"=>"MT-8845","servicio"=>"Limpieza preventiva","adicionales"=>[],"estado"=>"Completado","fecha"=>"15 may 2025","total"=>"S/ 70.80","obs"=>""],
-        ],
-    ],
-    [
-        "id"            => "EQ-002",
-        "tipo"          => "PC",
-        "marca"         => "",
-        "modelo"        => "",
-        "serie"         => "",
-        "so"            => "macOS Sonoma 14.4",
-        "fecha_reg"     => "03 mar 2024",
-        "tickets"       => [
-            ["id"=>"MT-8843","servicio"=>"Repotenciación (mano de obra)","adicionales"=>[],"estado"=>"Recibido","fecha"=>"21 may 2025","total"=>"S/ 59.00","obs"=>""],
-        ],
-    ],
-    [
-        "id"            => "EQ-003",
-        "tipo"          => "Laptop",
-        "marca"         => "Apple",
-        "modelo"        => "MacBook Pro 14\" M3",
-        "serie"         => "C3QXWV1XJGH5",
-        "so"            => "macOS Sonoma 14.5",
-        "fecha_reg"     => "18 abr 2025",
-        "tickets"       => [
-            ["id"=>"MT-8844","servicio"=>"Mantenimiento correctivo","adicionales"=>["Optimización del sistema","Instalación de programas"],"estado"=>"En reparación","fecha"=>"18 may 2025","total"=>"S/ 141.30","obs"=>"El equipo va muy lento y se calienta mucho."],
-        ],
-    ],
-    [
-        "id"            => "EQ-004",
-        "tipo"          => "Laptop",
-        "marca"         => "ASUS",
-        "modelo"        => "VivoBook 15 X1502",
-        "serie"         => "N8N0CX03T456789",
-        "so"            => "Windows 10 Pro",
-        "fecha_reg"     => "22 feb 2023",
-        "tickets"       => [],
-    ],
-];
+$sql = "SELECT e.idEquipo, e.tipoEquipo, e.marca, e.modelo, e.numSerie, e.sistemaOperativo, e.observaciones,
+               t.codigo, t.estado, t.fechaCreacion,
+               c.idCotizacion, c.total
+        FROM EQUIPO e
+        LEFT JOIN COTIZACION c ON c.idEquipo = e.idEquipo
+        LEFT JOIN TICKET t ON t.idCotizacion = c.idCotizacion
+        WHERE e.idCliente = ?
+        ORDER BY e.idEquipo DESC, t.fechaCreacion DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $_SESSION['idCliente']);
+$stmt->execute();
+$resultado = $stmt->get_result();
+
+$sqlServicios = "SELECT s.nomServicio
+                   FROM COTIZACION_SERVICIO cs
+                   JOIN SERVICIO s ON s.idServicio = cs.idServicio
+                  WHERE cs.idCotizacion = ?
+                  ORDER BY (s.tipo = 'Principal') DESC, s.nomServicio ASC";
+$stmtServicios = $conn->prepare($sqlServicios);
+
+$equiposPorId = [];
+while ($fila = $resultado->fetch_assoc()) {
+    $idEq = (int) $fila['idEquipo'];
+
+    if (!isset($equiposPorId[$idEq])) {
+        $equiposPorId[$idEq] = [
+            "id"            => 'EQ-' . str_pad((string) $idEq, 3, '0', STR_PAD_LEFT),
+            "tipo"          => $fila['tipoEquipo'],
+            "marca"         => $fila['marca'],
+            "modelo"        => $fila['modelo'],
+            "serie"         => $fila['numSerie'],
+            "so"            => $fila['sistemaOperativo'],
+            "fecha_reg_raw" => null,
+            "tickets"       => [],
+        ];
+    }
+
+    if ($fila['codigo'] === null) continue;
+
+    $stmtServicios->bind_param("i", $fila['idCotizacion']);
+    $stmtServicios->execute();
+    $resServicios = $stmtServicios->get_result();
+    $nombres_servicios = [];
+    while ($s = $resServicios->fetch_assoc()) {
+        $nombres_servicios[] = $s['nomServicio'];
+    }
+    $servicio_principal = array_shift($nombres_servicios) ?? 'Servicio técnico';
+
+    $equiposPorId[$idEq]['tickets'][] = [
+        "id"          => $fila['codigo'],
+        "servicio"    => $servicio_principal,
+        "adicionales" => $nombres_servicios,
+        "estado"      => $fila['estado'],
+        "fecha"       => fecha_es($fila['fechaCreacion']),
+        "total"       => 'S/ ' . number_format((float) $fila['total'], 2),
+        "obs"         => $fila['observaciones'] ?? '',
+    ];
+
+    $raw = $equiposPorId[$idEq]['fecha_reg_raw'];
+    if ($raw === null || strtotime($fila['fechaCreacion']) < strtotime($raw)) {
+        $equiposPorId[$idEq]['fecha_reg_raw'] = $fila['fechaCreacion'];
+    }
+}
+$stmtServicios->close();
+$stmt->close();
+
+$equipos = [];
+foreach ($equiposPorId as $eq) {
+    $eq['fecha_reg'] = $eq['fecha_reg_raw'] !== null ? fecha_es($eq['fecha_reg_raw']) : '—';
+    unset($eq['fecha_reg_raw']);
+    $equipos[] = $eq;
+}
 
 /* ── helper: config de color por estado (igual que tickets_cliente) ── */
 function estado_cfg($e) {
