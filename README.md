@@ -10,6 +10,7 @@
 - [Estructura del Proyecto](#estructura-del-proyecto)
 - [Instalación y Ejecución](#instalación-y-ejecución)
 - [Medidas de Seguridad](#medidas-de-seguridad)
+- [Pruebas Funcionales y de Seguridad](#pruebas-funcionales-y-de-seguridad)
 - [Credenciales de Prueba](#credenciales-de-prueba)
 - [Capturas de Pantalla](#capturas-de-pantalla)
 - [Encargados del Proyecto](#encargados-del-proyecto)
@@ -181,14 +182,33 @@ Morales-Tech/
   - Verificación de respuestas a preguntas de seguridad.
   - Restablecimiento de contraseña solo si todas las respuestas son correctas.
 
+## Pruebas Funcionales y de Seguridad
+Se realizaron 10 casos de prueba funcionales sobre los módulos principales del sistema, documentados y ejecutados en TestRail.
+
+| Código | Nombre | Prioridad |
+|---|---|---|
+| CP01 | Registro de cliente con datos válidos | Alta |
+| CP02 | Registro de administrador con dominio @moralestechs.com | Alta |
+| CP03 | Inicio de sesión con credenciales inválidas | Alta |
+| CP04 | Recuperación de contraseña mediante preguntas de seguridad | Media |
+| CP05 | Creación completa de cotización y ticket mediante asistente por pasos | Crítica |
+| CP06 | Validación del cálculo de cotización con IGV y total | Alta |
+| CP07 | Visualización de tickets propios desde el portal cliente | Media |
+| CP08 | Cambio de estado de ticket por parte del administrador | Alta |
+| CP09 | Validación de acceso por roles | Crítica |
+| CP10 | Consulta pública de ticket por código de seguimiento | Baja |
+
+- **Herramienta:** TestRail  
+- **Ciclos de prueba ejecutados:** 2  
+- **Informe exportado:** `docs/pruebas/informe_pruebas.pdf`
+
 ## Credenciales de Prueba
+Las credenciales de prueba han sido removidas por seguridad.
 
-**Cliente:**
-- Correo: `demo@gmail.com`
-- Contraseña: `DemoUs3r`
-
-**Administrador:**
-- Registrar una cuenta con: `@moralestechs.com`
+Para acceder al sistema:
+- **Portal Cliente:** Registrarse desde `registro.php`
+- **Portal Administrador:** Registrarse desde `registro_staff.php` 
+  usando un correo con dominio `@moralestechs.com`
 
 ## Capturas de Pantalla
 
