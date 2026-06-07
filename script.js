@@ -314,13 +314,15 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     'Instalación de programas': 20, 'Optimización del sistema': 30,
   };
 
-  window.abrirModal = function(id, equipo, so, servicio, adicionales, estado, fecha, total, obs) {
+  window.abrirModal = function(id, equipo, so, servicio, adicionales, estado, fecha, subtotal, igv, total, obs) {
     document.getElementById('m-id').textContent     = '#' + id;
     document.getElementById('m-equipo').textContent = equipo;
     document.getElementById('m-estado').textContent = estado;
     document.getElementById('m-tipo').textContent   = equipo;
     document.getElementById('m-so').textContent     = so || '—';
     document.getElementById('m-fecha').textContent  = fecha;
+    document.getElementById('m-subtotal').textContent = subtotal;
+    document.getElementById('m-igv').textContent      = igv;
     document.getElementById('m-total').textContent  = total;
 
     const obsEl    = document.getElementById('m-obs');
