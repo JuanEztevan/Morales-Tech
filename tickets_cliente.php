@@ -1,18 +1,73 @@
 <?php
-// session_start();
-// include("includes/auth_cliente.php");
-$nombre_cliente = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Esteban Demo';
+require_once 'conexion.php';
+session_start();
+
+if (!isset($_SESSION['idCliente'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$nombre_cliente = $_SESSION['nombres'];
 $partes         = explode(' ', trim($nombre_cliente));
 $nombre_corto   = $partes[0];
 
 $filtro_activo = isset($_GET['estado']) ? $_GET['estado'] : 'Todos';
 
-$todos_los_tickets = [
-    ["id"=>"MT-8842","tipo"=>"Laptop","marca"=>"HP","so"=>"Windows 11","servicio"=>"Reparación","adicionales"=>["Limpieza profunda"],"estado"=>"En diagnóstico","fecha"=>"20 may 2025","total"=>"S/ 115.00","obs"=>"La laptop no enciende correctamente y presenta pantalla azul al iniciar."],
-    ["id"=>"MT-8843","tipo"=>"PC","marca"=>"Apple","so"=>"macOS","servicio"=>"Repotenciación (mano de obra)","adicionales"=>[],"estado"=>"Recibido","fecha"=>"21 may 2025","total"=>"S/ 59.00","obs"=>""],
-    ["id"=>"MT-8844","tipo"=>"Laptop","marca"=>"Apple","so"=>"macOS","servicio"=>"Mantenimiento correctivo","adicionales"=>["Optimización del sistema","Instalación de programas"],"estado"=>"En reparación","fecha"=>"18 may 2025","total"=>"S/ 141.30","obs"=>"El equipo va muy lento y se calienta mucho."],
-    ["id"=>"MT-8845","tipo"=>"Laptop","marca"=>"ASUS","so"=>"Windows 10","servicio"=>"Limpieza preventiva","adicionales"=>[],"estado"=>"Completado","fecha"=>"15 may 2025","total"=>"S/ 70.80","obs"=>""],
-];
+function fecha_es($fechaSql) {
+    $meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    $ts = strtotime($fechaSql);
+    return date('j', $ts) . ' ' . $meses[date('n', $ts) - 1] . ' ' . date('Y', $ts);
+}
+
+$todos_los_tickets = [];
+
+$sql = "SELECT t.codigo, t.estado, t.fechaCreacion,
+               e.tipoEquipo, e.marca, e.sistemaOperativo, e.observaciones,
+               c.idCotizacion, c.total
+        FROM TICKET t
+        JOIN COTIZACION c ON c.idCotizacion = t.idCotizacion
+        JOIN EQUIPO e ON e.idEquipo = c.idEquipo
+        WHERE c.idCliente = ?
+        ORDER BY t.fechaCreacion DESC";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $_SESSION['idCliente']);
+$stmt->execute();
+$resultado = $stmt->get_result();
+
+$sqlServicios = "SELECT s.nomServicio
+                   FROM COTIZACION_SERVICIO cs
+                   JOIN SERVICIO s ON s.idServicio = cs.idServicio
+                  WHERE cs.idCotizacion = ?
+                  ORDER BY (s.tipo = 'Principal') DESC, s.nomServicio ASC";
+$stmtServicios = $conn->prepare($sqlServicios);
+
+while ($fila = $resultado->fetch_assoc()) {
+    $stmtServicios->bind_param("i", $fila['idCotizacion']);
+    $stmtServicios->execute();
+    $resServicios = $stmtServicios->get_result();
+
+    $nombres_servicios = [];
+    while ($s = $resServicios->fetch_assoc()) {
+        $nombres_servicios[] = $s['nomServicio'];
+    }
+    $servicio_principal = array_shift($nombres_servicios) ?? 'Servicio técnico';
+
+    $todos_los_tickets[] = [
+        "id"          => $fila['codigo'],
+        "tipo"        => $fila['tipoEquipo'],
+        "marca"       => $fila['marca'],
+        "so"          => $fila['sistemaOperativo'],
+        "servicio"    => $servicio_principal,
+        "adicionales" => $nombres_servicios,
+        "estado"      => $fila['estado'],
+        "fecha"       => fecha_es($fila['fechaCreacion']),
+        "total"       => 'S/ ' . number_format((float) $fila['total'], 2),
+        "obs"         => $fila['observaciones'] ?? '',
+    ];
+}
+$stmtServicios->close();
+$stmt->close();
 
 $mapa_estados = [
     'Recibidos'      => 'Recibido',
@@ -38,7 +93,7 @@ function estado_cfg($e) {
     return $m[$e] ?? ['bg'=>'rgba(100,100,120,.18)','color'=>'#a0a8bb','dot'=>'#7a8096'];
 }
 
-$reciente = $todos_los_tickets[0];
+$reciente = $todos_los_tickets[0] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -77,6 +132,12 @@ $reciente = $todos_los_tickets[0];
             </a>
           </li>
           <li>
+            <a href="equipos_cliente.php">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Mis equipos
+            </a>
+          </li>
+          <li>
             <a href="nuevo_ticket_cliente.php">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
               Nueva cotización
@@ -107,6 +168,10 @@ $reciente = $todos_los_tickets[0];
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
     Mis tickets
   </a>
+  <a href="equipos_cliente.php" onclick="closeDashMenu()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Mis equipos
+  </a>
   <a href="nuevo_ticket_cliente.php" onclick="closeDashMenu()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
     Nueva cotización
@@ -122,12 +187,13 @@ $reciente = $todos_los_tickets[0];
 <div class="dash-page">
 
   <!-- HERO: ticket más reciente -->
+  <?php if ($reciente): ?>
   <section class="dash-hero">
     <div class="dash-container">
       <div class="dash-tag">Mis tickets</div>
       <?php $ec = estado_cfg($reciente['estado']); ?>
       <div class="ticket-hero-card"
-           onclick="abrirModal('<?= htmlspecialchars($reciente['id']) ?>','<?= htmlspecialchars($reciente['tipo'].' '.$reciente['marca']) ?>','<?= htmlspecialchars($reciente['so']) ?>','<?= htmlspecialchars($reciente['servicio']) ?>',<?= json_encode($reciente['adicionales']) ?>,'<?= htmlspecialchars($reciente['estado']) ?>','<?= htmlspecialchars($reciente['fecha']) ?>','<?= htmlspecialchars($reciente['total']) ?>','<?= addslashes(htmlspecialchars($reciente['obs'])) ?>')">
+           onclick="abrirModal('<?= htmlspecialchars($reciente['id']) ?>','<?= htmlspecialchars($reciente['tipo'].' '.$reciente['marca']) ?>','<?= htmlspecialchars($reciente['so']) ?>','<?= htmlspecialchars($reciente['servicio']) ?>',<?= htmlspecialchars(json_encode($reciente['adicionales']), ENT_QUOTES) ?>,'<?= htmlspecialchars($reciente['estado']) ?>','<?= htmlspecialchars($reciente['fecha']) ?>','<?= htmlspecialchars($reciente['total']) ?>','<?= addslashes(htmlspecialchars($reciente['obs'])) ?>')">
         <div class="ticket-hero-card__label">Ticket más reciente</div>
         <div class="ticket-hero-card__inner">
           <div class="ticket-hero-card__left">
@@ -141,7 +207,7 @@ $reciente = $todos_los_tickets[0];
           </div>
           <div class="ticket-hero-card__right">
             <div class="ticket-hero-card__fecha"><?= htmlspecialchars($reciente['fecha']) ?></div>
-            <button class="btn-hero-detail" onclick="event.stopPropagation(); abrirModal('<?= htmlspecialchars($reciente['id']) ?>','<?= htmlspecialchars($reciente['tipo'].' '.$reciente['marca']) ?>','<?= htmlspecialchars($reciente['so']) ?>','<?= htmlspecialchars($reciente['servicio']) ?>',<?= json_encode($reciente['adicionales']) ?>,'<?= htmlspecialchars($reciente['estado']) ?>','<?= htmlspecialchars($reciente['fecha']) ?>','<?= htmlspecialchars($reciente['total']) ?>','<?= addslashes(htmlspecialchars($reciente['obs'])) ?>')">
+            <button class="btn-hero-detail" onclick="event.stopPropagation(); abrirModal('<?= htmlspecialchars($reciente['id']) ?>','<?= htmlspecialchars($reciente['tipo'].' '.$reciente['marca']) ?>','<?= htmlspecialchars($reciente['so']) ?>','<?= htmlspecialchars($reciente['servicio']) ?>',<?= htmlspecialchars(json_encode($reciente['adicionales']), ENT_QUOTES) ?>,'<?= htmlspecialchars($reciente['estado']) ?>','<?= htmlspecialchars($reciente['fecha']) ?>','<?= htmlspecialchars($reciente['total']) ?>','<?= addslashes(htmlspecialchars($reciente['obs'])) ?>')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               Ver detalle
             </button>
@@ -150,6 +216,7 @@ $reciente = $todos_los_tickets[0];
       </div>
     </div>
   </section>
+  <?php endif; ?>
 
   <!-- LISTADO DE TICKETS -->
   <section class="dash-section dash-section--bottom">
@@ -220,7 +287,7 @@ $reciente = $todos_los_tickets[0];
                   '<?= htmlspecialchars($t['tipo'].' '.$t['marca']) ?>',
                   '<?= htmlspecialchars($t['so']) ?>',
                   '<?= htmlspecialchars($t['servicio']) ?>',
-                  <?= json_encode($t['adicionales']) ?>,
+                  <?= htmlspecialchars(json_encode($t['adicionales']), ENT_QUOTES) ?>,
                   '<?= htmlspecialchars($t['estado']) ?>',
                   '<?= htmlspecialchars($t['fecha']) ?>',
                   '<?= htmlspecialchars($t['total']) ?>',
