@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS morales_tech;
 
 USE morales_tech;
-
+-- demo
 -- tabla cliente
 CREATE TABLE CLIENTE (
     idCliente INT AUTO_INCREMENT PRIMARY KEY,
