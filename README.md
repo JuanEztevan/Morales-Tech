@@ -235,3 +235,5 @@ Para acceder al sistema:
 - Mejoras futuras:
   - Generación de reportes en PDF.
   - Despliegue en entorno productivo.
+ 
+<!-- RFC-001: registro con preguntas de seguridad -->

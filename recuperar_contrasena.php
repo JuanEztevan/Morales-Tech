@@ -1,14 +1,11 @@
 <?php
-// ── Sesión SIEMPRE al inicio, antes de cualquier lógica ──
 session_start();
 require_once 'conexion.php';
 $error     = '';
 $success   = '';
 $step      = intval($_POST['step'] ?? 1);
 $startStep = 1;
-// ════════════════════════════════════════
 // PASO 1 → verificar correo o DNI
-// ════════════════════════════════════════
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
     $identificador = trim($_POST['identificador'] ?? '');
     if (!$identificador) {
@@ -51,9 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
         }
     }
 }
-// ════════════════════════════════════════
 // PASO 2 → verificar respuestas
-// ════════════════════════════════════════
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
     $r1 = trim($_POST['respuesta1'] ?? '');
     $r2 = trim($_POST['respuesta2'] ?? '');
@@ -95,9 +90,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
         }
     }
 }
-// ════════════════════════════════════════
 // PASO 3 → guardar nueva contraseña
-// ════════════════════════════════════════
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 3) {
     $nueva   = $_POST['password'] ?? '';
     $confirm = $_POST['confirm']  ?? '';
@@ -287,13 +280,6 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
         </button>
       </div><!-- /ms-panel-1 -->
       <!-- ══════════ PASO 2 ══════════ -->
-      <!--
-        FIX: Los inputs NO llevan "required" porque el navegador intenta
-        enfocarlos aunque el panel esté oculto (ms-panel--hidden), lo que
-        lanza el error "invalid form control with name='respuestaX' is not
-        focusable". La validación de que no estén vacíos la hace PHP en el
-        servidor (bloque PASO 2 arriba).
-      -->
       <div class="ms-panel ms-panel--hidden" id="ms-panel-2">
         <div class="section-divider">
           <div class="section-divider-line"></div>
@@ -425,9 +411,7 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
   </div>
 </div>
 <script>
-/* ─────────────────────────────────────────────────────────────
-   RECUPERAR CONTRASEÑA — CLIENTES
-   ─────────────────────────────────────────────────────────── */
+/* RECUPERAR CONTRASEÑA — CLIENTES */
 var MS_START_STEP  = <?= (int)$startStep ?>;
 var MS_TOTAL_STEPS = 3;
 

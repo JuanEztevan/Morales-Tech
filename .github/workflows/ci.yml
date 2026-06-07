@@ -1,0 +1,41 @@
+name: CI - Validación del Proyecto
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obtener código del repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+
+      - name: Validar sintaxis de archivos PHP
+        run: |
+          find . -name "*.php" | while read file; do
+            php -l "$file"
+          done
+          
+      - name: Verificar archivos principales del proyecto
+        run: |
+          echo "Verificando archivos clave..."
+          test -f login.php && echo "login.php OK"
+          test -f login_staff.php && echo "login_staff.php OK"
+          test -f nueva_venta.php && echo "nueva_venta.php OK"
+          test -f equipos_cliente.php && echo "equipos_cliente.php OK"
+          test -f recuperar_contrasena.php && echo "recuperar_contrasena.php OK"
+          test -f recuperar_contra_staff.php && echo "recuperar_contra_staff.php OK"
+          test -f registro.php && echo "registro.php OK"
+          test -f registro_staff.php && echo "registro_staff.php OK"
+          test -f inicio_clientes.php && echo "inicio_clientes.php OK"
+          test -f dashboard.php && echo "dashboard.php OK"
+          echo "Verificación completada"
