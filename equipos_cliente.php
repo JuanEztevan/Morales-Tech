@@ -16,7 +16,7 @@ function fecha_es($fechaSql) {
     $ts = strtotime($fechaSql);
     return date('j', $ts) . ' ' . $meses[date('n', $ts) - 1] . ' ' . date('Y', $ts);
 }
-
+// RFC-003: historial de equipos y sincronización con nueva venta
 /* ══════════════════════════════════════════
    EQUIPOS DEL CLIENTE + SU HISTORIAL DE SERVICIOS
    ══════════════════════════════════════════ */
