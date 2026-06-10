@@ -1241,31 +1241,32 @@ window.ntkGenerarPDF = function() {
 
   const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
-  const DATA_MES = [
-    {label:'Ene',year:2025,val:18400},{label:'Feb',year:2025,val:22100},
-    {label:'Mar',year:2025,val:15800},{label:'Abr',year:2025,val:30200},
-    {label:'May',year:2025,val:27500},{label:'Jun',year:2025,val:19300},
-    {label:'Jul',year:2025,val:24100},{label:'Ago',year:2025,val:31000},
-    {label:'Sep',year:2025,val:20700},{label:'Oct',year:2025,val:28400},
-    {label:'Nov',year:2025,val:23900},{label:'Dic',year:2025,val:35200},
-  ];
-  const DATA_QUINCENA = DATA_MES.flatMap((m, i) => [
-    {label: MONTHS_ES[i]+' 1ª', year: m.year, val: Math.round(m.val * 0.45)},
-    {label: MONTHS_ES[i]+' 2ª', year: m.year, val: Math.round(m.val * 0.55)},
+  const _mesesRaw = Array.isArray(window._vtVentasPorMes) ? window._vtVentasPorMes : [];
+  const DATA_MES = _mesesRaw.map(r => ({
+    label: MONTHS_ES[r.mo - 1],
+    year:  r.yr,
+    val:   r.val,
+  }));
+  const DATA_QUINCENA = DATA_MES.flatMap((m) => [
+    {label: m.label+' 1ª', year: m.year, val: Math.round(m.val * 0.45)},
+    {label: m.label+' 2ª', year: m.year, val: Math.round(m.val * 0.55)},
   ]);
-  const DATA_ANIO = [
-    {label:'2022',year:2022,val:185000},{label:'2023',year:2023,val:243000},
-    {label:'2024',year:2024,val:310000},{label:'2025',year:2025,val:98000},
-  ];
+  const _anioAgg = {};
+  _mesesRaw.forEach(r => { _anioAgg[r.yr] = (_anioAgg[r.yr] || 0) + r.val; });
+  const DATA_ANIO = Object.entries(_anioAgg)
+    .map(([yr, val]) => ({label: String(yr), year: Number(yr), val}))
+    .sort((a, b) => a.year - b.year);
 
-  const TODAY_IDX = 4; // Mayo
-  const VISIBLE   = 8;
-  const CHART_H   = 200;
+  const _now       = new Date();
+  const curMesIdx  = DATA_MES.findIndex(d => d.year === _now.getFullYear() && d.label === MONTHS_ES[_now.getMonth()]);
+  const curAnioIdx = Math.max(0, DATA_ANIO.length - 1);
+  const VISIBLE    = 8;
+  const CHART_H    = 200;
 
   let vtPeriod     = 'mes';
   let vtOffset     = 0;
   let vtDataset    = DATA_MES;
-  let vtCurrentIdx = TODAY_IDX;
+  let vtCurrentIdx = Math.max(0, curMesIdx);
 
   function vtFmtVal(v) {
     if (v >= 1000000) return 'S/ ' + (v/1000000).toFixed(1).replace('.0','') + ' millón';
@@ -1282,9 +1283,9 @@ window.ntkGenerarPDF = function() {
     vtPeriod = p;
     document.querySelectorAll('.vt-period-btn').forEach(b => b.classList.remove('active'));
     el.classList.add('active');
-    if (p === 'mes')           { vtDataset = DATA_MES;       vtCurrentIdx = TODAY_IDX; }
-    else if (p === 'quincena') { vtDataset = DATA_QUINCENA;  vtCurrentIdx = TODAY_IDX * 2 + 1; }
-    else                       { vtDataset = DATA_ANIO;      vtCurrentIdx = DATA_ANIO.length - 1; }
+    if (p === 'mes')           { vtDataset = DATA_MES;       vtCurrentIdx = Math.max(0, curMesIdx); }
+    else if (p === 'quincena') { vtDataset = DATA_QUINCENA;  vtCurrentIdx = Math.max(0, curMesIdx * 2 + 1); }
+    else                       { vtDataset = DATA_ANIO;      vtCurrentIdx = curAnioIdx; }
     vtOffset = Math.max(0, vtCurrentIdx - VISIBLE + 1);
     vtRenderChart();
   };
@@ -1378,345 +1379,7 @@ window.ntkGenerarPDF = function() {
   }
 })();
 
-/* ══════════════════════════════════════════
-   NUEVA_VENTA.PHP — formulario de venta
-   ══════════════════════════════════════════ */
 
-(function initNuevaVenta() {
-  if (!document.getElementById('nv-bloque-ticket')) return;
-
-  let nvTipoVenta     = 'ticket';
-  let nvMetodo        = 'Yape';
-  let nvTicketData    = null;
-  let nvProdCounter   = 0;
-  let nvEquipoSnapshot = null; // copia de datos antes de entrar en edición
-
-  /* ── Selector tipo ── */
-  window.nvSelTipo = function(tipo, el) {
-    nvTipoVenta = tipo;
-    document.querySelectorAll('.nv-vtype-opt').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    el.blur();
-
-    const bT   = document.getElementById('nv-bloque-ticket');
-    const bC   = document.getElementById('nv-bloque-cliente');
-    const bD   = document.getElementById('nv-bloque-dispositivo');
-    const pTitle = document.getElementById('nv-prod-card-title');
-    const pSub   = document.getElementById('nv-prod-card-sub');
-
-    if (tipo === 'ticket') {
-      bT.classList.remove('nv-hidden');
-      bC.classList.add('nv-hidden');
-      if (pTitle) pTitle.textContent = 'Productos adicionales';
-      if (pSub)   pSub.textContent   = 'Añade repuestos o materiales usados en el servicio';
-    } else {
-      bT.classList.add('nv-hidden');
-      bC.classList.remove('nv-hidden');
-      if (bD)  bD.classList.add('nv-hidden');
-      if (pTitle) pTitle.textContent = 'Productos';
-      if (pSub)   pSub.textContent   = 'Selecciona los productos que desea el cliente';
-      nvTicketData = null;
-      nvEquipoCancelar();
-      const sel = document.getElementById('nv-sel-ticket');
-      if (sel) sel.selectedIndex = 0;
-    }
-    nvUpdateQuote();
-  };
-
-  /* ── Cambio de ticket ── */
-  window.nvOnTicketChange = function() {
-    const sel  = document.getElementById('nv-sel-ticket');
-    const opt  = sel?.options[sel.selectedIndex];
-    const bloq = document.getElementById('nv-bloque-dispositivo');
-
-    if (!sel || !sel.value) {
-      if (bloq)  bloq.classList.add('nv-hidden');
-      nvTicketData = null;
-      nvEquipoCancelar();
-      nvUpdateQuote();
-      return;
-    }
-
-    const nombres   = opt.dataset.nombres   || '';
-    const apellidos = opt.dataset.apellidos  || '';
-
-    nvTicketData = {
-      id:       sel.value,
-      nombres:  nombres,
-      apellidos: apellidos,
-      cliente:  (nombres + ' ' + apellidos).trim(),
-      servicio: opt.dataset.servicio,
-      subtotal: parseFloat(opt.dataset.subtotal),
-      tipo:     opt.dataset.tipo   || '',
-      marca:    opt.dataset.marca  || '',
-      modelo:   opt.dataset.modelo || '',
-      serie:    opt.dataset.serie  || '',
-      so:       opt.dataset.so     || '',
-    };
-
-    // Rellenar bloque de datos del dispositivo, limpiar edición previa y asegurar modo vista
-    nvEquipoSnapshot = null;    // descartar snapshot de cualquier ticket anterior
-    nvEquipoRenderView();
-    nvEquipoVolverVistaUI();
-    if (bloq) bloq.classList.remove('nv-hidden');
-
-    nvUpdateQuote();
-  };
-
-  /* ── Renderiza el bloque en modo vista ── */
-  window.nvEquipoRenderView = function() {
-    if (!nvTicketData) return;
-
-    const esLaptop = nvTicketData.tipo !== 'PC de Escritorio';
-    const setTxt   = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-
-    // Datos del ticket
-    setTxt('nv-di-ticket',   nvTicketData.id);
-    setTxt('nv-di-cliente',  nvTicketData.cliente);
-    setTxt('nv-di-servicio', nvTicketData.servicio);
-    setTxt('nv-di-subtotal', 'S/ ' + nvTicketData.subtotal.toFixed(2));
-
-    // Badge tipo
-    setTxt('nv-equipo-type-text', nvTicketData.tipo);
-
-    // Campos de vista
-    const viewMarca  = document.getElementById('nv-view-marca');
-    const viewModelo = document.getElementById('nv-view-modelo');
-    const viewSerie  = document.getElementById('nv-view-serie');
-    const viewSO     = document.getElementById('nv-view-so');
-
-    if (viewMarca)  viewMarca.textContent  = nvTicketData.marca  || '—';
-    if (viewModelo) viewModelo.textContent = nvTicketData.modelo || '(sin registrar)';
-    if (viewSerie)  viewSerie.textContent  = nvTicketData.serie  || '(sin registrar)';
-    if (viewSO)     viewSO.textContent     = nvTicketData.so     || '—';
-
-    // Estilos vacío
-    if (viewModelo) viewModelo.classList.toggle('nv-device-info-item__value--empty', !nvTicketData.modelo);
-    if (viewSerie)  viewSerie.classList.toggle('nv-device-info-item__value--empty',  !nvTicketData.serie);
-
-    // Mostrar/ocultar campos solo-laptop en modo vista (nv-device-info-item → flex)
-    document.querySelectorAll('.nv-field-laptop-only.nv-device-info-item').forEach(el => {
-      el.classList.toggle('nv-visible', esLaptop);
-    });
-
-    // Mostrar/ocultar campos solo-laptop en modo edición (ntk-form-group → block)
-    document.querySelectorAll('.nv-field-laptop-only.ntk-form-group').forEach(el => {
-      el.classList.toggle('nv-form-visible', esLaptop);
-    });
-  };
-
-  /* ── Entrar en modo edición ── */
-  window.nvEquipoEditar = function() {
-    if (!nvTicketData) return;
-    const esLaptop = nvTicketData.tipo !== 'PC de Escritorio';
-
-    // Snapshot para cancelar
-    nvEquipoSnapshot = {
-      marca:  nvTicketData.marca,
-      modelo: nvTicketData.modelo,
-      serie:  nvTicketData.serie,
-      so:     nvTicketData.so,
-    };
-
-    // Cargar inputs
-    const setInput = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-    setInput('nv-edit-marca',  nvTicketData.marca);
-    setInput('nv-edit-modelo', nvTicketData.modelo);
-    setInput('nv-edit-serie',  nvTicketData.serie);
-    setInput('nv-edit-so',     nvTicketData.so);
-
-    // Toggle vistas
-    document.getElementById('nv-equipo-view')?.classList.add('nv-hidden');
-    document.getElementById('nv-equipo-edit')?.classList.remove('nv-hidden');
-    document.getElementById('nv-btn-editar')?.classList.add('nv-hidden');
-    document.getElementById('nv-btn-guardar')?.classList.remove('nv-hidden');
-    document.getElementById('nv-btn-cancelar')?.classList.remove('nv-hidden');
-
-    // Foco en primer campo activo
-    const primerInput = esLaptop
-      ? document.getElementById('nv-edit-marca')
-      : document.getElementById('nv-edit-so');
-    primerInput?.focus();
-  };
-
-  /* ── Guardar cambios del equipo ── */
-  window.nvEquipoGuardar = function() {
-    if (!nvTicketData) return;
-    const esLaptop = nvTicketData.tipo !== 'PC de Escritorio';
-    const getVal   = id => (document.getElementById(id)?.value.trim() || '');
-
-    nvTicketData.so = getVal('nv-edit-so');
-    if (esLaptop) {
-      nvTicketData.marca  = getVal('nv-edit-marca');
-      nvTicketData.modelo = getVal('nv-edit-modelo');
-      nvTicketData.serie  = getVal('nv-edit-serie');
-    }
-    nvEquipoSnapshot = null;
-    nvEquipoRenderView();
-    nvEquipoVolverVistaUI();
-  };
-
-  /* ── Cancelar edición ── */
-  window.nvEquipoCancelar = function() {
-    if (nvEquipoSnapshot && nvTicketData) {
-      nvTicketData.marca  = nvEquipoSnapshot.marca;
-      nvTicketData.modelo = nvEquipoSnapshot.modelo;
-      nvTicketData.serie  = nvEquipoSnapshot.serie;
-      nvTicketData.so     = nvEquipoSnapshot.so;
-      nvEquipoSnapshot = null;
-      nvEquipoRenderView();
-    }
-    nvEquipoVolverVistaUI();
-  };
-
-  /* ── Helper: restaurar UI modo vista ── */
-  function nvEquipoVolverVistaUI() {
-    document.getElementById('nv-equipo-view')?.classList.remove('nv-hidden');
-    document.getElementById('nv-equipo-edit')?.classList.add('nv-hidden');
-    document.getElementById('nv-btn-editar')?.classList.remove('nv-hidden');
-    document.getElementById('nv-btn-guardar')?.classList.add('nv-hidden');
-    document.getElementById('nv-btn-cancelar')?.classList.add('nv-hidden');
-  }
-
-  /* ── Productos ── */
-  window.nvAgregarProd = function() {
-    const PRODS = typeof NV_PRODUCTOS !== 'undefined' ? NV_PRODUCTOS : [];
-    const list  = document.getElementById('nv-prod-list');
-    if (!list) return;
-    const id   = ++nvProdCounter;
-    const opts = PRODS.map(p => `<option value="${p.id}" data-precio="${p.precio}">${p.nombre}</option>`).join('');
-    const row  = document.createElement('div');
-    row.className = 'nv-prod-row';
-    row.id = 'nv-prow-' + id;
-    row.innerHTML = `
-      <select id="nv-psel-${id}" onchange="nvOnProdChange(${id})">
-        <option value="">Seleccionar producto…</option>${opts}
-      </select>
-      <div class="nv-qty-ctrl">
-        <button class="nv-qty-btn" onclick="nvCambiarQty(${id},-1)">−</button>
-        <span class="nv-qty-num" id="nv-pqty-${id}">1</span>
-        <button class="nv-qty-btn" onclick="nvCambiarQty(${id},1)">+</button>
-      </div>
-      <span class="nv-prod-precio" id="nv-pprecio-${id}">S/ —</span>
-      <button class="nv-prod-remove" onclick="nvEliminarProd(${id})">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>`;
-    list.appendChild(row);
-  };
-
-  window.nvOnProdChange = function(id) {
-    const PRODS = typeof NV_PRODUCTOS !== 'undefined' ? NV_PRODUCTOS : [];
-    const sel   = document.getElementById('nv-psel-' + id);
-    const precio = sel?.options[sel.selectedIndex]?.dataset?.precio;
-    const qty    = parseInt(document.getElementById('nv-pqty-' + id)?.textContent || 1);
-    const etiq   = document.getElementById('nv-pprecio-' + id);
-    if (etiq) etiq.textContent = precio ? 'S/ ' + (parseFloat(precio) * qty).toFixed(2) : 'S/ —';
-    nvUpdateQuote();
-  };
-
-  window.nvCambiarQty = function(id, delta) {
-    const el = document.getElementById('nv-pqty-' + id);
-    if (!el) return;
-    el.textContent = Math.max(1, parseInt(el.textContent) + delta);
-    nvOnProdChange(id);
-  };
-
-  window.nvEliminarProd = function(id) {
-    document.getElementById('nv-prow-' + id)?.remove();
-    nvUpdateQuote();
-  };
-
-  /* ── Método de pago ── */
-  window.nvSelMetodo = function(m, el) {
-    nvMetodo = m;
-    document.querySelectorAll('.nv-metodo-opt').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    el.blur();
-  };
-
-  /* ── Actualizar resumen ── */
-  window.nvUpdateQuote = function() {
-    const PRODS  = typeof NV_PRODUCTOS !== 'undefined' ? NV_PRODUCTOS : [];
-    const items  = [];
-
-    if (nvTipoVenta === 'ticket' && nvTicketData)
-      items.push({ name: nvTicketData.servicio, price: nvTicketData.subtotal });
-
-    document.querySelectorAll('[id^="nv-psel-"]').forEach(sel => {
-      if (!sel.value) return;
-      const prod = PRODS.find(p => p.id == sel.value);
-      if (!prod) return;
-      const qty = parseInt(document.getElementById(sel.id.replace('nv-psel-','nv-pqty-'))?.textContent || 1);
-      items.push({ name: prod.nombre + (qty > 1 ? ` ×${qty}` : ''), price: prod.precio * qty });
-    });
-
-    const clientName = nvTipoVenta === 'ticket' && nvTicketData
-      ? nvTicketData.cliente
-      : (document.getElementById('nv-cli-nombre')?.value?.trim() || '');
-
-    const qClient = document.getElementById('nv-q-client');
-    if (qClient) {
-      if (clientName) { document.getElementById('nv-q-client-name').textContent = clientName; qClient.classList.remove('nv-hidden'); }
-      else qClient.classList.add('nv-hidden');
-    }
-
-    const qEmpty   = document.getElementById('nv-q-empty');
-    const qDetails = document.getElementById('nv-q-details');
-    if (items.length === 0) {
-      if (qEmpty)   qEmpty.classList.remove('nv-hidden');
-      if (qDetails) qDetails.classList.add('nv-hidden');
-      return;
-    }
-    if (qEmpty)   qEmpty.classList.add('nv-hidden');
-    if (qDetails) qDetails.classList.remove('nv-hidden');
-
-    const itemsEl = document.getElementById('nv-q-items');
-    if (itemsEl) itemsEl.innerHTML = items.map(i =>
-      `<div class="nv-quote-item">
-         <span class="nv-quote-item__name">${i.name}</span>
-         <span class="nv-quote-item__price">S/ ${i.price.toFixed(2)}</span>
-       </div>`
-    ).join('');
-
-    const subtotal = items.reduce((a, i) => a + i.price, 0);
-    const igv      = subtotal * 0.18;
-    const total    = subtotal + igv;
-
-    const sub  = document.getElementById('nv-q-subtotal');
-    const igvEl = document.getElementById('nv-q-igv');
-    const totEl = document.getElementById('nv-q-total');
-    if (sub)   sub.textContent  = subtotal.toFixed(2);
-    if (igvEl) igvEl.textContent = igv.toFixed(2);
-    if (totEl) totEl.textContent = total.toFixed(2);
-  };
-
-  /* ── Guardar ── */
-  window.nvGuardarVenta = function() {
-    if (nvTipoVenta === 'ticket') {
-      if (!nvTicketData) { alert('Selecciona un ticket.'); return; }
-    } else {
-      const dni    = document.getElementById('nv-cli-dni')?.value.trim()    || '';
-      const nombre = document.getElementById('nv-cli-nombre')?.value.trim() || '';
-      if (!dni || dni.length !== 8) { alert('El DNI debe tener 8 dígitos.'); return; }
-      if (!nombre) { alert('Ingresa el nombre del cliente.'); return; }
-    }
-    const totEl = document.getElementById('nv-q-total');
-    const total = parseFloat(totEl?.textContent || '0');
-    if (!total || total <= 0) { alert('Agrega al menos un producto o servicio.'); return; }
-
-    const amountEl = document.getElementById('nv-modal-amount');
-    const methodEl = document.getElementById('nv-modal-method');
-    if (amountEl) amountEl.textContent = 'S/ ' + total.toFixed(2);
-    if (methodEl) methodEl.textContent = nvMetodo;
-
-    const modal = document.getElementById('nv-modal-success');
-    if (modal) { modal.style.opacity = '1'; modal.style.pointerEvents = 'all'; modal.classList.add('show'); }
-  };
-
-  /* Escuchar cambios en nombre cliente directo */
-  const cliNombre = document.getElementById('nv-cli-nombre');
-  if (cliNombre) cliNombre.addEventListener('input', nvUpdateQuote);
-})();
 
 
 
