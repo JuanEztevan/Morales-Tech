@@ -40,24 +40,105 @@ $inicial = strtoupper(substr($nombre_display, 0, 1));
 $hora   = (int) date('H');
 $saludo = $hora < 12 ? 'Buenos días' : ($hora < 19 ? 'Buenas tardes' : 'Buenas noches');
 
-$tickets_hoy         = 4;
-$tickets_pendientes  = 7;
-$tickets_completados = 12;
-$ingresos_mes        = 3480;
+$meses_largo = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+$mes_actual  = $meses_largo[(int)date('n')] . ' ' . date('Y');
 
-$tickets_recientes = [
-    ["id"=>"MT-8845","cliente"=>"Brenda Benites",  "servicio"=>"Limpieza preventiva",     "estado"=>"Completado",     "fecha"=>"Hoy, 10:30"],
-    ["id"=>"MT-8844","cliente"=>"Diana Calderón",  "servicio"=>"Mantenimiento correctivo", "estado"=>"En reparación",  "fecha"=>"Hoy, 09:15"],
-    ["id"=>"MT-8843","cliente"=>"Andrés Ochante",  "servicio"=>"Repotenciación",           "estado"=>"Recibido",       "fecha"=>"Ayer, 16:00"],
-    ["id"=>"MT-8842","cliente"=>"Valeria Ramírez", "servicio"=>"Reparación",               "estado"=>"En diagnóstico", "fecha"=>"Ayer, 11:45"],
-    ["id"=>"MT-8841","cliente"=>"Carlos Quispe",   "servicio"=>"Formateo e instalación",   "estado"=>"Completado",     "fecha"=>"22 may, 09:00"],
-];
+// ── KPIs ──
+$r = $conn->query("SELECT COALESCE(SUM(c.total),0) AS v FROM COTIZACION c JOIN TICKET t ON t.idCotizacion=c.idCotizacion WHERE DATE_FORMAT(t.fechaCreacion,'%Y-%m')=DATE_FORMAT(NOW(),'%Y-%m')");
+$ingresos_mes = (float) $r->fetch_assoc()['v'];
 
-$stock_alerta = [
-    ["nombre"=>"RAM DDR5 16GB 4800MHz", "stock"=>9,  "minimo"=>10, "clase"=>"dash-stock--min"],
-    ["nombre"=>"SSD 1TB SATA",          "stock"=>10, "minimo"=>12, "clase"=>"dash-stock--low"],
-    ["nombre"=>"Kit Dest. 128 en 1",    "stock"=>12, "minimo"=>15, "clase"=>"dash-stock--low"],
-];
+$r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE DATE(fechaCreacion)=CURDATE()");
+$tickets_hoy = (int) $r->fetch_assoc()['v'];
+
+$r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE estado != 'Completado'");
+$tickets_pendientes = (int) $r->fetch_assoc()['v'];
+
+$r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE estado='Completado' AND DATE_FORMAT(fechaCreacion,'%Y-%m')=DATE_FORMAT(NOW(),'%Y-%m')");
+$tickets_completados = (int) $r->fetch_assoc()['v'];
+
+// ── Resumen del día ──
+$r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE estado='Completado' AND DATE(fechaCreacion)=CURDATE()");
+$completados_hoy = (int) $r->fetch_assoc()['v'];
+
+$r = $conn->query("SELECT COALESCE(SUM(c.total),0) AS v FROM COTIZACION c JOIN TICKET t ON t.idCotizacion=c.idCotizacion WHERE DATE(t.fechaCreacion)=CURDATE()");
+$ingresos_hoy = (float) $r->fetch_assoc()['v'];
+
+// ── Tickets recientes (últimos 5) ──
+function fecha_dash($dt) {
+    $ts   = strtotime($dt);
+    $hora = date('H:i', $ts);
+    if ($ts >= strtotime('today'))     return 'Hoy, '  . $hora;
+    if ($ts >= strtotime('yesterday')) return 'Ayer, ' . $hora;
+    $m = ['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return date('j', $ts) . ' ' . $m[(int)date('n',$ts)] . ', ' . $hora;
+}
+
+$tickets_recientes = [];
+$res = $conn->query(
+    "SELECT t.codigo, t.estado, t.fechaCreacion, cl.nombres, cl.apellidos,
+            (SELECT s.nomServicio FROM COTIZACION_SERVICIO cs
+             JOIN SERVICIO s ON s.idServicio=cs.idServicio
+             WHERE cs.idCotizacion=c.idCotizacion AND s.tipo='Principal' LIMIT 1) AS servicio
+     FROM TICKET t
+     JOIN COTIZACION c  ON c.idCotizacion = t.idCotizacion
+     JOIN CLIENTE   cl  ON cl.idCliente   = c.idCliente
+     ORDER BY t.fechaCreacion DESC LIMIT 5"
+);
+while ($f = $res->fetch_assoc()) {
+    $tickets_recientes[] = [
+        "id"       => $f['codigo'],
+        "cliente"  => $f['nombres'] . ' ' . $f['apellidos'],
+        "servicio" => $f['servicio'] ?? 'Servicio técnico',
+        "estado"   => $f['estado'],
+        "fecha"    => fecha_dash($f['fechaCreacion']),
+    ];
+}
+
+// ── Stock bajo (componentes con stock ≤ mínimo) ──
+$stock_alerta = [];
+$res = $conn->query(
+    "SELECT nombre, stockActual, stockMinimo FROM COMPONENTE
+     WHERE stockActual <= stockMinimo ORDER BY (stockActual/GREATEST(stockMinimo,1)) ASC LIMIT 5"
+);
+while ($f = $res->fetch_assoc()) {
+    $ratio = $f['stockMinimo'] > 0 ? $f['stockActual'] / $f['stockMinimo'] : 0;
+    $stock_alerta[] = [
+        "nombre" => $f['nombre'],
+        "stock"  => $f['stockActual'],
+        "minimo" => $f['stockMinimo'],
+        "clase"  => $ratio <= 0.5 ? 'dash-stock--min' : 'dash-stock--low',
+    ];
+}
+$alertas_stock = count($stock_alerta);
+
+// ── Donut: servicios más solicitados este mes ──
+$colores_donut = ['#1746EA','#1883ED','#f5a623','#1a7a4a'];
+$res = $conn->query(
+    "SELECT s.nomServicio, COUNT(*) AS cnt
+     FROM COTIZACION_SERVICIO cs
+     JOIN SERVICIO s ON s.idServicio=cs.idServicio
+     JOIN COTIZACION c ON c.idCotizacion=cs.idCotizacion
+     JOIN TICKET t ON t.idCotizacion=c.idCotizacion
+     WHERE DATE_FORMAT(t.fechaCreacion,'%Y-%m')=DATE_FORMAT(NOW(),'%Y-%m')
+     GROUP BY s.idServicio ORDER BY cnt DESC LIMIT 4"
+);
+$raw_donut  = [];
+$total_svc  = 0;
+while ($f = $res->fetch_assoc()) { $raw_donut[] = $f; $total_svc += (int)$f['cnt']; }
+
+$segmentos_donut = [];
+$cumulative = 0;
+foreach ($raw_donut as $i => $f) {
+    $pct    = $total_svc > 0 ? round($f['cnt'] / $total_svc * 100, 1) : 0;
+    $segmentos_donut[] = [
+        'nombre'     => $f['nomServicio'],
+        'pct'        => $pct,
+        'dasharray'  => $pct . ' ' . round(100 - $pct, 1),
+        'dashoffset' => round(25 - $cumulative, 1),
+        'color'      => $colores_donut[$i],
+    ];
+    $cumulative += $pct;
+}
 
 function clase_estado_dash($e) {
     $m = [
@@ -153,7 +234,7 @@ function clase_estado_dash($e) {
               </div>
               <div class="dash-kpi-card__label">Ingresos del mes</div>
               <div class="dash-kpi-card__value">S/ <?= number_format($ingresos_mes, 0) ?></div>
-              <div class="dash-kpi-card__sub">Mayo 2025</div>
+              <div class="dash-kpi-card__sub"><?= htmlspecialchars($mes_actual) ?></div>
             </div>
 
             <div class="dash-kpi-card">
@@ -245,6 +326,9 @@ function clase_estado_dash($e) {
                 </div>
                 <a href="inventario.php" class="dash-panel-block__link">Gestionar →</a>
               </div>
+              <?php if (empty($stock_alerta)): ?>
+              <div style="text-align:center;padding:20px 0;color:#3a4470;font-size:13px;">Sin alertas de stock</div>
+              <?php else: ?>
               <?php foreach ($stock_alerta as $s): ?>
               <div class="dash-stock-item">
                 <div>
@@ -254,6 +338,7 @@ function clase_estado_dash($e) {
                 <span class="dash-stock-val <?= $s['clase'] ?>"><?= $s['stock'] ?> uds.</span>
               </div>
               <?php endforeach; ?>
+              <?php endif; ?>
             </div>
 
             <!-- Donut servicios -->
@@ -265,20 +350,30 @@ function clase_estado_dash($e) {
                 </div>
               </div>
               <div class="dash-donut-wrap">
+                <?php if (empty($segmentos_donut)): ?>
+                <div style="text-align:center;padding:20px 0;color:#3a4470;font-size:13px;">Sin datos este mes</div>
+                <?php else: ?>
                 <svg class="dash-donut-svg" viewBox="0 0 36 36">
                   <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f0f2f8" stroke-width="3.5"/>
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1746EA" stroke-width="3.5" stroke-dasharray="35 65" stroke-dashoffset="25" stroke-linecap="round"/>
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1883ED" stroke-width="3.5" stroke-dasharray="28 72" stroke-dashoffset="-10" stroke-linecap="round"/>
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f5a623" stroke-width="3.5" stroke-dasharray="20 80" stroke-dashoffset="-38" stroke-linecap="round"/>
-                  <circle cx="18" cy="18" r="15.9" fill="none" stroke="#1a7a4a" stroke-width="3.5" stroke-dasharray="17 83" stroke-dashoffset="-58" stroke-linecap="round"/>
-                  <text x="18" y="19.5" text-anchor="middle" font-size="5" font-weight="800" fill="#000019" font-family="Montserrat,sans-serif">May 2025</text>
+                  <?php foreach ($segmentos_donut as $seg): ?>
+                  <circle cx="18" cy="18" r="15.9" fill="none"
+                    stroke="<?= $seg['color'] ?>" stroke-width="3.5"
+                    stroke-dasharray="<?= $seg['dasharray'] ?>"
+                    stroke-dashoffset="<?= $seg['dashoffset'] ?>"
+                    stroke-linecap="round"/>
+                  <?php endforeach; ?>
+                  <text x="18" y="19.5" text-anchor="middle" font-size="4.5" font-weight="800" fill="#000019" font-family="Montserrat,sans-serif"><?= date('M Y') ?></text>
                 </svg>
                 <div class="dash-donut-legend">
-                  <div class="dash-legend-item"><span class="dash-legend-dot" style="background:#1746EA"></span>Mantenimiento<span class="dash-legend-pct">35%</span></div>
-                  <div class="dash-legend-item"><span class="dash-legend-dot" style="background:#1883ED"></span>Reparación<span class="dash-legend-pct">28%</span></div>
-                  <div class="dash-legend-item"><span class="dash-legend-dot" style="background:#f5a623"></span>Formateo<span class="dash-legend-pct">20%</span></div>
-                  <div class="dash-legend-item"><span class="dash-legend-dot" style="background:#1a7a4a"></span>Limpieza<span class="dash-legend-pct">17%</span></div>
+                  <?php foreach ($segmentos_donut as $seg): ?>
+                  <div class="dash-legend-item">
+                    <span class="dash-legend-dot" style="background:<?= $seg['color'] ?>"></span>
+                    <?= htmlspecialchars($seg['nombre']) ?>
+                    <span class="dash-legend-pct"><?= $seg['pct'] ?>%</span>
+                  </div>
+                  <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
               </div>
             </div>
           </div><!-- /bottom-row -->
@@ -325,21 +420,21 @@ function clase_estado_dash($e) {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   Completados hoy
                 </div>
-                <div class="dash-day-item__val dash-day-item__val--green">2</div>
+                <div class="dash-day-item__val dash-day-item__val--green"><?= $completados_hoy ?></div>
               </div>
               <div class="dash-day-item">
                 <div class="dash-day-item__label">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                   Ingresos hoy
                 </div>
-                <div class="dash-day-item__val dash-day-item__val--green">S/ 320</div>
+                <div class="dash-day-item__val dash-day-item__val--green">S/ <?= number_format($ingresos_hoy, 0) ?></div>
               </div>
               <div class="dash-day-item">
                 <div class="dash-day-item__label">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
                   Alertas de stock
                 </div>
-                <div class="dash-day-item__val dash-day-item__val--warn">3</div>
+                <div class="dash-day-item__val <?= $alertas_stock > 0 ? 'dash-day-item__val--warn' : '' ?>"><?= $alertas_stock ?></div>
               </div>
             </div>
           </div>
