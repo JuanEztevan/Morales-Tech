@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // 3. COTIZACION_SERVICIO (mapea el nombre del servicio a su idServicio)
+    // 3. COTIZACION_SERVICIO
     if ($ok) {
         $stmtServicio = $conn->prepare("SELECT idServicio FROM SERVICIO WHERE nomServicio = ? LIMIT 1");
         $stmtRel      = $conn->prepare("INSERT INTO COTIZACION_SERVICIO (idCotizacion, idServicio) VALUES (?, ?)");
@@ -118,7 +118,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($ok) {
         $conn->commit();
-        echo json_encode(['success' => true, 'codigo' => $codigo], JSON_UNESCAPED_UNICODE);
+        echo json_encode([
+            'success'   => true,
+            'codigo'    => $codigo,
+            'subtotal'  => $subtotal,
+            'igv'       => $igv,
+            'total'     => $total,
+        ], JSON_UNESCAPED_UNICODE);
     } else {
         $conn->rollback();
         echo json_encode(['success' => false, 'message' => 'No se pudo guardar la solicitud. Inténtalo de nuevo.']);
@@ -126,8 +132,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$nombre_cliente = trim($_SESSION['nombres'] . ' ' . $_SESSION['apellidos']);
-$email_cliente  = $_SESSION['email'];
+$nombre_cliente   = trim(($_SESSION['nombres'] ?? '') . ' ' . ($_SESSION['apellidos'] ?? ''));
+$email_cliente    = $_SESSION['email'] ?? '';
+$dni_cliente      = $_SESSION['numDNI'] ?? '';
+$telefono_cliente = $_SESSION['numTelefono'] ?? '';
+$ruc_cliente      = $_SESSION['numRUC'] ?? '';
+
+// Fallback: si DNI o Teléfono no están en SESSION, los traemos de la BD
+if ($dni_cliente === '' || $telefono_cliente === '') {
+    $idC = (int) $_SESSION['idCliente'];
+    $stmtC = $conn->prepare("SELECT numDNI, numTelefono, numRUC FROM CLIENTE WHERE idCliente = ? LIMIT 1");
+    $stmtC->bind_param("i", $idC);
+    $stmtC->execute();
+    $rowC = $stmtC->get_result()->fetch_assoc();
+    $stmtC->close();
+    if ($rowC) {
+        if ($dni_cliente === '')      $dni_cliente      = $rowC['numDNI']      ?? '';
+        if ($telefono_cliente === '') $telefono_cliente = $rowC['numTelefono'] ?? '';
+        if ($ruc_cliente === '')      $ruc_cliente      = $rowC['numRUC']      ?? '';
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -139,6 +164,7 @@ $email_cliente  = $_SESSION['email'];
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -486,10 +512,16 @@ $email_cliente  = $_SESSION['email'];
     </div>
     <div class="dash-modal-success-title">¡Solicitud enviada!</div>
     <div class="dash-modal-success-sub">Tu cotización ha sido enviada correctamente. Pronto nos pondremos en contacto contigo.</div>
-    <button class="btn-wizard-next" onclick="window.location.href='tickets_cliente.php'" style="margin-inline:auto;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
-      Ver mis tickets
-    </button>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center;width:100%;">
+      <button class="btn-wizard-next" id="btn-descargar-pdf" onclick="generarPDF()" style="margin-inline:auto;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar Cotización PDF
+      </button>
+      <button class="btn-wizard-next" onclick="window.location.href='tickets_cliente.php'" style="margin-inline:auto;background:transparent;border:1.5px solid rgba(255,255,255,0.12);color:#9aa2bf;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+        Ver mis tickets
+      </button>
+    </div>
   </div>
 </div>
 
@@ -502,6 +534,9 @@ $email_cliente  = $_SESSION['email'];
 <script>
   const CLIENTE_NOMBRE = '<?= htmlspecialchars($nombre_cliente) ?>';
   const CLIENTE_EMAIL  = '<?= htmlspecialchars($email_cliente) ?>';
+  const CLIENTE_DNI    = '<?= htmlspecialchars($dni_cliente) ?>';
+  const CLIENTE_TEL    = '<?= htmlspecialchars($telefono_cliente) ?>';
+  const CLIENTE_RUC    = '<?= htmlspecialchars($ruc_cliente) ?>';
 </script>
 <script src="script.js" defer></script>
 </body>
