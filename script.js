@@ -1886,3 +1886,282 @@ window.adminCheckMatch = function() {
   setupPasswordToggle('pw-toggle-rec1', 'password',  'eye-show-rec1', 'eye-hide-rec1');
   setupPasswordToggle('pw-toggle-rec2', 'password2', 'eye-show-rec2', 'eye-hide-rec2');
 })();
+
+
+/* ══════════════════════════════════════════
+   COTIZACIÓN PDF — nuevo_ticket_cliente.php
+   Genera y descarga la cotización con jsPDF
+   ══════════════════════════════════════════ */
+// Estado global que enviarSolicitud() llena al recibir éxito del servidor
+window._pdfData = null;
+
+/* Sobreescribir enviarSolicitud para capturar datos del servidor */
+(function patchEnviarSolicitud() {
+  const _original = window.enviarSolicitud;
+  window.enviarSolicitud = function () {
+    const tipo     = document.getElementById('tipo_dispositivo').value;
+    const esLaptop = tipo === 'Laptop';
+
+    const marca  = (esLaptop ? document.getElementById('marca')?.value  : '') || '';
+    const modelo = (esLaptop ? document.getElementById('modelo')?.value : '') || '';
+    const serie  = (esLaptop ? document.getElementById('serie')?.value  : '') || '';
+    const so     = (esLaptop
+      ? document.getElementById('so-laptop')?.value
+      : document.getElementById('so-pc')?.value) || '';
+    const observaciones = document.getElementById('observaciones')?.value || '';
+
+    // Capturar servicios antes de enviar
+    const base = document.querySelector('input[name="srv_base"]:checked');
+    const serviciosLocal = [];
+    if (base) serviciosLocal.push({ nombre: base.dataset.nombre, precio: parseFloat(base.value) });
+    document.querySelectorAll('#add-panel input[type="checkbox"]:checked').forEach(cb => {
+      serviciosLocal.push({ nombre: cb.dataset.nombre, precio: parseFloat(cb.value) });
+    });
+
+    // Fecha de emisión
+    const hoy = new Date();
+    const fecha = hoy.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // ✅ Fecha de vencimiento: emisión + 7 días, mismo formato
+    const vencimiento = new Date(hoy);
+    vencimiento.setDate(vencimiento.getDate() + 7);
+    const fechaVencimiento = vencimiento.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Snapshot para el PDF
+    window._pdfData = {
+      tipo, marca, modelo, serie, so, observaciones,
+      servicios: serviciosLocal,
+      cliente: typeof CLIENTE_NOMBRE !== 'undefined' ? CLIENTE_NOMBRE : '',
+      email:   typeof CLIENTE_EMAIL  !== 'undefined' ? CLIENTE_EMAIL  : '',
+      dni:     typeof CLIENTE_DNI    !== 'undefined' ? CLIENTE_DNI    : '',
+      tel:     typeof CLIENTE_TEL    !== 'undefined' ? CLIENTE_TEL    : '',
+      ruc:     typeof CLIENTE_RUC    !== 'undefined' ? CLIENTE_RUC    : '',
+      fecha,
+      fechaVencimiento,
+      codigo:   null,
+      subtotal: null,
+      igv:      null,
+      total:    null,
+    };
+
+    // Enviar al servidor
+    const serviciosPayload = serviciosLocal.map(s => ({ nombre: s.nombre, precio: s.precio }));
+    const btn = document.querySelector('.btn-wizard-send');
+    const textoOriginal = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = 'Enviando…'; }
+
+    function restaurarBoton() {
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = textoOriginal; }
+    }
+
+    fetch('nuevo_ticket_cliente.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo, marca, modelo, serie, so, observaciones, servicios: serviciosPayload })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          if (window._pdfData) {
+            window._pdfData.codigo   = data.codigo;
+            window._pdfData.subtotal = data.subtotal;
+            window._pdfData.igv      = data.igv;
+            window._pdfData.total    = data.total;
+          }
+          const modal = document.getElementById('modal-success');
+          if (modal) {
+            modal.style.opacity       = '1';
+            modal.style.pointerEvents = 'all';
+            modal.classList.add('show');
+          }
+        } else {
+          alert(data.message || 'No se pudo enviar la solicitud. Inténtalo de nuevo.');
+          restaurarBoton();
+        }
+      })
+      .catch(() => {
+        alert('Ocurrió un error de conexión. Inténtalo de nuevo.');
+        restaurarBoton();
+      });
+  };
+})();
+
+/* =============================================
+   PDF COTIZACIÓN
+   ============================================= */
+window.generarPDF = function () {
+    const d = window._pdfData;
+    if (!d) return alert("No hay datos.");
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const azulTecnologico = [23, 70, 234];
+    const azulProfundo    = [0, 0, 25];
+
+    // Márgenes: todo alineado a derecha usa x=195 (margen real de la hoja)
+    // Solo los precios de la tabla usan x=190 para dar respiro visual
+    const xDerecha  = 195;  // margen derecho estándar (header, fechas, footer, totales)
+    const xPrecios  = 190;  // columna de montos en la tabla de servicios
+    const xLabel    = 130;  // etiquetas de subtotal / IGV / TOTAL
+    const aRight    = { align: "right" };
+
+    let y = 20;
+
+    // ===== HEADER =====
+    doc.addImage('img/logo-horizontal-color.png', 'PNG', 15, y, 40, 15);
+
+    doc.setFontSize(9);
+    doc.setTextColor(...azulProfundo);
+    doc.setFont("helvetica", "bold");
+    doc.text("MORALES TECH SOLUTIONS ADVANCED S.A.C.", xDerecha, y + 5,  aRight);
+    doc.setFont("helvetica", "normal");
+    doc.text("Urb. Jardines de Casablanca F-06, Ica",  xDerecha, y + 10, aRight);
+    doc.text("(51) 903-208-170",                        xDerecha, y + 15, aRight);
+    doc.text("RUC: 20613424238",                        xDerecha, y + 20, aRight);
+
+    y += 35;
+
+    // ===== TITULO =====
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(...azulTecnologico);
+    doc.text("COTIZACIÓN DE SERVICIO", 15, y);
+    y += 8;
+
+    doc.setDrawColor(200);
+    doc.line(15, y, 195, y);
+    y += 8;
+
+    // ===== TICKET / FECHA =====
+    doc.setTextColor(...azulProfundo);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("N° TICKET", 15, y);
+    doc.text("FECHA", xDerecha, y, aRight);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    doc.text(d.codigo || "-", 15, y);
+    doc.text(d.fecha, xDerecha, y, aRight);
+    y += 12;
+
+    // ===== CLIENTE / EQUIPO =====
+    doc.setFont("helvetica", "bold");
+    doc.text("CLIENTE", 15, y);
+
+    const esLaptop = d.tipo === 'Laptop';
+    const tieneEquipo = esLaptop ? (d.marca || d.modelo) : d.tipo;
+    if (tieneEquipo) doc.text("EQUIPO", xDerecha, y, aRight);
+    y += 6;
+
+    doc.setFont("helvetica", "normal");
+
+    // Fila 1: nombre cliente | (Laptop: marca) / (PC: tipo)
+    if (d.cliente) doc.text(d.cliente, 15, y);
+    if (esLaptop) {
+        if (d.marca) doc.text(d.marca, xDerecha, y, aRight);
+    } else {
+        if (d.tipo) doc.text(d.tipo, xDerecha, y, aRight);
+    }
+    y += 6;
+
+    // Fila 2: DNI | (Laptop: modelo) / (PC: SO)
+    if (d.dni) doc.text("DNI: " + d.dni, 15, y);
+    if (esLaptop) {
+        if (d.modelo) doc.text(d.modelo, xDerecha, y, aRight);
+    } else {
+        if (d.so) doc.text(d.so, xDerecha, y, aRight);
+    }
+    y += 6;
+
+    // Email (solo si existe)
+    if (d.email) {
+        doc.text("Correo: " + d.email, 15, y);
+        y += 6;
+    }
+
+    // Teléfono (solo si existe)
+    if (d.tel) {
+        doc.text("Tel: " + d.tel, 15, y);
+        y += 6;
+    }
+
+    // RUC del cliente (OPCIONAL)
+    if (d.ruc) {
+        doc.text("RUC: " + d.ruc, 15, y);
+        y += 6;
+    }
+
+    y += 4;
+    doc.line(15, y, 195, y);
+    y += 10;
+
+    // ===== SERVICIOS =====
+    doc.setFont("helvetica", "bold");
+    doc.text("DESCRIPCIÓN DE SERVICIOS", 15, y);
+    y += 6;
+
+    doc.setFillColor(...azulTecnologico);
+    doc.roundedRect(15, y, 180, 8, 4, 4, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.text("SERVICIO", 20, y + 5.5);
+    doc.text("MONTO", xPrecios, y + 5.5, aRight);
+    y += 12;
+
+    doc.setTextColor(...azulProfundo);
+    doc.setFont("helvetica", "normal");
+    let subtotal = 0;
+    d.servicios.forEach(s => {
+        doc.text(s.nombre, 20, y);
+        const precio = parseFloat(s.precio) || 0;
+        doc.text(`S/. ${precio.toFixed(2)}`, xPrecios, y, aRight);
+        subtotal += precio;
+        y += 7;
+    });
+    y += 5;
+
+    // ===== TOTALES =====
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Subtotal", xLabel, y);
+    doc.text(`S/. ${subtotal.toFixed(2)}`, xPrecios, y, aRight);
+    y += 6;
+
+    const igv = subtotal * 0.18;
+    doc.text("IGV (18%)", xLabel, y);
+    doc.text(`S/. ${igv.toFixed(2)}`, xPrecios, y, aRight);
+    y += 8;
+
+    doc.setDrawColor(200);
+    doc.line(xLabel, y, 195, y);
+    y += 7;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.setTextColor(...azulProfundo);
+    doc.text("TOTAL:", xLabel, y);
+    doc.setTextColor(...azulTecnologico);
+    doc.text(`S/. ${(subtotal + igv).toFixed(2)}`, xPrecios, y, aRight);
+
+    // ===== FOOTER =====
+    y = 260;
+    doc.setTextColor(...azulProfundo);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Medios de pago", 15, y);
+    doc.text("Fecha de vencimiento", xDerecha, y, aRight);
+    y += 6;
+
+    doc.setFont("helvetica", "normal");
+    doc.text("Cuenta: 38098136788029", 15, y);
+    // ✅ Fecha de vencimiento calculada: emisión + 7 días
+    doc.text(d.fechaVencimiento, xDerecha, y, aRight);
+    y += 5;
+    doc.text("CCI: 00238019813678802941", 15, y);
+    y += 5;
+    doc.text("Yape: 922 893 416", 15, y);
+    y += 5;
+    doc.text("Titular: César Raúl Morales Ticona", 15, y);
+
+    doc.save(`Cotizacion_${d.codigo}.pdf`);
+};
