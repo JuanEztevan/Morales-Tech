@@ -729,6 +729,19 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   window.tkActualizarEstado = function(select) {
     ALL_BADGES.forEach(cls => select.classList.remove(cls));
     select.classList.add(BADGE_MAP[select.value] || 'dash-badge--default');
+
+    const codigo = select.dataset.id;
+    if (!codigo) return;
+    select.disabled = true;
+    fetch('tickets.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codigo, estado: select.value })
+    })
+      .then(r => r.json())
+      .then(data => { if (!data.success) alert('No se pudo actualizar el estado.'); })
+      .catch(() => alert('Error de conexión al actualizar el estado.'))
+      .finally(() => { select.disabled = false; });
   };
 })();
 
