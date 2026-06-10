@@ -4217,3 +4217,14 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ms-connector--done {
   background: rgba(40, 200, 80, .55);
 }
+
+/* ── Modal éxito: botón secundario fantasma ── */
+.dash-modal-box--success .btn-wizard-next[style*="background:transparent"] {
+  font-size: 13px;
+  padding: 10px 20px;
+  opacity: 0.75;
+}
+.dash-modal-box--success .btn-wizard-next[style*="background:transparent"]:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.06) !important;
+}
