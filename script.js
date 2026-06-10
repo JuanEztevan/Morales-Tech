@@ -1037,9 +1037,33 @@ window.ntkGenerarPDF = function() {
     }
     const btn  = evt.target.closest('button');
     const orig = btn.innerHTML;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><polyline points="20 6 9 17 4 12"/></svg> Guardado';
-    btn.style.background = 'linear-gradient(135deg,#1a7a4a,#2ecc71)';
-    setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 1800);
+    btn.disabled = true;
+
+    const idNum = parseInt(id);
+    if (!isNaN(idNum)) {
+      fetch('inventario.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'actualizar_stock', id: idNum, stock: qty })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><polyline points="20 6 9 17 4 12"/></svg> Guardado';
+            btn.style.background = 'linear-gradient(135deg,#1a7a4a,#2ecc71)';
+            invActualizarKPIs();
+          } else {
+            btn.innerHTML = 'Error';
+            btn.style.background = '#c0392b';
+          }
+        })
+        .catch(() => { btn.innerHTML = 'Error'; btn.style.background = '#c0392b'; })
+        .finally(() => { setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; btn.disabled = false; }, 1800); });
+    } else {
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><polyline points="20 6 9 17 4 12"/></svg> Guardado';
+      btn.style.background = 'linear-gradient(135deg,#1a7a4a,#2ecc71)';
+      setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; btn.disabled = false; }, 1800);
+    }
   };
 
   /* ── Filtros y búsqueda ── */
@@ -1103,7 +1127,7 @@ window.ntkGenerarPDF = function() {
   window.invCerrarOverlay = function(e) { if (e.target === document.getElementById('inv-modal-overlay')) invCerrarModal(); };
 
   function invLimpiarModal() {
-    ['inv-m-nombre', 'inv-m-precio', 'inv-m-stock'].forEach(id => {
+    ['inv-m-nombre', 'inv-m-precio', 'inv-m-stock', 'inv-m-stock-min'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
     const sel = document.getElementById('inv-m-categoria');
@@ -1124,50 +1148,88 @@ window.ntkGenerarPDF = function() {
   };
 
   window.invGuardarNuevo = function() {
-    const nombre = document.getElementById('inv-m-nombre')?.value.trim()   || '';
-    const cat    = document.getElementById('inv-m-categoria')?.value        || '';
-    const precio = parseFloat(document.getElementById('inv-m-precio')?.value);
-    const stock  = parseInt(document.getElementById('inv-m-stock')?.value);
+    const nombre    = document.getElementById('inv-m-nombre')?.value.trim()    || '';
+    const cat       = document.getElementById('inv-m-categoria')?.value         || '';
+    const precio    = parseFloat(document.getElementById('inv-m-precio')?.value);
+    const stock     = parseInt(document.getElementById('inv-m-stock')?.value)   || 0;
+    const stockMin  = parseInt(document.getElementById('inv-m-stock-min')?.value) || 0;
 
     if (!nombre)                  { alert('Ingresa el nombre del producto.'); return; }
     if (!cat)                     { alert('Selecciona una categoría.'); return; }
     if (isNaN(precio)||precio<=0) { alert('Ingresa un precio válido.'); return; }
-    if (isNaN(stock) ||stock < 0) { alert('Ingresa un stock válido.'); return; }
 
-    const nuevoId   = 'new-' + Date.now();
-    const catClass  = INV_CAT_CLASS[cat]  || '';
-    const stClass   = stock >= 20 ? 'inv-stock--ok' : stock >= 10 ? 'inv-stock--low' : 'inv-stock--min';
-    const icono     = INV_ICONOS[cat]     || '';
+    const saveBtn = document.querySelector('.inv-btn-save');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando…'; }
 
-    const tr = document.createElement('tr');
-    tr.dataset.cat    = cat;
-    tr.dataset.nombre = nombre.toLowerCase();
-    tr.innerHTML = `
-      <td><div class="inv-prod-cell">
-        <div class="inv-prod-icon">${icono}</div>
-        <div>
-          <div class="inv-prod-name">${nombre}</div>
-          <div class="inv-prod-id">Nuevo</div>
-        </div>
-      </div></td>
-      <td><span class="inv-cat-badge ${catClass}">${cat}</span></td>
-      <td><span class="inv-precio">S/ ${precio.toFixed(2)}</span></td>
-      <td><span class="inv-stock-badge ${stClass}" id="inv-stock-label-${nuevoId}">${stock} uds.</span></td>
-      <td><div class="inv-qty-control">
-        <button class="inv-qty-btn" onclick="invCambiarQty('${nuevoId}',-1)">−</button>
-        <span class="inv-qty-num" id="inv-qty-${nuevoId}">${stock}</span>
-        <button class="inv-qty-btn" onclick="invCambiarQty('${nuevoId}',1)">+</button>
-      </div></td>
-      <td><button class="inv-btn-update" onclick="invGuardarCambio('${nuevoId}', event)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Actualizar
-      </button></td>`;
+    fetch('inventario.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accion: 'nuevo_producto', nombre, categoria: cat, precio, stock, stockMin })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) { alert(data.message || 'No se pudo guardar el producto.'); return; }
 
-    document.getElementById('inv-tbody').appendChild(tr);
-    invCerrarModal();
-    paginaActual = 1;
-    invAplicarFiltros();
+        const realId   = data.id;
+        const catClass = INV_CAT_CLASS[cat] || '';
+        const stClass  = stock >= 20 ? 'inv-stock--ok' : stock >= 10 ? 'inv-stock--low' : 'inv-stock--min';
+        const icono    = INV_ICONOS[cat]    || '';
+
+        const tr = document.createElement('tr');
+        tr.dataset.cat      = cat;
+        tr.dataset.nombre   = nombre.toLowerCase();
+        tr.dataset.precio   = precio;
+        tr.dataset.stockMin = stockMin;
+        tr.innerHTML = `
+          <td><div class="inv-prod-cell">
+            <div class="inv-prod-icon">${icono}</div>
+            <div>
+              <div class="inv-prod-name">${nombre}</div>
+              <div class="inv-prod-id">#${String(realId).padStart(4,'0')}</div>
+            </div>
+          </div></td>
+          <td><span class="inv-cat-badge ${catClass}">${cat}</span></td>
+          <td><span class="inv-precio">S/ ${precio.toFixed(2)}</span></td>
+          <td><span class="inv-stock-badge ${stClass}" id="inv-stock-label-${realId}">${stock} uds.</span></td>
+          <td><div class="inv-qty-control">
+            <button class="inv-qty-btn" onclick="invCambiarQty(${realId},-1)">−</button>
+            <span class="inv-qty-num" id="inv-qty-${realId}">${stock}</span>
+            <button class="inv-qty-btn" onclick="invCambiarQty(${realId},1)">+</button>
+          </div></td>
+          <td><button class="inv-btn-update" onclick="invGuardarCambio(${realId}, event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Actualizar
+          </button></td>`;
+
+        document.getElementById('inv-tbody').appendChild(tr);
+        invActualizarKPIs();
+        invCerrarModal();
+        paginaActual = 1;
+        invAplicarFiltros();
+      })
+      .catch(() => alert('Error de conexión. Inténtalo de nuevo.'))
+      .finally(() => { if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar producto'; } });
   };
+
+  function invActualizarKPIs() {
+    const filas = Array.from(document.querySelectorAll('#inv-tbody tr[data-nombre]'));
+    let unidades = 0, stockBajo = 0, valor = 0;
+    filas.forEach(tr => {
+      const qty      = parseInt(tr.querySelector('.inv-qty-num')?.textContent) || 0;
+      const precio   = parseFloat(tr.dataset.precio)   || 0;
+      const stockMin = parseInt(tr.dataset.stockMin)   || 0;
+      unidades += qty;
+      valor    += qty * precio;
+      if (qty <= stockMin) stockBajo++;
+    });
+    const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const elU = document.getElementById('kpi-unidades');
+    const elS = document.getElementById('kpi-stock-bajo');
+    const elV = document.getElementById('kpi-valor');
+    if (elU) elU.textContent = fmt(unidades);
+    if (elS) elS.textContent = stockBajo;
+    if (elV) elV.textContent = 'S/ ' + fmt(valor);
+  }
 })();
 
 /* ══════════════════════════════════════════
