@@ -911,8 +911,86 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
 
   /* ── Crear ticket ── */
   window.ntkCrearTicket = function() {
-    const modal = document.getElementById('ntk-modal-success');
-    if (modal) { modal.style.opacity = '1'; modal.style.pointerEvents = 'all'; modal.classList.add('show'); }
+    const tipo      = document.getElementById('ntk-tipo-dispositivo')?.value || '';
+    const esLaptop  = tipo === 'Laptop';
+    const marca     = (esLaptop ? document.getElementById('ntk-marca')?.value  : '') || '';
+    const modelo    = (esLaptop ? document.getElementById('ntk-modelo')?.value : '') || '';
+    const serie     = (esLaptop ? document.getElementById('ntk-serie')?.value  : '') || '';
+    const so        = (esLaptop
+      ? document.getElementById('ntk-so-laptop')?.value
+      : document.getElementById('ntk-so-pc')?.value) || '';
+    const observaciones = document.getElementById('ntk-observaciones')?.value || '';
+    const nombre    = document.getElementById('ntk-nombre-cliente')?.value || '';
+    const dni       = document.getElementById('ntk-dni')?.value || '';
+    const ruc       = document.getElementById('ntk-ruc')?.value || '';
+    const telefono  = document.getElementById('ntk-telefono')?.value || '';
+    const correo    = document.getElementById('ntk-correo')?.value || '';
+
+    const serviciosLocal = [];
+    const base = document.querySelector('input[name="ntk_srv_base"]:checked');
+    if (base) serviciosLocal.push({ nombre: base.dataset.nombre, precio: parseFloat(base.value) });
+    document.querySelectorAll('#ntk-add-panel input[type="checkbox"]:checked').forEach(cb => {
+      serviciosLocal.push({ nombre: cb.dataset.nombre, precio: parseFloat(cb.value) });
+    });
+
+    const hoy = new Date();
+    const fecha = hoy.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+    const vencimiento = new Date(hoy);
+    vencimiento.setDate(vencimiento.getDate() + 7);
+    const fechaVencimiento = vencimiento.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    window._ntkPdfData = {
+      tipo, marca, modelo, serie, so, observaciones,
+      servicios: serviciosLocal,
+      cliente: nombre,
+      email: correo,
+      dni,
+      tel: telefono,
+      ruc,
+      fecha,
+      fechaVencimiento,
+      codigo: null, subtotal: null, igv: null, total: null,
+    };
+
+    const btn = document.querySelector('.ntk-btn-finish');
+    const textoOriginal = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = 'Guardando…'; }
+
+    function restaurarBoton() {
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = textoOriginal; }
+    }
+
+    fetch('nuevo_ticket.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre, dni, ruc, telefono, correo,
+        tipo, marca, modelo, serie, so, observaciones,
+        servicios: serviciosLocal.map(s => ({ nombre: s.nombre, precio: s.precio }))
+      })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          if (window._ntkPdfData) {
+            window._ntkPdfData.codigo   = data.codigo;
+            window._ntkPdfData.subtotal = data.subtotal;
+            window._ntkPdfData.igv      = data.igv;
+            window._ntkPdfData.total    = data.total;
+          }
+          const codigoEl = document.getElementById('ntk-modal-codigo');
+          if (codigoEl) codigoEl.textContent = '#' + data.codigo;
+          const modal = document.getElementById('ntk-modal-success');
+          if (modal) { modal.style.opacity = '1'; modal.style.pointerEvents = 'all'; modal.classList.add('show'); }
+        } else {
+          alert(data.message || 'No se pudo registrar el ticket. Inténtalo de nuevo.');
+          restaurarBoton();
+        }
+      })
+      .catch(() => {
+        alert('Error de conexión. Inténtalo de nuevo.');
+        restaurarBoton();
+      });
   };
 
   /* ── Solo números en campos del wizard ── */
@@ -921,6 +999,13 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     if (el) el.addEventListener('input', function() { this.value = this.value.replace(/\D/g, ''); });
   });
 })();
+
+/* ── Admin: PDF de cotización para nuevo_ticket.php ── */
+window._ntkPdfData = null;
+window.ntkGenerarPDF = function() {
+  window._pdfData = window._ntkPdfData;
+  if (typeof generarPDF === 'function') generarPDF();
+};
 
 /* ══════════════════════════════════════════
    INVENTARIO.PHP — filtros, stock y modal
