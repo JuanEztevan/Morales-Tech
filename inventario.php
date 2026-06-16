@@ -1,17 +1,6 @@
 <?php
-session_start();
+require_once 'admin_protect.php';
 require_once 'conexion.php';
-
-if (!isset($_SESSION['idAdmin'])) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        http_response_code(401);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['success' => false, 'message' => 'No autorizado.']);
-        exit;
-    }
-    header("Location: login_staff.php");
-    exit;
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
@@ -109,6 +98,8 @@ function inv_stock_class($stockActual, $stockMinimo) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
 </head>
 <body class="admin-body admin-body--dashboard">
 
