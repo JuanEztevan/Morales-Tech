@@ -1,17 +1,6 @@
 <?php
-session_start();
+require_once 'client_protect.php';
 require_once 'conexion.php';
-
-if (!isset($_SESSION['idCliente'])) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        http_response_code(401);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['success' => false, 'message' => 'Debes iniciar sesión para enviar una solicitud.']);
-        exit;
-    }
-    header("Location: login.php");
-    exit;
-}
 
 /* Envío del wizard "Nueva cotización": guarda equipo + cotización + servicios + ticket */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -229,6 +218,8 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
   <style>
     .eq-saved-card {
       display:inline-flex;flex-direction:column;padding:10px 16px;border-radius:10px;
@@ -255,7 +246,7 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
 <nav class="navbar dash-navbar" id="navbar">
   <div class="dash-container">
     <div class="nav-inner">
-      <a href="index.php" class="nav-logo">
+      <a href="inicio_clientes.php" class="nav-logo">
         <img src="img/logo-horizontal-blanco.png" alt="Morales Tech"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="nav-logo-fallback">Morales<span>Tech</span></div>
@@ -289,7 +280,7 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
         </ul>
       </div>
       <div class="nav-right">
-        <a href="login.php" class="btn-salir">
+        <a href="logout_cliente.php" class="btn-salir">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           Salir
         </a>
