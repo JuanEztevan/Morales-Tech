@@ -429,6 +429,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
 
   window.goStep = function(n) {
     if (n > currentStep + 1 || n < 1) return;
+    if (n > currentStep && !validateStep(currentStep)) return;
     document.getElementById('step-' + currentStep).classList.remove('active');
     document.getElementById('nav-'  + currentStep).classList.remove('active');
     if (n > currentStep) document.getElementById('nav-' + currentStep).classList.add('done');
@@ -458,13 +459,41 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  function showToast(msg) {
+    var t = document.getElementById('wiz-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'wiz-toast';
+      t.style.cssText = [
+        'position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px)',
+        'background:#1a1f35;border:1.5px solid rgba(248,113,113,.35)',
+        'color:#f87171;padding:13px 22px;border-radius:12px',
+        'font-size:14px;font-family:inherit;z-index:9999',
+        'opacity:0;transition:opacity .22s,transform .22s',
+        'pointer-events:none;white-space:nowrap',
+        'box-shadow:0 6px 28px rgba(0,0,0,.5)',
+        'display:flex;align-items:center;gap:10px'
+      ].join(';');
+      t.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span></span>';
+      document.body.appendChild(t);
+    }
+    t.querySelector('span').textContent = msg;
+    t.style.opacity = '1';
+    t.style.transform = 'translateX(-50%) translateY(0)';
+    clearTimeout(t._hide);
+    t._hide = setTimeout(function() {
+      t.style.opacity = '0';
+      t.style.transform = 'translateX(-50%) translateY(16px)';
+    }, 3000);
+  }
+
   function validateStep(n) {
     if (n === 1 && !document.getElementById('tipo_dispositivo').value) {
-      alert('Por favor selecciona el tipo de dispositivo.');
+      showToast('Selecciona el tipo de dispositivo para continuar.');
       return false;
     }
     if (n === 2 && !document.querySelector('input[name="srv_base"]:checked')) {
-      alert('Por favor selecciona al menos un servicio principal.');
+      showToast('Selecciona al menos un servicio principal para continuar.');
       return false;
     }
     return true;
@@ -592,10 +621,14 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
       if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = textoOriginal; }
     }
 
+    const idEquipoGuardado = parseInt(document.getElementById('id_equipo_guardado')?.value || '0') || 0;
+    const payload = { tipo, marca, modelo, serie, so, observaciones, servicios };
+    if (idEquipoGuardado > 0) payload.idEquipo = idEquipoGuardado;
+
     fetch('nuevo_ticket_cliente.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo, marca, modelo, serie, so, observaciones, servicios })
+      body: JSON.stringify(payload)
     })
       .then(r => r.json())
       .then(data => {
@@ -617,6 +650,11 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
       });
   };
 })();
+
+/* ══════════════════════════════════════════
+   EQUIPOS GUARDADOS — nuevo_ticket_cliente.php
+   Preselección manejada server-side via ?idEquipo=N
+   ══════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════
    ADMIN PORTAL — login_staff & registro_staff
