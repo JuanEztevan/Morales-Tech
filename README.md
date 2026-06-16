@@ -30,10 +30,11 @@ Optimizar la gestión del soporte técnico mediante un sistema web que permita e
 ### Objetivos Específicos (SMART)
 - Implementar un sistema de gestión de tickets con registro, seguimiento y control de estados (Recibido, Diagnóstico, Reparación, Completado).
 - Desarrollar dos portales diferenciados (clientes y administradores) con autenticación segura basada en roles.
-- Diseñar e implementar una base de datos relacional con más de 10 tablas interconectadas que gestionen clientes, equipos, servicios, cotizaciones, tickets e inventario.
+- Diseñar e implementar una base de datos relacional con más de 10 tablas interconectadas para la gestión integral del sistema.
 - Implementar un sistema de cotización que permita asociar múltiples servicios a un equipo, generando automáticamente subtotal, IGV y total.
 - Desarrollar un módulo de historial de equipos por cliente, permitiendo visualizar servicios realizados y seguimiento técnico.
 - Implementar un sistema de recuperación de contraseña mediante validación de preguntas de seguridad.
+- Diseñar e implementar una interfaz web responsive que se adapte a dispositivos móviles, tablets y escritorios, asegurando su correcta visualización en al menos tres resoluciones durante el desarrollo del sistema.
 
 ## Stack Tecnológico
 
@@ -133,6 +134,10 @@ Morales-Tech/
 │   ├── database/
 │   │   ├── script.sql
 ├── img/
+├── admin_protect.php
+├── client_protect.php
+├── logout.php
+├── logout_cliente.php
 ├── conexion.php
 ├── consulta_tickets.php
 ├── dashboard.php
@@ -191,6 +196,11 @@ Morales-Tech/
   - Validación mediante correo o DNI.
   - Verificación de respuestas a preguntas de seguridad.
   - Restablecimiento de contraseña solo si todas las respuestas son correctas.
+- Protección de rutas mediante archivos intermedios (`admin_protect.php` y `client_protect.php`).
+- Restricción de acceso directo por URL a páginas privadas sin autenticación previa.
+- Implementación de cierre de sesión seguro (logout) con destrucción completa de la sesión.
+- Redirección automática al login en caso de sesión no válida o expirada.
+- Control de acceso por roles con validación continua de sesión.
 
 ## Pruebas Funcionales y de Seguridad
 Se realizaron 10 casos de prueba funcionales sobre los módulos principales del sistema, documentados y ejecutados en TestRail.
