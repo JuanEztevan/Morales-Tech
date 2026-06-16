@@ -10,7 +10,7 @@ CREATE TABLE CLIENTE (
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     numTelefono VARCHAR(20),
-    numDNI VARCHAR(8),
+    numDNI VARCHAR(8) UNIQUE NOT NULL,
     numRUC VARCHAR(11),
     pregunta1  VARCHAR(255),
     respuesta1 VARCHAR(255),
@@ -27,7 +27,7 @@ CREATE TABLE ADMIN (
     apellidos VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    dni VARCHAR(8) NOT NULL,
+    dni VARCHAR(8) UNIQUE NOT NULL,
     pregunta1  VARCHAR(255),
     respuesta1 VARCHAR(255),
     pregunta2  VARCHAR(255),
@@ -109,7 +109,6 @@ CREATE TABLE COMPONENTE (
     idComponente INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
     categoria VARCHAR(100),
-    codigoSKU VARCHAR(50) UNIQUE,
     stockActual INT NOT NULL DEFAULT 0,
     stockMinimo INT NOT NULL DEFAULT 0,
     precioUnitario DECIMAL(10,2) NOT NULL
@@ -180,3 +179,35 @@ INSERT INTO SERVICIO (nomServicio, tipo, precio) VALUES
     ('Instalación de programas',        'Adicional',  20.00),
     ('Optimización del sistema',        'Adicional',  30.00),
     ('Repotenciación (mano de obra)',   'Adicional',  50.00);
+
+
+-- Eliminación de columna de CodigoSKU en Componente
+ALTER TABLE COMPONENTE
+DROP COLUMN IF EXISTS codigoSKU;
+
+-- Inserts de Componentes básicos
+INSERT INTO componente (nombre, categoria, stockActual, stockMinimo, precioUnitario) VALUES
+
+-- CONSUMIBLES Y LIMPIEZA
+('Alcohol Isopropílico 1L (99%)', 'Consumibles y Limpieza', 20, 5, 25.00),
+('Pasta Térmica Arctic MX-4 4g', 'Consumibles y Limpieza', 15, 5, 35.00),
+('Aire Comprimido 400ml', 'Consumibles y Limpieza', 25, 8, 18.00),
+('Limpiador de Contactos Electrónicos', 'Consumibles y Limpieza', 10, 4, 22.00),
+
+-- HERRAMIENTAS Y KITS
+('Kit Destornilladores 32 en 1', 'Herramientas y Kits', 10, 3, 45.00),
+('Kit Destornilladores de Precisión 115 en 1', 'Herramientas y Kits', 8, 3, 65.00),
+('Multímetro Digital Básico', 'Herramientas y Kits', 5, 2, 55.00),
+('Pulsera Antiestática', 'Herramientas y Kits', 12, 4, 12.00),
+
+-- ALMACENAMIENTO
+('SSD Kingston 480GB SATA', 'Almacenamiento', 10, 3, 110.00),
+('SSD Crucial 1TB SATA', 'Almacenamiento', 6, 2, 210.00),
+('SSD NVMe Kingston 500GB', 'Almacenamiento', 8, 3, 150.00),
+('Memoria USB Kingston 32GB', 'Almacenamiento', 20, 5, 25.00),
+
+-- MEMORIA RAM
+('RAM DDR4 8GB 2666MHz Kingston', 'Memoria RAM', 12, 4, 90.00),
+('RAM DDR4 16GB 3200MHz Kingston', 'Memoria RAM', 8, 3, 160.00),
+('RAM DDR5 16GB 4800MHz Crucial', 'Memoria RAM', 5, 2, 240.00),
+('RAM DDR4 4GB 2400MHz Genérica', 'Memoria RAM', 10, 3, 55.00);
