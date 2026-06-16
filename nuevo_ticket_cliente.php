@@ -1,17 +1,6 @@
 <?php
-session_start();
+require_once 'client_protect.php';
 require_once 'conexion.php';
-
-if (!isset($_SESSION['idCliente'])) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        http_response_code(401);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['success' => false, 'message' => 'Debes iniciar sesión para enviar una solicitud.']);
-        exit;
-    }
-    header("Location: login.php");
-    exit;
-}
 
 /* Envío del wizard "Nueva cotización": guarda equipo + cotización + servicios + ticket */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -23,16 +12,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $idCliente     = (int) $_SESSION['idCliente'];
-    $tipoEquipo    = trim($datos['tipo'] ?? '');
-    $marca         = trim($datos['marca'] ?? '');
-    $modelo        = trim($datos['modelo'] ?? '');
-    $serie         = trim($datos['serie'] ?? '');
-    $so            = trim($datos['so'] ?? '');
-    $observaciones = trim($datos['observaciones'] ?? '');
-    $servicios     = is_array($datos['servicios'] ?? null) ? $datos['servicios'] : [];
+    $idCliente         = (int) $_SESSION['idCliente'];
+    // Si JS envió idEquipo (aunque sea 0), usarlo directamente.
+    // Si la clave no existe (JS antiguo en caché), usar la sesión PHP como fallback.
+    if (array_key_exists('idEquipo', $datos)) {
+        $idEquipoExistente = (int) $datos['idEquipo'];
+    } else {
+        $idEquipoExistente = (int) ($_SESSION['nvc_idEquipo'] ?? 0);
+    }
+    $tipoEquipo        = trim($datos['tipo'] ?? '');
+    $marca              = trim($datos['marca'] ?? '');
+    $modelo             = trim($datos['modelo'] ?? '');
+    $serie              = trim($datos['serie'] ?? '');
+    $so                 = trim($datos['so'] ?? '');
+    $observaciones      = trim($datos['observaciones'] ?? '');
+    $servicios          = is_array($datos['servicios'] ?? null) ? $datos['servicios'] : [];
 
-    if ($tipoEquipo === '' || !$servicios) {
+    if (($idEquipoExistente === 0 && $tipoEquipo === '') || !$servicios) {
         echo json_encode(['success' => false, 'message' => 'Selecciona el tipo de equipo y al menos un servicio.']);
         exit;
     }
@@ -56,16 +52,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ok = true;
     $codigo = '';
     $idCotizacion = 0;
+    $idEquipo = 0;
 
-    // 1. EQUIPO
-    $stmt = $conn->prepare(
-        "INSERT INTO EQUIPO (idCliente, tipoEquipo, marca, modelo, numSerie, sistemaOperativo, observaciones)
-         VALUES (?, ?, ?, ?, ?, ?, ?)"
-    );
-    $stmt->bind_param("issssss", $idCliente, $tipoEquipo, $marca, $modelo, $serie, $so, $observaciones);
-    $ok = $stmt->execute();
-    $idEquipo = $stmt->insert_id;
-    $stmt->close();
+    // 1. EQUIPO — reusar existente o crear nuevo
+    if ($idEquipoExistente > 0) {
+        $stmtV = $conn->prepare("SELECT idEquipo FROM EQUIPO WHERE idEquipo=? AND idCliente=? LIMIT 1");
+        $stmtV->bind_param("ii", $idEquipoExistente, $idCliente);
+        $stmtV->execute();
+        $validRow = $stmtV->get_result()->fetch_assoc();
+        $stmtV->close();
+        if ($validRow) {
+            $idEquipo = $idEquipoExistente;
+        } else {
+            $conn->rollback();
+            echo json_encode(['success' => false, 'message' => 'Equipo no válido.']);
+            exit;
+        }
+    } else {
+        $stmt = $conn->prepare(
+            "INSERT INTO EQUIPO (idCliente, tipoEquipo, marca, modelo, numSerie, sistemaOperativo, observaciones)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param("issssss", $idCliente, $tipoEquipo, $marca, $modelo, $serie, $so, $observaciones);
+        $ok = $stmt->execute();
+        $idEquipo = $stmt->insert_id;
+        $stmt->close();
+    }
 
     // 2. COTIZACION
     if ($ok) {
@@ -79,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // 3. COTIZACION_SERVICIO (mapea el nombre del servicio a su idServicio)
+    // 3. COTIZACION_SERVICIO
     if ($ok) {
         $stmtServicio = $conn->prepare("SELECT idServicio FROM SERVICIO WHERE nomServicio = ? LIMIT 1");
         $stmtRel      = $conn->prepare("INSERT INTO COTIZACION_SERVICIO (idCotizacion, idServicio) VALUES (?, ?)");
@@ -118,7 +130,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($ok) {
         $conn->commit();
-        echo json_encode(['success' => true, 'codigo' => $codigo], JSON_UNESCAPED_UNICODE);
+        unset($_SESSION['nvc_idEquipo']); // limpiar selección guardada en sesión
+        echo json_encode([
+            'success'   => true,
+            'codigo'    => $codigo,
+            'subtotal'  => $subtotal,
+            'igv'       => $igv,
+            'total'     => $total,
+        ], JSON_UNESCAPED_UNICODE);
     } else {
         $conn->rollback();
         echo json_encode(['success' => false, 'message' => 'No se pudo guardar la solicitud. Inténtalo de nuevo.']);
@@ -126,8 +145,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$nombre_cliente = trim($_SESSION['nombres'] . ' ' . $_SESSION['apellidos']);
-$email_cliente  = $_SESSION['email'];
+$nombre_cliente   = trim(($_SESSION['nombres'] ?? '') . ' ' . ($_SESSION['apellidos'] ?? ''));
+$email_cliente    = $_SESSION['email'] ?? '';
+$dni_cliente      = $_SESSION['numDNI'] ?? '';
+$telefono_cliente = $_SESSION['numTelefono'] ?? '';
+$ruc_cliente      = $_SESSION['numRUC'] ?? '';
+
+$idC = (int) $_SESSION['idCliente'];
+
+// Fallback: si DNI o Teléfono no están en SESSION, los traemos de la BD
+if ($dni_cliente === '' || $telefono_cliente === '') {
+    $stmtC = $conn->prepare("SELECT numDNI, numTelefono, numRUC FROM CLIENTE WHERE idCliente = ? LIMIT 1");
+    $stmtC->bind_param("i", $idC);
+    $stmtC->execute();
+    $rowC = $stmtC->get_result()->fetch_assoc();
+    $stmtC->close();
+    if ($rowC) {
+        if ($dni_cliente === '')      $dni_cliente      = $rowC['numDNI']      ?? '';
+        if ($telefono_cliente === '') $telefono_cliente = $rowC['numTelefono'] ?? '';
+        if ($ruc_cliente === '')      $ruc_cliente      = $rowC['numRUC']      ?? '';
+    }
+}
+
+// Equipos guardados del cliente
+$resEq = $conn->prepare("SELECT idEquipo, tipoEquipo, marca, modelo, numSerie, sistemaOperativo FROM EQUIPO WHERE idCliente = ? ORDER BY idEquipo DESC LIMIT 10");
+$resEq->bind_param("i", $idC);
+$resEq->execute();
+$equipos_guardados = $resEq->get_result()->fetch_all(MYSQLI_ASSOC);
+$resEq->close();
+
+// Equipo preseleccionado via GET ?idEquipo=N
+$idEquipoPresel = 0;
+$equipoPresel   = null;
+if (!empty($_GET['idEquipo'])) {
+    $idEquipoPresel = (int) $_GET['idEquipo'];
+    $stmtP = $conn->prepare(
+        "SELECT idEquipo, tipoEquipo, marca, modelo, numSerie, sistemaOperativo
+         FROM EQUIPO WHERE idEquipo = ? AND idCliente = ? LIMIT 1"
+    );
+    $stmtP->bind_param("ii", $idEquipoPresel, $idC);
+    $stmtP->execute();
+    $equipoPresel = $stmtP->get_result()->fetch_assoc();
+    $stmtP->close();
+    if (!$equipoPresel) $idEquipoPresel = 0;
+}
+
+// Sincronizar sesión con la selección actual
+if ($idEquipoPresel > 0) {
+    $_SESSION['nvc_idEquipo'] = $idEquipoPresel; // equipo seleccionado via URL
+} else {
+    unset($_SESSION['nvc_idEquipo']); // nuevo ticket sin preselección
+}
+
+$esNuevo    = !empty($_GET['nuevo']);
+$preselP    = $idEquipoPresel > 0;
+$tipoP      = $equipoPresel['tipoEquipo']       ?? '';
+$marcaP     = $equipoPresel['marca']            ?? '';
+$modeloP    = $equipoPresel['modelo']           ?? '';
+$serieP     = $equipoPresel['numSerie']         ?? '';
+$soP        = $equipoPresel['sistemaOperativo'] ?? '';
+$isLaptopP  = $tipoP === 'Laptop';
+$isPcP      = $tipoP !== '' && !$isLaptopP;
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -139,6 +218,27 @@ $email_cliente  = $_SESSION['email'];
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
+  <style>
+    .eq-saved-card {
+      display:inline-flex;flex-direction:column;padding:10px 16px;border-radius:10px;
+      font-family:inherit;cursor:pointer;transition:border .2s,background .2s;
+      border:1.5px solid rgba(255,255,255,0.12);background:#1a1f35;color:#e2e6f3;
+      text-decoration:none;
+    }
+    .eq-saved-card--sel {
+      border-color:#4f8ef7;background:rgba(79,142,247,0.14);color:#4f8ef7;
+    }
+    .eq-saved-card--new {
+      border:1.5px dashed rgba(255,255,255,0.22);background:transparent;color:#8a90a8;
+      flex-direction:row;align-items:center;
+    }
+    .eq-saved-card--new.eq-saved-card--sel {
+      border:1.5px solid #4f8ef7;background:rgba(79,142,247,0.14);color:#4f8ef7;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -146,7 +246,7 @@ $email_cliente  = $_SESSION['email'];
 <nav class="navbar dash-navbar" id="navbar">
   <div class="dash-container">
     <div class="nav-inner">
-      <a href="index.php" class="nav-logo">
+      <a href="inicio_clientes.php" class="nav-logo">
         <img src="img/logo-horizontal-blanco.png" alt="Morales Tech"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="nav-logo-fallback">Morales<span>Tech</span></div>
@@ -180,7 +280,7 @@ $email_cliente  = $_SESSION['email'];
         </ul>
       </div>
       <div class="nav-right">
-        <a href="login.php" class="btn-salir">
+        <a href="logout_cliente.php" class="btn-salir">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           Salir
         </a>
@@ -287,59 +387,95 @@ $email_cliente  = $_SESSION['email'];
                 </div>
               </div>
               <div class="wizard-step-card__body">
+                <input type="hidden" id="id_equipo_guardado" value="<?= $idEquipoPresel ?>">
+
+                <?php if (!empty($equipos_guardados)): ?>
+                <div class="wizard-section-sm">Mis equipos registrados</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;" id="eq-cards-wrap">
+                  <?php foreach ($equipos_guardados as $eq):
+                    $selCard = ((int)$eq['idEquipo'] === $idEquipoPresel);
+                    $esL     = ($eq['tipoEquipo'] ?? '') === 'Laptop';
+                    $lbl     = trim(($eq['marca'] ?? '') . ' ' . ($eq['modelo'] ?? ''));
+                    if (!$lbl) $lbl = $esL ? 'Laptop' : 'PC de escritorio';
+                    $sub     = $eq['sistemaOperativo'] ?: ($esL ? 'Laptop' : 'PC de escritorio');
+                  ?>
+                  <a href="?idEquipo=<?= (int)$eq['idEquipo'] ?>"
+                     class="eq-saved-card<?= $selCard ? ' eq-saved-card--sel' : '' ?>">
+                    <span style="font-weight:600;font-size:13px;"><?= htmlspecialchars($lbl) ?></span>
+                    <span style="font-size:11px;opacity:.65;margin-top:2px;"><?= htmlspecialchars($sub) ?></span>
+                  </a>
+                  <?php endforeach; ?>
+                  <a href="nuevo_ticket_cliente.php?nuevo=1"
+                     class="eq-saved-card<?= $esNuevo ? ' eq-saved-card--sel' : ' eq-saved-card--new' ?>">
+                    + Nuevo equipo
+                  </a>
+                </div>
+                <hr class="wizard-divider">
+                <?php endif; ?>
+
+                <div id="device-section" <?= (!$preselP && !$esNuevo && !empty($equipos_guardados)) ? 'style="display:none"' : '' ?>>
                 <div class="wizard-section-sm">Tipo de equipo</div>
                 <div class="device-grid">
-                  <div class="device-opt" onclick="selectDevice(this,'Laptop')" id="opt-laptop">
+                  <div class="device-opt<?= $isLaptopP ? ' selected' : '' ?>"
+                       onclick="<?= $preselP ? '' : "selectDevice(this,'Laptop')" ?>"
+                       id="opt-laptop"<?= $preselP ? ' style="pointer-events:none;opacity:0.85"' : '' ?>>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><polyline points="1 21 23 21"/></svg>
                     <div class="device-opt__label">Laptop</div>
                   </div>
-                  <div class="device-opt" onclick="selectDevice(this,'PC')" id="opt-pc">
+                  <div class="device-opt<?= $isPcP ? ' selected' : '' ?>"
+                       onclick="<?= $preselP ? '' : "selectDevice(this,'PC')" ?>"
+                       id="opt-pc"<?= $preselP ? ' style="pointer-events:none;opacity:0.85"' : '' ?>>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                     <div class="device-opt__label">PC de escritorio</div>
                   </div>
                 </div>
-                <input type="hidden" id="tipo_dispositivo">
+                <input type="hidden" id="tipo_dispositivo" value="<?= htmlspecialchars($tipoP) ?>">
 
                 <!-- Campos laptop -->
-                <div class="wizard-extra-fields form-grid-2col" id="extra-laptop">
+                <div class="wizard-extra-fields form-grid-2col<?= $isLaptopP ? ' visible' : '' ?>" id="extra-laptop">
                   <div class="wizard-form-group">
                     <label>Marca</label>
-                    <input type="text" id="marca" placeholder="HP, Apple, ASUS…">
+                    <input type="text" id="marca" placeholder="HP, Apple, ASUS…"
+                           value="<?= htmlspecialchars($marcaP) ?>"<?= $preselP ? ' disabled style="opacity:.7;cursor:not-allowed"' : '' ?>>
                   </div>
                   <div class="wizard-form-group">
                     <label>Modelo <span class="wizard-label-opt">Opcional</span></label>
-                    <input type="text" id="modelo" placeholder="Ej. Pavilion 15">
+                    <input type="text" id="modelo" placeholder="Ej. Pavilion 15"
+                           value="<?= htmlspecialchars($modeloP) ?>"<?= $preselP ? ' disabled style="opacity:.7;cursor:not-allowed"' : '' ?>>
                   </div>
                   <div class="wizard-form-group">
                     <label>N.° de serie <span class="wizard-label-opt">Opcional</span></label>
-                    <input type="text" id="serie" placeholder="Ej. 5CD1234XYZ">
+                    <input type="text" id="serie" placeholder="Ej. 5CD1234XYZ"
+                           value="<?= htmlspecialchars($serieP) ?>"<?= $preselP ? ' disabled style="opacity:.7;cursor:not-allowed"' : '' ?>>
                   </div>
                   <div class="wizard-form-group">
                     <label>Sistema operativo</label>
-                    <select id="so-laptop">
+                    <select id="so-laptop"<?= $preselP ? ' disabled style="opacity:.7;cursor:not-allowed"' : '' ?>>
                       <option value="">Seleccionar…</option>
-                      <option>Windows 11</option>
-                      <option>Windows 10</option>
-                      <option>macOS</option>
-                      <option>Linux</option>
-                      <option>Sin SO</option>
+                      <option<?= $soP === 'Windows 11' ? ' selected' : '' ?>>Windows 11</option>
+                      <option<?= $soP === 'Windows 10' ? ' selected' : '' ?>>Windows 10</option>
+                      <option<?= $soP === 'macOS'      ? ' selected' : '' ?>>macOS</option>
+                      <option<?= $soP === 'Linux'      ? ' selected' : '' ?>>Linux</option>
+                      <option<?= $soP === 'Sin SO'     ? ' selected' : '' ?>>Sin SO</option>
                     </select>
                   </div>
                 </div>
 
                 <!-- Campos PC -->
-                <div class="wizard-extra-fields" id="extra-pc" style="margin-top:18px;">
+                <div class="wizard-extra-fields<?= $isPcP ? ' visible' : '' ?>" id="extra-pc" style="margin-top:18px;">
                   <div class="wizard-form-group" style="max-width:260px;">
                     <label>Sistema operativo</label>
-                    <select id="so-pc">
+                    <select id="so-pc"<?= $preselP ? ' disabled style="opacity:.7;cursor:not-allowed"' : '' ?>>
                       <option value="">Seleccionar…</option>
-                      <option>Windows 11</option>
-                      <option>Windows 10</option>
-                      <option>Linux</option>
-                      <option>Sin SO</option>
+                      <option<?= $soP === 'Windows 11' ? ' selected' : '' ?>>Windows 11</option>
+                      <option<?= $soP === 'Windows 10' ? ' selected' : '' ?>>Windows 10</option>
+                      <option<?= $soP === 'Linux'      ? ' selected' : '' ?>>Linux</option>
+                      <option<?= $soP === 'Sin SO'     ? ' selected' : '' ?>>Sin SO</option>
                     </select>
                   </div>
                 </div>
+
+                </div><!-- /device-section -->
 
                 <hr class="wizard-divider">
                 <div class="wizard-form-group">
@@ -486,10 +622,16 @@ $email_cliente  = $_SESSION['email'];
     </div>
     <div class="dash-modal-success-title">¡Solicitud enviada!</div>
     <div class="dash-modal-success-sub">Tu cotización ha sido enviada correctamente. Pronto nos pondremos en contacto contigo.</div>
-    <button class="btn-wizard-next" onclick="window.location.href='tickets_cliente.php'" style="margin-inline:auto;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
-      Ver mis tickets
-    </button>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center;width:100%;">
+      <button class="btn-wizard-next" id="btn-descargar-pdf" onclick="generarPDF()" style="margin-inline:auto;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar Cotización PDF
+      </button>
+      <button class="btn-wizard-next" onclick="window.location.href='tickets_cliente.php'" style="margin-inline:auto;background:transparent;border:1.5px solid rgba(255,255,255,0.12);color:#9aa2bf;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+        Ver mis tickets
+      </button>
+    </div>
   </div>
 </div>
 
@@ -502,7 +644,10 @@ $email_cliente  = $_SESSION['email'];
 <script>
   const CLIENTE_NOMBRE = '<?= htmlspecialchars($nombre_cliente) ?>';
   const CLIENTE_EMAIL  = '<?= htmlspecialchars($email_cliente) ?>';
+  const CLIENTE_DNI    = '<?= htmlspecialchars($dni_cliente) ?>';
+  const CLIENTE_TEL    = '<?= htmlspecialchars($telefono_cliente) ?>';
+  const CLIENTE_RUC    = '<?= htmlspecialchars($ruc_cliente) ?>';
 </script>
-<script src="script.js" defer></script>
+<script src="script.js?v=<?= filemtime('script.js') ?>" defer></script>
 </body>
 </html>

@@ -1,18 +1,114 @@
 <?php
-// session_start();
-// include("includes/auth.php");
-$nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Juan';
-$rol_usuario    = 'Trabajador';
+require_once 'admin_protect.php';
+require_once 'conexion.php';
+
+// Admin header
+$stmt = $conn->prepare("SELECT nombres, apellidos FROM ADMIN WHERE idAdmin=? LIMIT 1");
+$stmt->bind_param("i", $_SESSION['idAdmin']);
+$stmt->execute();
+$adm = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+$nombre_usuario = $adm ? $adm['nombres'] . ' ' . $adm['apellidos'] : 'Admin';
+$rol_usuario    = 'Administrador';
 $partes         = explode(' ', trim($nombre_usuario));
 $inicial        = strtoupper(substr($partes[0], 0, 1));
 $nombre_corto   = $partes[0];
 
-$ventas = [
-    ["id"=>"VT-0041","fecha"=>"2025-05-20","cliente"=>"Valeria Ramírez", "ticket"=>"MT-8842","servicio"=>"Mantenimiento correctivo",     "productos"=>"SSD 512GB NVMe",              "total"=>355.00,"metodo"=>"Yape"],
-    ["id"=>"VT-0042","fecha"=>"2025-05-21","cliente"=>"Andrés Ochante",  "ticket"=>"MT-8843","servicio"=>"Repotenciación (mano de obra)","productos"=>"—",                           "total"=>50.00, "metodo"=>"Transferencia"],
-    ["id"=>"VT-0043","fecha"=>"2025-05-22","cliente"=>"Diana Calderón",  "ticket"=>"MT-8844","servicio"=>"Diagnóstico",                  "productos"=>"RAM DDR4 16GB",               "total"=>175.00,"metodo"=>"Yape"],
-    ["id"=>"VT-0044","fecha"=>"2025-05-22","cliente"=>"Brenda Benites",  "ticket"=>null,     "servicio"=>"—",                           "productos"=>"Kit Destornilladores 128 en 1","total"=>95.00, "metodo"=>"Efectivo"],
+// KPIs — mes actual
+$kpi = $conn->query("
+    SELECT COUNT(*) AS cnt,
+           COALESCE(SUM(total),0) AS sum_total,
+           COALESCE(AVG(total),0) AS avg_total,
+           COUNT(DISTINCT COALESCE(nombreCliente,'')) AS clientes
+    FROM VENTA
+    WHERE YEAR(fechaVenta)=YEAR(NOW()) AND MONTH(fechaVenta)=MONTH(NOW())
+")->fetch_assoc();
+$ingresos_mes    = (float)$kpi['sum_total'];
+$ventas_mes      = (int)$kpi['cnt'];
+$ticket_promedio = (float)$kpi['avg_total'];
+$clientes_mes    = (int)$kpi['clientes'];
+
+// KPIs — mes anterior (para % cambio)
+$kpi_prev = $conn->query("
+    SELECT COALESCE(SUM(total),0) AS sum_total, COUNT(*) AS cnt
+    FROM VENTA
+    WHERE YEAR(fechaVenta)=YEAR(NOW() - INTERVAL 1 MONTH)
+      AND MONTH(fechaVenta)=MONTH(NOW() - INTERVAL 1 MONTH)
+")->fetch_assoc();
+$ingresos_prev = (float)$kpi_prev['sum_total'];
+$ventas_prev   = (int)$kpi_prev['cnt'];
+
+function pct_change($curr, $prev) {
+    if ($prev == 0) return $curr > 0 ? 100 : 0;
+    return round(($curr - $prev) / $prev * 100, 1);
+}
+$pct_ingresos = pct_change($ingresos_mes, $ingresos_prev);
+$pct_ventas   = pct_change($ventas_mes,   $ventas_prev);
+
+// Métodos de pago — mes actual (para donut)
+$res_metodos = $conn->query("
+    SELECT metodoPago, COUNT(*) AS cnt, COALESCE(SUM(total),0) AS suma
+    FROM VENTA
+    WHERE YEAR(fechaVenta)=YEAR(NOW()) AND MONTH(fechaVenta)=MONTH(NOW())
+    GROUP BY metodoPago ORDER BY suma DESC
+");
+$metodos = [];
+while ($r = $res_metodos->fetch_assoc()) $metodos[] = $r;
+
+// Ventas por mes — para gráfico de barras
+$res_meses = $conn->query("
+    SELECT YEAR(fechaVenta) AS yr, MONTH(fechaVenta) AS mo, SUM(total) AS val
+    FROM VENTA GROUP BY yr, mo ORDER BY yr, mo
+");
+$ventas_por_mes = [];
+while ($r = $res_meses->fetch_assoc())
+    $ventas_por_mes[] = ['yr'=>(int)$r['yr'],'mo'=>(int)$r['mo'],'val'=>round((float)$r['val'],2)];
+
+// Lista de ventas para la tabla
+$res_ventas = $conn->query("
+    SELECT v.idVenta, v.nombreCliente, v.metodoPago,
+           v.total, v.fechaVenta,
+           COALESCE(v.tipo,'ticket') AS tipo,
+           t.codigo AS ticketCodigo,
+           (SELECT GROUP_CONCAT(c.nombre ORDER BY c.nombre SEPARATOR ', ')
+            FROM DETALLE_VENTA dv JOIN COMPONENTE c ON c.idComponente=dv.idComponente
+            WHERE dv.idVenta=v.idVenta) AS productos,
+           (SELECT s.nomServicio
+            FROM COTIZACION_SERVICIO cs JOIN SERVICIO s ON s.idServicio=cs.idServicio
+            WHERE cs.idCotizacion=cot.idCotizacion AND s.tipo='Principal'
+            LIMIT 1) AS servicio
+    FROM VENTA v
+    JOIN TICKET t   ON t.idTicket     = v.idTicket
+    JOIN COTIZACION cot ON cot.idCotizacion = t.idCotizacion
+    ORDER BY v.fechaVenta DESC
+");
+$ventas = [];
+while ($r = $res_ventas->fetch_assoc()) $ventas[] = $r;
+
+// Donut — colores y cálculo de arcos SVG
+$METODO_COLORES = [
+    'Yape'          => '#000019',
+    'Transferencia' => '#1883ED',
+    'Efectivo'      => '#1746EA',
 ];
+$COLOR_DEFAULT = '#6c757d';
+$CIRC          = 276.46; // 2 * pi * 44
+$total_metodos = (float)array_sum(array_column($metodos, 'suma'));
+
+function donut_circles($metodos, $colores, $default_color, $circ, $total) {
+    if ($total <= 0) return '';
+    $out = ''; $offset = 0;
+    foreach ($metodos as $m) {
+        $color = $colores[$m['metodoPago']] ?? $default_color;
+        $arc   = round(((float)$m['suma'] / $total) * $circ, 2);
+        $gap   = round($circ - $arc, 2);
+        $off   = round(-$offset, 2);
+        $out  .= "<circle cx=\"55\" cy=\"55\" r=\"44\" fill=\"none\" stroke=\"{$color}\" stroke-width=\"12\"
+                  stroke-dasharray=\"{$arc} {$gap}\" stroke-dashoffset=\"{$off}\" stroke-linecap=\"round\"/>\n";
+        $offset += $arc;
+    }
+    return $out;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -24,6 +120,8 @@ $ventas = [
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
 </head>
 <body class="admin-body admin-body--dashboard">
 
@@ -85,71 +183,96 @@ $ventas = [
         </div>
       </div>
 
-      <!-- KPI cards — reutiliza .dash-kpi-row -->
+      <!-- KPI cards -->
       <div class="dash-kpi-row" style="margin-bottom:24px;">
+
+        <!-- Ingresos del mes -->
         <div class="dash-kpi-card dash-kpi-card--highlight">
           <div class="dash-kpi-card__top">
             <div class="dash-kpi-card__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
+            <?php if ($pct_ingresos > 0): ?>
             <span class="dash-kpi-badge dash-kpi-badge--up">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-              2.4% vs mes ant.
+              <?= $pct_ingresos ?>% vs mes ant.
             </span>
+            <?php elseif ($pct_ingresos < 0): ?>
+            <span class="dash-kpi-badge dash-kpi-badge--down">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <?= abs($pct_ingresos) ?>% vs mes ant.
+            </span>
+            <?php else: ?>
+            <span class="dash-kpi-badge dash-kpi-badge--neutral">sin cambio</span>
+            <?php endif; ?>
           </div>
           <div class="dash-kpi-card__label">Ingresos del mes</div>
-          <div class="dash-kpi-card__value">S/ 675</div>
-          <div class="dash-kpi-card__sub">Mayo 2025</div>
+          <div class="dash-kpi-card__value">S/ <?= number_format($ingresos_mes, 0, '.', ',') ?></div>
+          <div class="dash-kpi-card__sub"><?= date('F Y') ?></div>
         </div>
+
+        <!-- Ventas este mes -->
         <div class="dash-kpi-card">
           <div class="dash-kpi-card__top">
             <div class="dash-kpi-card__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             </div>
+            <?php if ($pct_ventas > 0): ?>
             <span class="dash-kpi-badge dash-kpi-badge--up">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-              6.2%
+              <?= $pct_ventas ?>%
             </span>
+            <?php elseif ($pct_ventas < 0): ?>
+            <span class="dash-kpi-badge dash-kpi-badge--down">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <?= abs($pct_ventas) ?>%
+            </span>
+            <?php else: ?>
+            <span class="dash-kpi-badge dash-kpi-badge--neutral">sin cambio</span>
+            <?php endif; ?>
           </div>
           <div class="dash-kpi-card__label">Ventas este mes</div>
-          <div class="dash-kpi-card__value">4</div>
+          <div class="dash-kpi-card__value"><?= $ventas_mes ?></div>
           <div class="dash-kpi-card__sub">vs mes anterior</div>
         </div>
+
+        <!-- Ticket promedio -->
         <div class="dash-kpi-card">
           <div class="dash-kpi-card__top">
             <div class="dash-kpi-card__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
             </div>
-            <span class="dash-kpi-badge dash-kpi-badge--neutral">sin cambio</span>
+            <span class="dash-kpi-badge dash-kpi-badge--neutral">este mes</span>
           </div>
           <div class="dash-kpi-card__label">Ticket promedio</div>
-          <div class="dash-kpi-card__value">S/ 168</div>
+          <div class="dash-kpi-card__value">S/ <?= number_format($ticket_promedio, 0, '.', ',') ?></div>
           <div class="dash-kpi-card__sub">por venta</div>
         </div>
+
+        <!-- Clientes atendidos -->
         <div class="dash-kpi-card">
           <div class="dash-kpi-card__top">
             <div class="dash-kpi-card__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-            <span class="dash-kpi-badge dash-kpi-badge--up">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-              0.8%
-            </span>
+            <span class="dash-kpi-badge dash-kpi-badge--neutral">este mes</span>
           </div>
           <div class="dash-kpi-card__label">Clientes atendidos</div>
-          <div class="dash-kpi-card__value">4</div>
+          <div class="dash-kpi-card__value"><?= $clientes_mes ?></div>
           <div class="dash-kpi-card__sub">este mes</div>
         </div>
+
       </div>
 
       <!-- Gráfico + donut -->
       <div class="vt-charts-row">
+
         <!-- Gráfico de barras -->
         <div class="dash-panel-block" style="padding:22px 24px 24px;">
           <div class="vt-chart-header">
             <div>
               <div class="vt-chart-title">Resumen de ventas</div>
-              <div class="vt-chart-sub" id="vt-chart-range-label">Ene 2025 — May 2025</div>
+              <div class="vt-chart-sub" id="vt-chart-range-label"></div>
             </div>
             <div class="vt-period-selector">
               <button class="vt-period-btn active" onclick="vtSetPeriod('mes',this)">Mes</button>
@@ -181,22 +304,33 @@ $ventas = [
             <div class="vt-donut-svg-wrap">
               <svg viewBox="0 0 110 110">
                 <circle cx="55" cy="55" r="44" fill="none" stroke="#e6e9f0" stroke-width="12"/>
-                <circle cx="55" cy="55" r="44" fill="none" stroke="#000019" stroke-width="12"
-                  stroke-dasharray="138.23 276.46" stroke-dashoffset="0" stroke-linecap="round"/>
-                <circle cx="55" cy="55" r="44" fill="none" stroke="#1883ED" stroke-width="12"
-                  stroke-dasharray="69.11 276.46" stroke-dashoffset="-138.23" stroke-linecap="round"/>
-                <circle cx="55" cy="55" r="44" fill="none" stroke="#1746EA" stroke-width="12"
-                  stroke-dasharray="69.11 276.46" stroke-dashoffset="-207.34" stroke-linecap="round"/>
+                <?php if ($total_metodos > 0): ?>
+                <?= donut_circles($metodos, $METODO_COLORES, $COLOR_DEFAULT, $CIRC, $total_metodos) ?>
+                <?php endif; ?>
               </svg>
               <div class="vt-donut-center">
-                <span class="vt-donut-center__val">S/ 675</span>
+                <?php if ($total_metodos > 0): ?>
+                <span class="vt-donut-center__val">S/ <?= number_format($total_metodos, 0, '.', ',') ?></span>
                 <span class="vt-donut-center__lbl">total</span>
+                <?php else: ?>
+                <span class="vt-donut-center__lbl" style="font-size:10px;text-align:center;">Sin ventas<br>este mes</span>
+                <?php endif; ?>
               </div>
             </div>
             <div class="vt-donut-legend">
-              <div class="vt-leg-row"><div class="vt-leg-dot" style="background:#000019"></div><span class="vt-leg-name">Yape</span><span class="vt-leg-val">S/ 530</span><span class="vt-leg-pct">50%</span></div>
-              <div class="vt-leg-row"><div class="vt-leg-dot" style="background:#1883ED"></div><span class="vt-leg-name">Transferencia</span><span class="vt-leg-val">S/ 50</span><span class="vt-leg-pct">25%</span></div>
-              <div class="vt-leg-row"><div class="vt-leg-dot" style="background:#1746EA"></div><span class="vt-leg-name">Efectivo</span><span class="vt-leg-val">S/ 95</span><span class="vt-leg-pct">25%</span></div>
+              <?php if (empty($metodos)): ?>
+              <div class="vt-leg-row" style="color:var(--color-text-muted);font-size:12px;">Sin datos este mes</div>
+              <?php else: foreach ($metodos as $m):
+                $color = $METODO_COLORES[$m['metodoPago']] ?? $COLOR_DEFAULT;
+                $pct   = $total_metodos > 0 ? round(($m['suma'] / $total_metodos) * 100) : 0;
+              ?>
+              <div class="vt-leg-row">
+                <div class="vt-leg-dot" style="background:<?= $color ?>"></div>
+                <span class="vt-leg-name"><?= htmlspecialchars($m['metodoPago']) ?></span>
+                <span class="vt-leg-val">S/ <?= number_format($m['suma'], 0, '.', ',') ?></span>
+                <span class="vt-leg-pct"><?= $pct ?>%</span>
+              </div>
+              <?php endforeach; endif; ?>
             </div>
           </div>
           <a href="nueva_venta.php" class="dash-btn-new" style="width:100%;justify-content:center;margin-top:20px;">
@@ -204,6 +338,7 @@ $ventas = [
             Registrar venta
           </a>
         </div>
+
       </div>
 
       <!-- Filtros y tabla -->
@@ -233,36 +368,48 @@ $ventas = [
               </tr>
             </thead>
             <tbody id="vt-tbody">
-            <?php foreach ($ventas as $v):
-              $tipo = $v['ticket'] ? 'ticket' : 'producto';
+            <?php if (empty($ventas)): ?>
+            <tr><td colspan="6">
+              <div class="dash-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <p>No hay ventas registradas</p>
+                <small>Registra la primera venta usando el botón de arriba</small>
+              </div>
+            </td></tr>
+            <?php else: foreach ($ventas as $v):
+              $vid   = 'VT-' . str_pad($v['idVenta'], 4, '0', STR_PAD_LEFT);
+              $tipo  = $v['tipo'] ?? 'ticket';
+              $svcs  = trim($v['servicio'] ?? '');
+              $prods = trim($v['productos'] ?? '');
             ?>
-            <tr data-tipo="<?= $tipo ?>"
-                data-search="<?= strtolower(htmlspecialchars($v['cliente'].' '.$v['id'])) ?>">
-              <td><span class="dash-admin-t-id">#<?= htmlspecialchars($v['id']) ?></span></td>
+            <tr data-tipo="<?= htmlspecialchars($tipo) ?>"
+                data-search="<?= strtolower(htmlspecialchars(($v['nombreCliente'] ?? '') . ' ' . $vid)) ?>">
+              <td><span class="dash-admin-t-id">#<?= htmlspecialchars($vid) ?></span></td>
               <td>
-                <div class="vt-cliente-nombre"><?= htmlspecialchars($v['cliente']) ?></div>
-                <?php if ($v['ticket']): ?>
-                <div class="vt-cliente-ticket">Ticket #<?= htmlspecialchars($v['ticket']) ?></div>
+                <div class="vt-cliente-nombre"><?= htmlspecialchars($v['nombreCliente'] ?? '—') ?></div>
+                <?php if ($tipo === 'ticket' && $v['ticketCodigo']): ?>
+                <div class="vt-cliente-ticket">Ticket #<?= htmlspecialchars($v['ticketCodigo']) ?></div>
                 <?php endif; ?>
               </td>
               <td>
-                <?php if ($v['servicio'] !== '—'): ?>
-                <div class="vt-detalle-svc"><?= htmlspecialchars($v['servicio']) ?></div>
+                <?php if ($svcs): ?>
+                <div class="vt-detalle-svc"><?= htmlspecialchars($svcs) ?></div>
                 <?php endif; ?>
-                <?php if ($v['productos'] !== '—'): ?>
-                <div class="vt-detalle-prod"><?= htmlspecialchars($v['productos']) ?></div>
+                <?php if ($prods): ?>
+                <div class="vt-detalle-prod"><?= htmlspecialchars($prods) ?></div>
                 <?php endif; ?>
+                <?php if (!$svcs && !$prods): ?><span style="color:var(--color-text-muted)">—</span><?php endif; ?>
               </td>
-              <td><span class="vt-metodo"><?= htmlspecialchars($v['metodo']) ?></span></td>
-              <td><span class="vt-total">S/ <?= number_format($v['total'],2) ?></span></td>
-              <td><span class="dash-admin-t-fecha"><?= date('d/m/Y', strtotime($v['fecha'])) ?></span></td>
+              <td><span class="vt-metodo"><?= htmlspecialchars($v['metodoPago'] ?? '—') ?></span></td>
+              <td><span class="vt-total">S/ <?= number_format((float)$v['total'], 2) ?></span></td>
+              <td><span class="dash-admin-t-fecha"><?= date('d/m/Y', strtotime($v['fechaVenta'])) ?></span></td>
             </tr>
-            <?php endforeach; ?>
+            <?php endforeach; endif; ?>
             </tbody>
           </table>
         </div>
         <div class="dash-table-footer">
-          <span id="vt-footer-count">4 ventas</span>
+          <span id="vt-footer-count"><?= count($ventas) ?> venta<?= count($ventas) !== 1 ? 's' : '' ?></span>
         </div>
       </div>
 
@@ -271,6 +418,9 @@ $ventas = [
 
 </div><!-- /dash-shell -->
 
+<script>
+window._vtVentasPorMes = <?= json_encode($ventas_por_mes) ?>;
+</script>
 <script src="script.js" defer></script>
 </body>
 </html>

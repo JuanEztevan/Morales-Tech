@@ -1,17 +1,78 @@
 <?php
-// session_start();
-// include("includes/auth.php");
-$filtro_activo = isset($_GET['estado']) ? $_GET['estado'] : 'Todos';
+require_once 'admin_protect.php';
+require_once 'conexion.php';
 
-$tickets = [
-    ["id"=>"MT-8842","cliente"=>"Valeria Ramírez", "tipo"=>"Laptop","marca"=>"HP",   "servicio"=>"Reparación",              "estado"=>"En diagnóstico"],
-    ["id"=>"MT-8843","cliente"=>"Andrés Ochante",  "tipo"=>"PC",    "marca"=>"Apple","servicio"=>"Repotenciación",          "estado"=>"Recibido"],
-    ["id"=>"MT-8844","cliente"=>"Diana Calderón",  "tipo"=>"Laptop","marca"=>"Apple","servicio"=>"Mantenimiento correctivo","estado"=>"En reparación"],
-    ["id"=>"MT-8845","cliente"=>"Brenda Benites",  "tipo"=>"Laptop","marca"=>"ASUS", "servicio"=>"Limpieza preventiva",     "estado"=>"Completado"],
-];
+// ── AJAX: actualizar estado de un ticket ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    $datos  = json_decode(file_get_contents('php://input'), true);
+    $codigo = trim($datos['codigo'] ?? '');
+    $estado = trim($datos['estado'] ?? '');
+    $validos = ['Recibido','En diagnóstico','En reparación','Completado'];
+    if ($codigo === '' || !in_array($estado, $validos)) {
+        echo json_encode(['success' => false, 'message' => 'Datos inválidos.']);
+        exit;
+    }
+    $stmt = $conn->prepare("UPDATE TICKET SET estado=? WHERE codigo=?");
+    $stmt->bind_param("ss", $estado, $codigo);
+    $ok = $stmt->execute();
+    $stmt->close();
+    echo json_encode(['success' => $ok]);
+    exit;
+}
+
+// ── Datos del admin para el header ──
+$stmt = $conn->prepare("SELECT nombres, apellidos FROM ADMIN WHERE idAdmin=? LIMIT 1");
+$stmt->bind_param("i", $_SESSION['idAdmin']);
+$stmt->execute();
+$adm = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+$nombre_usuario = $adm ? $adm['nombres'] . ' ' . $adm['apellidos'] : 'Admin';
+$rol_usuario    = 'Administrador';
+$partes         = explode(' ', trim($nombre_usuario));
+$inicial        = strtoupper(substr($partes[0], 0, 1));
+$nombre_corto   = $partes[0];
+
+// ── Filtro activo ──
+$estados_validos = ['Recibido','En diagnóstico','En reparación','Completado'];
+$filtro_activo   = $_GET['estado'] ?? 'Todos';
+if (!in_array($filtro_activo, array_merge(['Todos'], $estados_validos))) {
+    $filtro_activo = 'Todos';
+}
+
+// ── Consulta tickets ──
+$sql = "SELECT t.codigo, t.estado,
+               cl.nombres, cl.apellidos,
+               e.tipoEquipo, e.marca,
+               (SELECT s.nomServicio FROM COTIZACION_SERVICIO cs
+                JOIN SERVICIO s ON s.idServicio=cs.idServicio
+                WHERE cs.idCotizacion=c.idCotizacion AND s.tipo='Principal' LIMIT 1) AS servicio
+        FROM TICKET t
+        JOIN COTIZACION c ON c.idCotizacion = t.idCotizacion
+        JOIN CLIENTE   cl ON cl.idCliente   = c.idCliente
+        JOIN EQUIPO    e  ON e.idEquipo      = c.idEquipo";
 
 if ($filtro_activo !== 'Todos') {
-    $tickets = array_filter($tickets, fn($t) => $t['estado'] === $filtro_activo);
+    $stmt = $conn->prepare($sql . " WHERE t.estado=? ORDER BY t.fechaCreacion DESC");
+    $stmt->bind_param("s", $filtro_activo);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $stmt->close();
+} else {
+    $res = $conn->query($sql . " ORDER BY t.fechaCreacion DESC");
+}
+
+$tickets = [];
+while ($f = $res->fetch_assoc()) {
+    $tickets[] = [
+        "id"       => $f['codigo'],
+        "cliente"  => $f['nombres'] . ' ' . $f['apellidos'],
+        "tipo"     => $f['tipoEquipo'] ?? '',
+        "marca"    => $f['marca'] ?? '',
+        "servicio" => $f['servicio'] ?? 'Servicio técnico',
+        "estado"   => $f['estado'],
+    ];
 }
 
 $estados = ['Todos','Recibido','En diagnóstico','En reparación','Completado'];
@@ -36,12 +97,6 @@ function clase_filtro_ticket($estado) {
     ];
     return $m[$estado] ?? '';
 }
-
-$nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Juan';
-$rol_usuario    = 'Trabajador';
-$partes         = explode(' ', trim($nombre_usuario));
-$inicial        = strtoupper(substr($partes[0], 0, 1));
-$nombre_corto   = $partes[0];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -53,6 +108,8 @@ $nombre_corto   = $partes[0];
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
 </head>
 <body class="admin-body admin-body--dashboard">
 
@@ -173,6 +230,7 @@ $nombre_corto   = $partes[0];
               <td><?= htmlspecialchars($t['servicio']) ?></td>
               <td>
                 <select class="tk-estado-select <?= clase_estado_ticket($t['estado']) ?>"
+                        data-id="<?= htmlspecialchars($t['id']) ?>"
                         onchange="tkActualizarEstado(this)">
                   <option <?= $t['estado']==='Recibido'       ? 'selected':'' ?>>Recibido</option>
                   <option <?= $t['estado']==='En diagnóstico' ? 'selected':'' ?>>En diagnóstico</option>

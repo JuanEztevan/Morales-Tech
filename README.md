@@ -13,7 +13,7 @@
 - [Pruebas Funcionales y de Seguridad](#pruebas-funcionales-y-de-seguridad)
 - [Credenciales de Prueba](#credenciales-de-prueba)
 - [Capturas de Pantalla](#capturas-de-pantalla)
-- [Encargados del Proyecto](#encargados-del-proyecto)
+- [Encargados del Github](#encargados-del-github)
 - [Limitaciones y Trabajo Futuro](#limitaciones-y-trabajo-futuro)
 
 ## Descripción del Proyecto
@@ -30,10 +30,11 @@ Optimizar la gestión del soporte técnico mediante un sistema web que permita e
 ### Objetivos Específicos (SMART)
 - Implementar un sistema de gestión de tickets con registro, seguimiento y control de estados (Recibido, Diagnóstico, Reparación, Completado).
 - Desarrollar dos portales diferenciados (clientes y administradores) con autenticación segura basada en roles.
-- Diseñar e implementar una base de datos relacional con más de 10 tablas interconectadas que gestionen clientes, equipos, servicios, cotizaciones, tickets e inventario.
+- Diseñar e implementar una base de datos relacional con más de 10 tablas interconectadas para la gestión integral del sistema.
 - Implementar un sistema de cotización que permita asociar múltiples servicios a un equipo, generando automáticamente subtotal, IGV y total.
 - Desarrollar un módulo de historial de equipos por cliente, permitiendo visualizar servicios realizados y seguimiento técnico.
 - Implementar un sistema de recuperación de contraseña mediante validación de preguntas de seguridad.
+- Diseñar e implementar una interfaz web responsive que se adapte a dispositivos móviles, tablets y escritorios, asegurando su correcta visualización en al menos tres resoluciones durante el desarrollo del sistema.
 
 ## Stack Tecnológico
 
@@ -106,6 +107,11 @@ https://balsamiq.cloud/sty85pm/pppo8zi
   - Visualización del historial de equipos registrados por el cliente.
   - Consulta de servicios asociados a cada equipo.
   - Seguimiento histórico de atenciones realizadas.
+- Generación de cotización en formato PDF:
+  - Descarga automática de la cotización desde el sistema.
+  - Inclusión de datos del cliente (nombre, DNI, teléfono y RUC opcional).
+  - Diseño del documento basado en la identidad corporativa de la empresa.
+  - Cálculo automático de subtotal, IGV y total.
 
 ### Portal Administrativo (Privado)
 - Acceso exclusivo mediante `login_staff.php` (solo correos con `@moralestechs.com`).
@@ -118,7 +124,8 @@ https://balsamiq.cloud/sty85pm/pppo8zi
 
 ```bash
 Morales-Tech/
-├── backend/
+├── database/
+│   ├── script.sql
 ├── docs/
 │   ├── diagrams/
 │   │   ├── modelo_er.png
@@ -127,21 +134,29 @@ Morales-Tech/
 │   ├── database/
 │   │   ├── script.sql
 ├── img/
-├── index.php
-├── login.php
-├── login_staff.php
-├── registro.php
-├── registro_staff.php
+├── admin_protect.php
+├── client_protect.php
+├── logout.php
+├── logout_cliente.php
+├── conexion.php
+├── consulta_tickets.php
 ├── dashboard.php
+├── equipos_cliente.php
+├── index.php
 ├── inicio_clientes.php
 ├── inventario.php
-├── ventas.php
-├── tickets.php
-├── tickets_cliente.php
+├── login.php
+├── login_staff.php
+├── nueva_venta.php
 ├── nuevo_ticket.php
 ├── nuevo_ticket_cliente.php
-├── nueva_venta.php
-├── consulta_tickets.php
+├── recuperar_contra_staff.php
+├── recuperar_contrasena.php
+├── registro.php
+├── registro_staff.php
+├── tickets.php
+├── tickets_cliente.php
+├── ventas.php
 ├── script.js
 ├── styles.css
 └── README.md
@@ -181,6 +196,11 @@ Morales-Tech/
   - Validación mediante correo o DNI.
   - Verificación de respuestas a preguntas de seguridad.
   - Restablecimiento de contraseña solo si todas las respuestas son correctas.
+- Protección de rutas mediante archivos intermedios (`admin_protect.php` y `client_protect.php`).
+- Restricción de acceso directo por URL a páginas privadas sin autenticación previa.
+- Implementación de cierre de sesión seguro (logout) con destrucción completa de la sesión.
+- Redirección automática al login en caso de sesión no válida o expirada.
+- Control de acceso por roles con validación continua de sesión.
 
 ## Pruebas Funcionales y de Seguridad
 Se realizaron 10 casos de prueba funcionales sobre los módulos principales del sistema, documentados y ejecutados en TestRail.
@@ -221,8 +241,8 @@ Para acceder al sistema:
 
 ## Encargados del GitHub
 - Juan Esteban Carmona Rodríguez – Frontend
-- Julio Moisés Salazar – Backend
-- Lyan Torres Coello – Backend
+- Julio César Moisés Salazar Gutierrez – Backend
+- Lyan Stefano Torres Coello – Backend
 
 **Curso: Integrador II - Sistemas**  
 **Profesor: José Andrés Valle Fuente**  
@@ -232,8 +252,8 @@ Para acceder al sistema:
 - Sistema actualmente diseñado para entorno local.
 - No incluye pasarela de pagos real.
 - La seguridad se basa en preguntas de seguridad, lo cual podría mejorarse hacia métodos más robustos (tokens, verificación por correo, autenticación multifactor).
+- Implementación actual de generación de cotizaciones en PDF utilizando jsPDF.
 - Mejoras futuras:
-  - Generación de reportes en PDF.
-  - Despliegue en entorno productivo.
- 
-<!-- RFC-001: registro con preguntas de seguridad -->
+  - Generación de boleta de venta en PDF al registrar una venta como completada en el sistema.
+  - Integración del módulo de PDFs con el panel de administradores.
+  - Implementación de un módulo de accesibilidad que permita ajustar tamaño de texto, contraste y legibilidad para usuarios con discapacidad visual.

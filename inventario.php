@@ -1,22 +1,77 @@
 <?php
-// session_start();
-// include("includes/auth.php");
-$nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Juan';
-$rol_usuario    = 'Trabajador';
+require_once 'admin_protect.php';
+require_once 'conexion.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    $datos  = json_decode(file_get_contents('php://input'), true);
+    $accion = trim($datos['accion'] ?? '');
+
+    if ($accion === 'actualizar_stock') {
+        $id    = (int) ($datos['id']    ?? 0);
+        $stock = (int) ($datos['stock'] ?? -1);
+        if ($id <= 0 || $stock < 0) {
+            echo json_encode(['success' => false, 'message' => 'Datos inválidos.']);
+            exit;
+        }
+        $stmt = $conn->prepare("UPDATE COMPONENTE SET stockActual=? WHERE idComponente=?");
+        $stmt->bind_param("ii", $stock, $id);
+        $ok = $stmt->execute();
+        $stmt->close();
+        echo json_encode(['success' => $ok]);
+        exit;
+    }
+
+    if ($accion === 'nuevo_producto') {
+        $nombre    = trim($datos['nombre']    ?? '');
+        $categoria = trim($datos['categoria'] ?? '');
+        $precio    = (float) ($datos['precio']   ?? 0);
+        $stock     = (int)   ($datos['stock']    ?? 0);
+        $stockMin  = (int)   ($datos['stockMin'] ?? 0);
+        if ($nombre === '' || $categoria === '' || $precio <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Faltan campos obligatorios.']);
+            exit;
+        }
+        $stmt = $conn->prepare(
+            "INSERT INTO COMPONENTE (nombre, categoria, stockActual, stockMinimo, precioUnitario)
+             VALUES (?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param("ssiid", $nombre, $categoria, $stock, $stockMin, $precio);
+        $ok = $stmt->execute();
+        $id = (int) $stmt->insert_id;
+        $stmt->close();
+        echo json_encode(['success' => $ok, 'id' => $id]);
+        exit;
+    }
+
+    echo json_encode(['success' => false, 'message' => 'Acción desconocida.']);
+    exit;
+}
+
+// Admin header
+$stmt = $conn->prepare("SELECT nombres, apellidos FROM ADMIN WHERE idAdmin=? LIMIT 1");
+$stmt->bind_param("i", $_SESSION['idAdmin']);
+$stmt->execute();
+$adm = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+$nombre_usuario = $adm ? $adm['nombres'] . ' ' . $adm['apellidos'] : 'Admin';
+$rol_usuario    = 'Administrador';
 $partes         = explode(' ', trim($nombre_usuario));
 $inicial        = strtoupper(substr($partes[0], 0, 1));
 $nombre_corto   = $partes[0];
 
-$productos = [
-    ["id"=>1,"nombre"=>"Alcohol Isopropílico 1000ml",              "categoria"=>"Consumibles y Limpieza","precio"=>25, "stock"=>45],
-    ["id"=>2,"nombre"=>"Pasta Térmica (jeringa 5g)",                "categoria"=>"Consumibles y Limpieza","precio"=>18, "stock"=>30],
-    ["id"=>3,"nombre"=>"Kit Destornilladores 58 en 1",              "categoria"=>"Herramientas y Kits",   "precio"=>65, "stock"=>18],
-    ["id"=>4,"nombre"=>"Kit Destornilladores de Precisión 128 en 1","categoria"=>"Herramientas y Kits",   "precio"=>95, "stock"=>12],
-    ["id"=>5,"nombre"=>"SSD 1TB SATA",                              "categoria"=>"Almacenamiento",        "precio"=>195,"stock"=>10],
-    ["id"=>6,"nombre"=>"SSD 512GB NVMe",                            "categoria"=>"Almacenamiento",        "precio"=>165,"stock"=>14],
-    ["id"=>7,"nombre"=>"RAM DDR4 16GB 3200MHz",                     "categoria"=>"Memoria RAM",            "precio"=>145,"stock"=>20],
-    ["id"=>8,"nombre"=>"RAM DDR5 16GB 4800MHz",                     "categoria"=>"Memoria RAM",            "precio"=>185,"stock"=>9],
-];
+// Productos desde BD
+$res = $conn->query("SELECT * FROM COMPONENTE ORDER BY nombre ASC");
+$productos = [];
+while ($f = $res->fetch_assoc()) $productos[] = $f;
+
+// KPIs
+$total_productos = count($productos);
+$total_unidades  = (int) array_sum(array_column($productos, 'stockActual'));
+$stock_bajo      = count(array_filter($productos, fn($p) => $p['stockActual'] <= $p['stockMinimo']));
+$valor_stock     = array_reduce($productos, fn($c, $p) => $c + $p['stockActual'] * $p['precioUnitario'], 0.0);
+$num_categorias  = count(array_unique(array_filter(array_column($productos, 'categoria'))));
 
 function inv_cat_class($cat) {
     return match($cat) {
@@ -27,8 +82,10 @@ function inv_cat_class($cat) {
         default                  => ''
     };
 }
-function inv_stock_class($stock) {
-    return $stock >= 20 ? 'inv-stock--ok' : ($stock >= 10 ? 'inv-stock--low' : 'inv-stock--min');
+function inv_stock_class($stockActual, $stockMinimo) {
+    if ($stockActual <= $stockMinimo)         return 'inv-stock--min';
+    if ($stockActual <= $stockMinimo + max(5, (int)($stockMinimo * 0.5))) return 'inv-stock--low';
+    return 'inv-stock--ok';
 }
 ?>
 <!DOCTYPE html>
@@ -41,6 +98,8 @@ function inv_stock_class($stock) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
 </head>
 <body class="admin-body admin-body--dashboard">
 
@@ -111,11 +170,11 @@ function inv_stock_class($stock) {
             <div class="dash-kpi-card__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
             </div>
-            <span class="dash-kpi-badge dash-kpi-badge--neutral">8 registros</span>
+            <span class="dash-kpi-badge dash-kpi-badge--neutral"><?= $total_productos ?> registros</span>
           </div>
           <div class="dash-kpi-card__label">Productos en catálogo</div>
-          <div class="dash-kpi-card__value">8</div>
-          <div class="dash-kpi-card__sub">4 categorías activas</div>
+          <div class="dash-kpi-card__value"><?= $total_productos ?></div>
+          <div class="dash-kpi-card__sub"><?= $num_categorias ?> categoría<?= $num_categorias !== 1 ? 's' : '' ?> activa<?= $num_categorias !== 1 ? 's' : '' ?></div>
         </div>
         <div class="dash-kpi-card">
           <div class="dash-kpi-card__top">
@@ -125,7 +184,7 @@ function inv_stock_class($stock) {
             <span class="dash-kpi-badge dash-kpi-badge--up">en stock</span>
           </div>
           <div class="dash-kpi-card__label">Unidades totales</div>
-          <div class="dash-kpi-card__value">158</div>
+          <div class="dash-kpi-card__value" id="kpi-unidades"><?= number_format($total_unidades) ?></div>
           <div class="dash-kpi-card__sub">suma de todos los productos</div>
         </div>
         <div class="dash-kpi-card">
@@ -136,8 +195,8 @@ function inv_stock_class($stock) {
             <span class="dash-kpi-badge dash-kpi-badge--warn">requieren atención</span>
           </div>
           <div class="dash-kpi-card__label">Stock bajo</div>
-          <div class="dash-kpi-card__value">3</div>
-          <div class="dash-kpi-card__sub">menos de 15 unidades</div>
+          <div class="dash-kpi-card__value" id="kpi-stock-bajo"><?= $stock_bajo ?></div>
+          <div class="dash-kpi-card__sub">en o por debajo del mínimo</div>
         </div>
         <div class="dash-kpi-card">
           <div class="dash-kpi-card__top">
@@ -147,7 +206,7 @@ function inv_stock_class($stock) {
             <span class="dash-kpi-badge dash-kpi-badge--up">valorizado</span>
           </div>
           <div class="dash-kpi-card__label">Valor del stock</div>
-          <div class="dash-kpi-card__value">S/ 9,935</div>
+          <div class="dash-kpi-card__value" id="kpi-valor">S/ <?= number_format($valor_stock, 0, '.', ',') ?></div>
           <div class="dash-kpi-card__sub">a precio de venta</div>
         </div>
       </div>
@@ -182,13 +241,27 @@ function inv_stock_class($stock) {
               </tr>
             </thead>
             <tbody id="inv-tbody">
+            <?php if (empty($productos)): ?>
+            <tr><td colspan="6">
+              <div class="dash-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <p>No hay productos en el inventario</p>
+                <small>Agrega el primer producto con el botón de arriba</small>
+              </div>
+            </td></tr>
+            <?php else: ?>
             <?php foreach ($productos as $p):
-              $stock_class = inv_stock_class($p['stock']);
-              $cat_class   = inv_cat_class($p['categoria']);
-              $cat = $p['categoria'];
+              $id          = $p['idComponente'];
+              $stockActual = (int) $p['stockActual'];
+              $stockMinimo = (int) $p['stockMinimo'];
+              $cat         = $p['categoria'] ?? '';
+              $stock_class = inv_stock_class($stockActual, $stockMinimo);
+              $cat_class   = inv_cat_class($cat);
             ?>
             <tr data-cat="<?= htmlspecialchars($cat) ?>"
-                data-nombre="<?= strtolower(htmlspecialchars($p['nombre'])) ?>">
+                data-nombre="<?= strtolower(htmlspecialchars($p['nombre'])) ?>"
+                data-precio="<?= $p['precioUnitario'] ?>"
+                data-stock-min="<?= $stockMinimo ?>">
               <td>
                 <div class="inv-prod-cell">
                   <div class="inv-prod-icon">
@@ -205,33 +278,34 @@ function inv_stock_class($stock) {
                   </div>
                   <div>
                     <div class="inv-prod-name"><?= htmlspecialchars($p['nombre']) ?></div>
-                    <div class="inv-prod-id">#<?= str_pad($p['id'],4,'0',STR_PAD_LEFT) ?></div>
+                    <div class="inv-prod-id">#<?= str_pad($id, 4, '0', STR_PAD_LEFT) ?></div>
                   </div>
                 </div>
               </td>
-              <td><span class="inv-cat-badge <?= $cat_class ?>"><?= htmlspecialchars($p['categoria']) ?></span></td>
-              <td><span class="inv-precio">S/ <?= number_format($p['precio'],2) ?></span></td>
-              <td><span class="inv-stock-badge <?= $stock_class ?>" id="inv-stock-label-<?= $p['id'] ?>"><?= $p['stock'] ?> uds.</span></td>
+              <td><span class="inv-cat-badge <?= $cat_class ?>"><?= htmlspecialchars($cat) ?></span></td>
+              <td><span class="inv-precio">S/ <?= number_format($p['precioUnitario'], 2) ?></span></td>
+              <td><span class="inv-stock-badge <?= $stock_class ?>" id="inv-stock-label-<?= $id ?>"><?= $stockActual ?> uds.</span></td>
               <td>
                 <div class="inv-qty-control">
-                  <button class="inv-qty-btn" onclick="invCambiarQty(<?= $p['id'] ?>,-1)">−</button>
-                  <span class="inv-qty-num" id="inv-qty-<?= $p['id'] ?>"><?= $p['stock'] ?></span>
-                  <button class="inv-qty-btn" onclick="invCambiarQty(<?= $p['id'] ?>,1)">+</button>
+                  <button class="inv-qty-btn" onclick="invCambiarQty(<?= $id ?>,-1)">−</button>
+                  <span class="inv-qty-num" id="inv-qty-<?= $id ?>"><?= $stockActual ?></span>
+                  <button class="inv-qty-btn" onclick="invCambiarQty(<?= $id ?>,1)">+</button>
                 </div>
               </td>
               <td>
-                <button class="inv-btn-update" onclick="invGuardarCambio(<?= $p['id'] ?>, event)">
+                <button class="inv-btn-update" onclick="invGuardarCambio(<?= $id ?>, event)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   Actualizar
                 </button>
               </td>
             </tr>
             <?php endforeach; ?>
+            <?php endif; ?>
             </tbody>
           </table>
         </div>
         <div class="dash-table-footer" style="justify-content:space-between;display:flex;align-items:center;">
-          <span id="inv-footer-count">8 productos</span>
+          <span id="inv-footer-count"><?= $total_productos ?> producto<?= $total_productos !== 1 ? 's' : '' ?></span>
           <div class="inv-pagination">
             <button class="inv-pag-btn" id="inv-btn-prev" onclick="invCambiarPagina(-1)" disabled>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -286,6 +360,10 @@ function inv_stock_class($stock) {
       <div class="inv-modal-field">
         <label>Stock inicial</label>
         <input type="text" id="inv-m-stock" placeholder="Ej. 20" class="ntk-input">
+      </div>
+      <div class="inv-modal-field">
+        <label>Stock mínimo</label>
+        <input type="text" id="inv-m-stock-min" placeholder="Ej. 5" class="ntk-input">
       </div>
     </div>
     <div class="inv-modal__actions">

@@ -1,8 +1,172 @@
 <?php
-// session_start();
-// include("includes/auth.php");
-$nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : 'Juan';
-$rol_usuario    = 'Trabajador';
+require_once 'admin_protect.php';
+require_once 'conexion.php';
+
+/*session_start();
+require_once 'conexion.php';
+
+if (!isset($_SESSION['idAdmin'])) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        http_response_code(401);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+        exit;
+    }
+    header("Location: login_staff.php");
+    exit;
+}*/
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    $datos = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($datos)) {
+        echo json_encode(['success' => false, 'message' => 'Datos inválidos.']);
+        exit;
+    }
+
+    $idAdmin       = (int) $_SESSION['idAdmin'];
+    $nombre        = trim($datos['nombre']        ?? '');
+    $dni           = trim($datos['dni']           ?? '');
+    $ruc           = trim($datos['ruc']           ?? '');
+    $telefono      = trim($datos['telefono']      ?? '');
+    $correo        = trim($datos['correo']        ?? '');
+    $tipoEquipo    = trim($datos['tipo']          ?? '');
+    $marca         = trim($datos['marca']         ?? '');
+    $modelo        = trim($datos['modelo']        ?? '');
+    $serie         = trim($datos['serie']         ?? '');
+    $so            = trim($datos['so']            ?? '');
+    $observaciones = trim($datos['observaciones'] ?? '');
+    $servicios     = is_array($datos['servicios'] ?? null) ? $datos['servicios'] : [];
+
+    if ($nombre === '' || $dni === '' || $telefono === '' || $tipoEquipo === '' || !$servicios) {
+        echo json_encode(['success' => false, 'message' => 'Faltan campos obligatorios.']);
+        exit;
+    }
+
+    $partes    = preg_split('/\s+/', $nombre, 2);
+    $nombres   = $partes[0] ?? '';
+    $apellidos = $partes[1] ?? '';
+
+    $subtotal = 0.0;
+    foreach ($servicios as $s) {
+        $subtotal += (float) ($s['precio'] ?? 0);
+    }
+    $igv      = round($subtotal * 0.18, 2);
+    $total    = round($subtotal + $igv, 2);
+    $subtotal = round($subtotal, 2);
+
+    $conn->begin_transaction();
+    $ok = true;
+    $codigo = '';
+    $idCotizacion = 0;
+    $idCliente = 0;
+
+    // 1. CLIENTE: buscar por DNI o crear
+    $stmtC = $conn->prepare("SELECT idCliente FROM CLIENTE WHERE numDNI = ? LIMIT 1");
+    $stmtC->bind_param("s", $dni);
+    $stmtC->execute();
+    $rowC = $stmtC->get_result()->fetch_assoc();
+    $stmtC->close();
+
+    if ($rowC) {
+        $idCliente = (int) $rowC['idCliente'];
+    } else {
+        $stmt = $conn->prepare(
+            "INSERT INTO CLIENTE (nombres, apellidos, email, password, numTelefono, numDNI, numRUC,
+             pregunta1, respuesta1, pregunta2, respuesta2, pregunta3, respuesta3)
+             VALUES (?, ?, ?, '', ?, ?, ?, '', '', '', '', '', '')"
+        );
+        $stmt->bind_param("ssssss", $nombres, $apellidos, $correo, $telefono, $dni, $ruc);
+        $ok = $stmt->execute();
+        $idCliente = (int) $stmt->insert_id;
+        $stmt->close();
+    }
+
+    // 2. EQUIPO
+    if ($ok) {
+        $stmt = $conn->prepare(
+            "INSERT INTO EQUIPO (idCliente, tipoEquipo, marca, modelo, numSerie, sistemaOperativo, observaciones)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param("issssss", $idCliente, $tipoEquipo, $marca, $modelo, $serie, $so, $observaciones);
+        $ok = $stmt->execute();
+        $idEquipo = (int) $stmt->insert_id;
+        $stmt->close();
+    }
+
+    // 3. COTIZACION
+    if ($ok) {
+        $stmt = $conn->prepare(
+            "INSERT INTO COTIZACION (idCliente, idEquipo, idAdmin, subtotal, igv, total)
+             VALUES (?, ?, ?, ?, ?, ?)"
+        );
+        $stmt->bind_param("iiiddd", $idCliente, $idEquipo, $idAdmin, $subtotal, $igv, $total);
+        $ok = $stmt->execute();
+        $idCotizacion = (int) $stmt->insert_id;
+        $stmt->close();
+    }
+
+    // 4. COTIZACION_SERVICIO
+    if ($ok) {
+        $stmtServicio = $conn->prepare("SELECT idServicio FROM SERVICIO WHERE nomServicio = ? LIMIT 1");
+        $stmtRel      = $conn->prepare("INSERT INTO COTIZACION_SERVICIO (idCotizacion, idServicio) VALUES (?, ?)");
+        foreach ($servicios as $s) {
+            $nom_srv = trim($s['nombre'] ?? '');
+            if ($nom_srv === '') continue;
+            $stmtServicio->bind_param("s", $nom_srv);
+            $stmtServicio->execute();
+            $fila = $stmtServicio->get_result()->fetch_assoc();
+            if (!$fila) continue;
+            $idServicio = (int) $fila['idServicio'];
+            $stmtRel->bind_param("ii", $idCotizacion, $idServicio);
+            if (!$stmtRel->execute()) { $ok = false; break; }
+        }
+        $stmtServicio->close();
+        $stmtRel->close();
+    }
+
+    // 5. TICKET con código único MT-XXXXXX
+    if ($ok) {
+        do {
+            $codigo = 'MT-' . strtoupper(bin2hex(random_bytes(3)));
+            $check  = $conn->prepare("SELECT idTicket FROM TICKET WHERE codigo = ? LIMIT 1");
+            $check->bind_param("s", $codigo);
+            $check->execute();
+            $existe = $check->get_result()->num_rows > 0;
+            $check->close();
+        } while ($existe);
+
+        $estado = 'Recibido';
+        $stmt = $conn->prepare("INSERT INTO TICKET (idCotizacion, codigo, estado) VALUES (?, ?, ?)");
+        $stmt->bind_param("iss", $idCotizacion, $codigo, $estado);
+        $ok = $stmt->execute();
+        $stmt->close();
+    }
+
+    if ($ok) {
+        $conn->commit();
+        echo json_encode([
+            'success'  => true,
+            'codigo'   => $codigo,
+            'subtotal' => $subtotal,
+            'igv'      => $igv,
+            'total'    => $total,
+        ], JSON_UNESCAPED_UNICODE);
+    } else {
+        $conn->rollback();
+        echo json_encode(['success' => false, 'message' => 'No se pudo registrar el ticket. Inténtalo de nuevo.']);
+    }
+    exit;
+}
+
+$stmt = $conn->prepare("SELECT nombres, apellidos FROM ADMIN WHERE idAdmin=? LIMIT 1");
+$stmt->bind_param("i", $_SESSION['idAdmin']);
+$stmt->execute();
+$adm = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+$nombre_usuario = $adm ? $adm['nombres'] . ' ' . $adm['apellidos'] : 'Admin';
+$rol_usuario    = 'Administrador';
 $partes         = explode(' ', trim($nombre_usuario));
 $inicial        = strtoupper(substr($partes[0], 0, 1));
 $nombre_corto   = $partes[0];
@@ -17,6 +181,9 @@ $nombre_corto   = $partes[0];
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
 </head>
 <body class="admin-body admin-body--dashboard">
 
@@ -385,11 +552,18 @@ $nombre_corto   = $partes[0];
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
     <div class="ntk-modal-title">¡Ticket creado!</div>
+    <div class="ntk-modal-code" id="ntk-modal-codigo"></div>
     <div class="ntk-modal-sub">El ticket ha sido registrado correctamente en el sistema.</div>
-    <button class="ntk-modal-btn" onclick="window.location.href='tickets.php'">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
-      Ver tickets
-    </button>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center;width:100%;margin-top:8px;">
+      <button class="ntk-modal-btn" onclick="ntkGenerarPDF()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar Cotización PDF
+      </button>
+      <button class="ntk-modal-btn" onclick="window.location.href='tickets.php'" style="background:transparent;border:1.5px solid rgba(255,255,255,0.12);color:#9aa2bf;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+        Ver tickets
+      </button>
+    </div>
   </div>
 </div>
 
