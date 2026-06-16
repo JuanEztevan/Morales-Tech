@@ -1,11 +1,6 @@
 <?php
-session_start();
+require_once 'admin_protect.php';
 require_once 'conexion.php';
-
-if (!isset($_SESSION['idAdmin'])) {
-    header("Location: login_staff.php");
-    exit;
-}
 
 // Admin header
 $stmt = $conn->prepare("SELECT nombres, apellidos FROM ADMIN WHERE idAdmin=? LIMIT 1");
@@ -95,8 +90,6 @@ $METODO_COLORES = [
     'Yape'          => '#000019',
     'Transferencia' => '#1883ED',
     'Efectivo'      => '#1746EA',
-    'Plin'          => '#5B2D8E',
-    'Tarjeta'       => '#2ecc71',
 ];
 $COLOR_DEFAULT = '#6c757d';
 $CIRC          = 276.46; // 2 * pi * 44
@@ -127,6 +120,8 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
 </head>
 <body class="admin-body admin-body--dashboard">
 

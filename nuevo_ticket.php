@@ -1,5 +1,8 @@
 <?php
-session_start();
+require_once 'admin_protect.php';
+require_once 'conexion.php';
+
+/*session_start();
 require_once 'conexion.php';
 
 if (!isset($_SESSION['idAdmin'])) {
@@ -11,7 +14,7 @@ if (!isset($_SESSION['idAdmin'])) {
     }
     header("Location: login_staff.php");
     exit;
-}
+}*/
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
@@ -179,6 +182,8 @@ $nombre_corto   = $partes[0];
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
 </head>
 <body class="admin-body admin-body--dashboard">
 

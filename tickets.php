@@ -1,11 +1,6 @@
 <?php
-session_start();
+require_once 'admin_protect.php';
 require_once 'conexion.php';
-
-if (!isset($_SESSION['idAdmin'])) {
-    header("Location: login_staff.php");
-    exit;
-}
 
 // ── AJAX: actualizar estado de un ticket ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -113,6 +108,8 @@ function clase_filtro_ticket($estado) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
 </head>
 <body class="admin-body admin-body--dashboard">
 
