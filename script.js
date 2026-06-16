@@ -622,8 +622,8 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     }
 
     const idEquipoGuardado = parseInt(document.getElementById('id_equipo_guardado')?.value || '0') || 0;
-    const payload = { tipo, marca, modelo, serie, so, observaciones, servicios };
-    if (idEquipoGuardado > 0) payload.idEquipo = idEquipoGuardado;
+    // Siempre enviar idEquipo: 0 = nuevo, N = reusar existente
+    const payload = { tipo, marca, modelo, serie, so, observaciones, servicios, idEquipo: idEquipoGuardado };
 
     fetch('nuevo_ticket_cliente.php', {
       method: 'POST',

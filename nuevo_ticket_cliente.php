@@ -23,9 +23,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $idCliente          = (int) $_SESSION['idCliente'];
-    $idEquipoExistente  = (int) ($datos['idEquipo'] ?? 0);
-    $tipoEquipo         = trim($datos['tipo'] ?? '');
+    $idCliente         = (int) $_SESSION['idCliente'];
+    // Si JS envió idEquipo (aunque sea 0), usarlo directamente.
+    // Si la clave no existe (JS antiguo en caché), usar la sesión PHP como fallback.
+    if (array_key_exists('idEquipo', $datos)) {
+        $idEquipoExistente = (int) $datos['idEquipo'];
+    } else {
+        $idEquipoExistente = (int) ($_SESSION['nvc_idEquipo'] ?? 0);
+    }
+    $tipoEquipo        = trim($datos['tipo'] ?? '');
     $marca              = trim($datos['marca'] ?? '');
     $modelo             = trim($datos['modelo'] ?? '');
     $serie              = trim($datos['serie'] ?? '');
@@ -135,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($ok) {
         $conn->commit();
+        unset($_SESSION['nvc_idEquipo']); // limpiar selección guardada en sesión
         echo json_encode([
             'success'   => true,
             'codigo'    => $codigo,
@@ -194,6 +201,14 @@ if (!empty($_GET['idEquipo'])) {
     if (!$equipoPresel) $idEquipoPresel = 0;
 }
 
+// Sincronizar sesión con la selección actual
+if ($idEquipoPresel > 0) {
+    $_SESSION['nvc_idEquipo'] = $idEquipoPresel; // equipo seleccionado via URL
+} else {
+    unset($_SESSION['nvc_idEquipo']); // nuevo ticket sin preselección
+}
+
+$esNuevo    = !empty($_GET['nuevo']);
 $preselP    = $idEquipoPresel > 0;
 $tipoP      = $equipoPresel['tipoEquipo']       ?? '';
 $marcaP     = $equipoPresel['marca']            ?? '';
@@ -214,6 +229,24 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .eq-saved-card {
+      display:inline-flex;flex-direction:column;padding:10px 16px;border-radius:10px;
+      font-family:inherit;cursor:pointer;transition:border .2s,background .2s;
+      border:1.5px solid rgba(255,255,255,0.12);background:#1a1f35;color:#e2e6f3;
+      text-decoration:none;
+    }
+    .eq-saved-card--sel {
+      border-color:#4f8ef7;background:rgba(79,142,247,0.14);color:#4f8ef7;
+    }
+    .eq-saved-card--new {
+      border:1.5px dashed rgba(255,255,255,0.22);background:transparent;color:#8a90a8;
+      flex-direction:row;align-items:center;
+    }
+    .eq-saved-card--new.eq-saved-card--sel {
+      border:1.5px solid #4f8ef7;background:rgba(79,142,247,0.14);color:#4f8ef7;
+    }
+  </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -367,34 +400,29 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
 
                 <?php if (!empty($equipos_guardados)): ?>
                 <div class="wizard-section-sm">Mis equipos registrados</div>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
-                  <?php foreach ($equipos_guardados as $idx => $eq):
-                    $selCard  = ((int)$eq['idEquipo'] === $idEquipoPresel);
-                    $esL      = ($eq['tipoEquipo'] ?? '') === 'Laptop';
-                    $lbl      = trim(($eq['marca'] ?? '') . ' ' . ($eq['modelo'] ?? ''));
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;" id="eq-cards-wrap">
+                  <?php foreach ($equipos_guardados as $eq):
+                    $selCard = ((int)$eq['idEquipo'] === $idEquipoPresel);
+                    $esL     = ($eq['tipoEquipo'] ?? '') === 'Laptop';
+                    $lbl     = trim(($eq['marca'] ?? '') . ' ' . ($eq['modelo'] ?? ''));
                     if (!$lbl) $lbl = $esL ? 'Laptop' : 'PC de escritorio';
-                    $sub      = $eq['sistemaOperativo'] ?: ($esL ? 'Laptop' : 'PC de escritorio');
+                    $sub     = $eq['sistemaOperativo'] ?: ($esL ? 'Laptop' : 'PC de escritorio');
                   ?>
                   <a href="?idEquipo=<?= (int)$eq['idEquipo'] ?>"
-                     style="display:inline-flex;flex-direction:column;padding:10px 16px;border-radius:10px;text-decoration:none;font-family:inherit;cursor:pointer;transition:border .2s,background .2s;
-                            border:1.5px solid <?= $selCard ? '#4f8ef7' : 'rgba(255,255,255,0.12)' ?>;
-                            background:<?= $selCard ? 'rgba(79,142,247,0.14)' : '#1a1f35' ?>;
-                            color:<?= $selCard ? '#4f8ef7' : '#e2e6f3' ?>;">
+                     class="eq-saved-card<?= $selCard ? ' eq-saved-card--sel' : '' ?>">
                     <span style="font-weight:600;font-size:13px;"><?= htmlspecialchars($lbl) ?></span>
                     <span style="font-size:11px;opacity:.65;margin-top:2px;"><?= htmlspecialchars($sub) ?></span>
                   </a>
                   <?php endforeach; ?>
-                  <a href="nuevo_ticket_cliente.php"
-                     style="display:inline-flex;align-items:center;padding:10px 16px;border-radius:10px;text-decoration:none;font-size:13px;font-family:inherit;cursor:pointer;
-                            border:1.5px <?= !$preselP ? 'solid #4f8ef7' : 'dashed rgba(255,255,255,0.22)' ?>;
-                            background:<?= !$preselP ? 'rgba(79,142,247,0.14)' : 'transparent' ?>;
-                            color:<?= !$preselP ? '#4f8ef7' : '#8a90a8' ?>;">
+                  <a href="nuevo_ticket_cliente.php?nuevo=1"
+                     class="eq-saved-card<?= $esNuevo ? ' eq-saved-card--sel' : ' eq-saved-card--new' ?>">
                     + Nuevo equipo
                   </a>
                 </div>
                 <hr class="wizard-divider">
                 <?php endif; ?>
 
+                <div id="device-section" <?= (!$preselP && !$esNuevo && !empty($equipos_guardados)) ? 'style="display:none"' : '' ?>>
                 <div class="wizard-section-sm">Tipo de equipo</div>
                 <div class="device-grid">
                   <div class="device-opt<?= $isLaptopP ? ' selected' : '' ?>"
@@ -455,6 +483,8 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
                     </select>
                   </div>
                 </div>
+
+                </div><!-- /device-section -->
 
                 <hr class="wizard-divider">
                 <div class="wizard-form-group">

@@ -7,6 +7,26 @@ if (!isset($_SESSION['idCliente'])) {
     exit;
 }
 
+// POST: editar equipo
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'editar_equipo') {
+    header('Content-Type: application/json; charset=utf-8');
+    $idC   = (int) $_SESSION['idCliente'];
+    $idEq  = (int) ($_POST['idEquipo'] ?? 0);
+    $marca = trim($_POST['marca']  ?? '');
+    $modelo= trim($_POST['modelo'] ?? '');
+    $serie = trim($_POST['serie']  ?? '');
+    $so    = trim($_POST['so']     ?? '');
+    if ($idEq <= 0) { echo json_encode(['success'=>false]); exit; }
+    $upd = $conn->prepare(
+        "UPDATE EQUIPO SET marca=?, modelo=?, numSerie=?, sistemaOperativo=?
+         WHERE idEquipo=? AND idCliente=?"
+    );
+    $upd->bind_param("ssssii", $marca, $modelo, $serie, $so, $idEq, $idC);
+    echo json_encode(['success' => $upd->execute()]);
+    $upd->close();
+    exit;
+}
+
 $nombre_cliente = $_SESSION['nombres'];
 $partes         = explode(' ', trim($nombre_cliente));
 $nombre_corto   = $partes[0];
@@ -46,6 +66,7 @@ while ($fila = $resultado->fetch_assoc()) {
 
     if (!isset($equiposPorId[$idEq])) {
         $equiposPorId[$idEq] = [
+            "rawId"         => $idEq,
             "id"            => 'EQ-' . str_pad((string) $idEq, 3, '0', STR_PAD_LEFT),
             "tipo"          => $fila['tipoEquipo'],
             "marca"         => $fila['marca'],
@@ -376,6 +397,62 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
     .eq-empty-state p { font-family: 'Montserrat', sans-serif; font-size: 14px; color: var(--txt-muted); font-weight: 600; }
     .eq-empty-state small { font-size: 12px; color: #3a4470; }
 
+    /* ── Modal editar equipo ── */
+    .eq-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      backdrop-filter: blur(4px); z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .22s;
+    }
+    .eq-modal-overlay.open { opacity: 1; pointer-events: all; }
+    .eq-modal {
+      background: #141829; border: 1px solid rgba(255,255,255,.1);
+      border-radius: 20px; padding: 28px 28px 24px;
+      width: min(480px, 92vw);
+      transform: translateY(20px); transition: transform .22s;
+      box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    }
+    .eq-modal-overlay.open .eq-modal { transform: translateY(0); }
+    .eq-modal__title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px; font-weight: 800; color: var(--txt-main);
+      margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .eq-modal__title svg { width: 18px; height: 18px; color: var(--txt-accent); flex-shrink: 0; }
+    .eq-modal__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .eq-modal__field label {
+      display: block; font-family: 'Montserrat', sans-serif;
+      font-size: 10px; font-weight: 800; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--txt-muted); margin-bottom: 6px;
+    }
+    .eq-modal__field input,
+    .eq-modal__field select {
+      width: 100%; box-sizing: border-box;
+      background: #1a1f35; border: 1.5px solid rgba(255,255,255,.1);
+      border-radius: 10px; padding: 10px 14px;
+      font-family: 'Montserrat', sans-serif; font-size: 13px;
+      color: var(--txt-main); outline: none; transition: border-color .18s;
+    }
+    .eq-modal__field input:focus,
+    .eq-modal__field select:focus { border-color: rgba(23,70,234,.6); }
+    .eq-modal__field--full { grid-column: span 2; }
+    .eq-modal__actions { display: flex; justify-content: flex-end; gap: 10px; }
+    .btn-modal-cancel {
+      padding: 10px 20px; border-radius: 50px; border: 1.5px solid rgba(255,255,255,.12);
+      background: transparent; color: var(--txt-muted);
+      font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: background .18s;
+    }
+    .btn-modal-cancel:hover { background: rgba(255,255,255,.06); }
+    .btn-modal-save {
+      padding: 10px 22px; border-radius: 50px; border: none;
+      background: var(--azul-tecnologico); color: #fff;
+      font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: opacity .18s;
+    }
+    .btn-modal-save:hover { opacity: .88; }
+    .btn-modal-save:disabled { opacity: .5; cursor: not-allowed; }
+
     /* ── Responsive ── */
     @media (max-width: 700px) {
       .eq-grid { grid-template-columns: 1fr; }
@@ -573,7 +650,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
                 </div>
               </div>
 
-              <!-- Pie: contador + botón Ver Historial -->
+              <!-- Pie: contador + botones -->
               <div class="eq-card__footer">
                 <span class="eq-tickets-count">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
@@ -582,20 +659,27 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
                     &middot; <span style="color:#8db4ff;font-weight:700;"><?= count($tickets_activos) ?> activo<?= count($tickets_activos) !== 1 ? 's' : '' ?></span>
                   <?php endif; ?>
                 </span>
-                <?php if ($num_tickets > 0): ?>
-                <button
-                  class="btn-ver-historial"
-                  id="btn-historial-<?= $idx ?>"
-                  onclick="toggleHistorial(<?= $idx ?>)"
-                  aria-expanded="false"
-                  aria-controls="historial-<?= $idx ?>">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  Ver historial
-                  <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                </button>
-                <?php else: ?>
-                <span class="eq-tickets-count" style="color:#3a4470;font-size:11px;">Sin servicios</span>
-                <?php endif; ?>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <button class="btn-ver-historial" style="padding:8px 12px;"
+                    onclick="abrirEditarEquipo(<?= $eq['rawId'] ?>, '<?= addslashes($eq['tipo']) ?>', '<?= addslashes($eq['marca']) ?>', '<?= addslashes($eq['modelo']) ?>', '<?= addslashes($eq['serie']) ?>', '<?= addslashes($eq['so']) ?>')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Editar
+                  </button>
+                  <?php if ($num_tickets > 0): ?>
+                  <button
+                    class="btn-ver-historial"
+                    id="btn-historial-<?= $idx ?>"
+                    onclick="toggleHistorial(<?= $idx ?>)"
+                    aria-expanded="false"
+                    aria-controls="historial-<?= $idx ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Ver historial
+                    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                  <?php else: ?>
+                  <span class="eq-tickets-count" style="color:#3a4470;font-size:11px;">Sin servicios</span>
+                  <?php endif; ?>
+                </div>
               </div>
 
               <!-- Accordion: Historial de servicios -->
@@ -661,6 +745,25 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
 </a>
 
+<!-- Modal editar equipo -->
+<div class="eq-modal-overlay" id="eq-modal-overlay" onclick="if(event.target===this)cerrarModal()">
+  <div class="eq-modal">
+    <div class="eq-modal__title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Editar equipo
+    </div>
+    <input type="hidden" id="eq-edit-id">
+    <input type="hidden" id="eq-edit-tipo">
+    <div class="eq-modal__grid" id="eq-modal-fields">
+      <!-- campos inyectados por JS -->
+    </div>
+    <div class="eq-modal__actions">
+      <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-modal-save" id="btn-guardar-equipo" onclick="guardarEquipo()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <script src="script.js" defer></script>
 <script>
 /* ══════════════════════════════════════════
@@ -715,6 +818,67 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
   };
 
 })();
+
+/* ── Modal: editar equipo ── */
+var _soOpts = {
+  Laptop: ['Windows 11','Windows 10','macOS','Linux','Sin SO'],
+  PC:     ['Windows 11','Windows 10','Linux','Sin SO']
+};
+
+window.abrirEditarEquipo = function(id, tipo, marca, modelo, serie, so) {
+  document.getElementById('eq-edit-id').value   = id;
+  document.getElementById('eq-edit-tipo').value = tipo;
+
+  var esLaptop = tipo === 'Laptop';
+  var soOpts   = (_soOpts[esLaptop ? 'Laptop' : 'PC']).map(function(o) {
+    return '<option' + (o === so ? ' selected' : '') + '>' + o + '</option>';
+  }).join('');
+
+  var fields = '';
+  if (esLaptop) {
+    fields += '<div class="eq-modal__field"><label>Marca</label><input id="eq-f-marca" value="' + _esc(marca) + '" placeholder="HP, Apple, ASUS…"></div>';
+    fields += '<div class="eq-modal__field"><label>Modelo</label><input id="eq-f-modelo" value="' + _esc(modelo) + '" placeholder="Ej. Pavilion 15"></div>';
+    fields += '<div class="eq-modal__field"><label>N.° de serie</label><input id="eq-f-serie" value="' + _esc(serie) + '" placeholder="Ej. 5CD1234XYZ"></div>';
+    fields += '<div class="eq-modal__field"><label>Sistema operativo</label><select id="eq-f-so"><option value="">Seleccionar…</option>' + soOpts + '</select></div>';
+  } else {
+    fields += '<div class="eq-modal__field eq-modal__field--full"><label>Sistema operativo</label><select id="eq-f-so"><option value="">Seleccionar…</option>' + soOpts + '</select></div>';
+  }
+  document.getElementById('eq-modal-fields').innerHTML = fields;
+  document.getElementById('eq-modal-overlay').classList.add('open');
+};
+
+window.cerrarModal = function() {
+  document.getElementById('eq-modal-overlay').classList.remove('open');
+};
+
+window.guardarEquipo = function() {
+  var btn  = document.getElementById('btn-guardar-equipo');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+
+  var tipo = document.getElementById('eq-edit-tipo').value;
+  var esL  = tipo === 'Laptop';
+  var body = new URLSearchParams({
+    action:   'editar_equipo',
+    idEquipo: document.getElementById('eq-edit-id').value,
+    marca:    esL ? (document.getElementById('eq-f-marca')?.value  || '') : '',
+    modelo:   esL ? (document.getElementById('eq-f-modelo')?.value || '') : '',
+    serie:    esL ? (document.getElementById('eq-f-serie')?.value  || '') : '',
+    so:       document.getElementById('eq-f-so')?.value || '',
+  });
+
+  fetch('equipos_cliente.php', { method:'POST', body: body })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.success) { cerrarModal(); location.reload(); }
+      else { alert('No se pudo guardar. Inténtalo de nuevo.'); }
+    })
+    .catch(function() { alert('Error de conexión.'); })
+    .finally(function() { btn.disabled = false; btn.textContent = 'Guardar cambios'; });
+};
+
+function _esc(s) {
+  return (s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 </script>
 </body>
 </html>
