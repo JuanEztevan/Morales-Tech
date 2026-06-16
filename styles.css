@@ -4228,3 +4228,164 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   opacity: 1;
   background: rgba(255,255,255,0.06) !important;
 }
+
+/* ══════════════════════════════════════════════════════
+   NUEVO_TICKET.PHP — Sección "Equipo del Cliente"
+   ══════════════════════════════════════════════════════ */
+
+/* ── Tabs de modo de equipo ── */
+.ntk-eq-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border .18s, background .18s, color .18s;
+  border: 1.5px solid var(--admin-border);
+  background: transparent;
+  color: var(--admin-gray-400);
+}
+.ntk-eq-tab:hover {
+  border-color: var(--azul-tecnologico);
+  color: var(--azul-tecnologico);
+  background: rgba(23, 70, 234, .05);
+}
+.ntk-eq-tab--active {
+  border-color: var(--azul-tecnologico);
+  background: rgba(23, 70, 234, .10);
+  color: var(--azul-tecnologico);
+}
+
+/* ── Tarjetas de equipos guardados ── */
+.ntk-eq-saved-card {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border .18s, background .18s, color .18s;
+  border: 1.5px solid var(--admin-border);
+  background: #f7f8fd;
+  color: var(--admin-navy);
+  text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.ntk-eq-saved-card:hover {
+  border-color: var(--azul-tecnologico);
+  background: rgba(23, 70, 234, .06);
+}
+.ntk-eq-saved-card--sel {
+  border-color: var(--azul-tecnologico);
+  background: rgba(23, 70, 234, .12);
+  color: var(--azul-tecnologico);
+}
+.ntk-eq-saved-card--new {
+  border: 1.5px dashed rgba(23, 70, 234, .30);
+  background: transparent;
+  color: var(--admin-gray-400);
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+.ntk-eq-saved-card--new:hover {
+  border-color: var(--azul-tecnologico);
+  color: var(--azul-tecnologico);
+  background: rgba(23, 70, 234, .05);
+}
+
+/* ── Preview del equipo seleccionado ── */
+.ntk-equipo-preview {
+  margin-top: 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--azul-tecnologico);
+  background: rgba(23, 70, 234, .05);
+  padding: 12px 16px;
+}
+.ntk-equipo-preview__inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* ── ntk-modal-code (código del ticket en el modal) ── */
+.ntk-modal-code {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  color: var(--azul-tecnologico);
+  margin-bottom: 8px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  #ntk-eq-cards { flex-direction: column; align-items: stretch; }
+  .ntk-eq-saved-card { width: 100%; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   NUEVO_TICKET — Añadidos para autocompletado DNI
+   Agregar al final del bloque ntk en styles.css
+   ══════════════════════════════════════════════════════════════ */
+
+/* Wrapper del input DNI con icono de estado */
+.ntk-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ntk-input-wrap .ntk-input {
+  padding-right: 42px; /* espacio para el ícono */
+}
+
+/* Ícono de estado (loading / found / notfound) */
+.ntk-dni-status {
+  position: absolute;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.ntk-dni-status svg {
+  width: 16px;
+  height: 16px;
+}
+.ntk-dni-status--found  svg { stroke: #22c55e; }
+.ntk-dni-status--notfound svg { stroke: #ef4444; }
+
+/* Spinner de carga */
+.ntk-dni-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--admin-border);
+  border-top-color: var(--azul-tecnologico);
+  border-radius: 50%;
+  animation: ntk-spin .65s linear infinite;
+}
+@keyframes ntk-spin { to { transform: rotate(360deg); } }
+
+/* Hint debajo del campo DNI */
+.ntk-hint {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--admin-gray-400);
+  min-height: 16px;
+  transition: color .2s;
+}
+.ntk-hint--ok  { color: #22c55e; }
+.ntk-hint--new { color: #f59e0b; }

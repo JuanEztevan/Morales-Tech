@@ -783,17 +783,22 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   };
 })();
 
-/* ══════════════════════════════════════════
+
+/* ════════════════════════════════════════════
    NUEVO_TICKET.PHP — wizard staff (4 pasos)
    ══════════════════════════════════════════ */
-
+ 
 (function initNuevoTicket() {
   if (!document.getElementById('step-1')) return;
-
+ 
   let currentStep = 1;
   const TOTAL    = 4;
   const PROGRESS = [25, 50, 75, 100];
 
+  /* ── Estado del equipo del cliente (Paso 2) ── */
+  let ntkEquiposGuardados = [];   // equipos del cliente actual, traídos por AJAX
+  let ntkIdEquipoSel      = 0;    // 0 = equipo nuevo / sin cliente con equipos
+ 
   /* ── Navegación ── */
   window.ntkGoStep = function(n) {
     if (n > currentStep + 1 || n < 1) return;
@@ -809,12 +814,12 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     if (currentStep === 4) ntkBuildSummary();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
+ 
   window.ntkNextStep = function(from) {
     if (!ntkValidateStep(from)) return;
     if (from < TOTAL) ntkGoStep(from + 1);
   };
-
+ 
   window.ntkPrevStep = function(from) {
     if (from <= 1) return;
     document.getElementById('step-' + from).classList.remove('active');
@@ -826,26 +831,28 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     document.getElementById('ntk-progress-fill').style.width = PROGRESS[currentStep - 1] + '%';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
+ 
   /* ── Validaciones ── */
   function ntkValidateStep(n) {
     if (n === 1) {
-      const dni = document.getElementById('ntk-dni')?.value.trim() || '';
-      const nom = document.getElementById('ntk-nombre-cliente')?.value.trim() || '';
-      const tel = document.getElementById('ntk-telefono')?.value.trim() || '';
-      if (!dni || dni.length !== 8) { alert('El DNI debe tener 8 dígitos.'); return false; }
-      if (!nom)                      { alert('Ingresa el nombre del cliente.'); return false; }
-      if (!tel || tel.length !== 9)  { alert('El teléfono debe tener 9 dígitos.'); return false; }
+      const dni = document.getElementById('ntk-dni')?.value.trim()       || '';
+      const nom = document.getElementById('ntk-nombres')?.value.trim()   || '';
+      const ape = document.getElementById('ntk-apellidos')?.value.trim() || '';
+      const tel = document.getElementById('ntk-telefono')?.value.trim()  || '';
+      if (!dni || dni.length !== 8)  { alert('El DNI debe tener 8 dígitos.');        return false; }
+      if (!nom)                      { alert('Ingresa los nombres del cliente.');     return false; }
+      if (!ape)                      { alert('Ingresa los apellidos del cliente.');   return false; }
+      if (!tel || tel.length !== 9)  { alert('El teléfono debe tener 9 dígitos.');   return false; }
     }
-    if (n === 2 && !document.getElementById('ntk-tipo-dispositivo')?.value) {
-      alert('Selecciona el tipo de dispositivo.'); return false;
+    if (n === 2 && ntkIdEquipoSel === 0 && !document.getElementById('ntk-tipo-dispositivo')?.value) {
+      alert('Selecciona un equipo guardado o registra uno nuevo.'); return false;
     }
     if (n === 3 && !document.querySelector('input[name="ntk_srv_base"]:checked')) {
       alert('Selecciona al menos un servicio base.'); return false;
     }
     return true;
   }
-
+ 
   /* ── Selector de dispositivo ── */
   window.ntkSelectDevice = function(el, type) {
     document.querySelectorAll('.ntk-device-opt').forEach(o => o.classList.remove('selected'));
@@ -855,12 +862,144 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     document.getElementById('extra-pc').classList.toggle('visible',     type === 'PC');
   };
 
+  /* ══════════════════════════════════════════
+     EQUIPOS DEL CLIENTE (Paso 2)
+     ══════════════════════════════════════════ */
+
+  /* Pinta las tarjetas de equipos guardados + tarjeta "Registrar Nuevo Equipo" */
+  function ntkPintarEquiposGuardados(equipos) {
+    ntkEquiposGuardados = Array.isArray(equipos) ? equipos : [];
+    const wrap  = document.getElementById('ntk-eq-saved-wrap');
+    const cards = document.getElementById('ntk-eq-cards');
+    if (!wrap || !cards) return;
+
+    const nuevoCardHtml = `
+      <button type="button" class="ntk-eq-saved-card ntk-eq-saved-card--new" id="ntk-btn-nuevo-equipo" onclick="ntkMostrarFormNuevoEquipo()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Registrar Nuevo Equipo
+      </button>`;
+
+    if (!ntkEquiposGuardados.length) {
+      wrap.classList.add('nv-hidden');
+      cards.innerHTML = nuevoCardHtml;
+      ntkMostrarFormNuevoEquipo();
+      return;
+    }
+
+    const guardadosHtml = ntkEquiposGuardados.map(eq => {
+      const esLaptop = (eq.tipoEquipo || '') === 'Laptop';
+      let label = [eq.marca, eq.modelo].filter(Boolean).join(' ').trim();
+      if (!label) label = esLaptop ? 'Laptop' : 'PC de escritorio';
+      const sub = eq.sistemaOperativo || (esLaptop ? 'Laptop' : 'PC de escritorio');
+      return `
+        <button type="button" class="ntk-eq-saved-card" data-id-equipo="${eq.idEquipo}" onclick="ntkSeleccionarEquipoGuardado(${eq.idEquipo})">
+          <span style="font-weight:600;font-size:13px;">${ntkEscapeHtml(label)}</span>
+          <span style="font-size:11px;opacity:.65;margin-top:2px;">${ntkEscapeHtml(sub)}</span>
+        </button>`;
+    }).join('');
+
+    cards.innerHTML = guardadosHtml + nuevoCardHtml;
+
+    wrap.classList.remove('nv-hidden');
+    // Por defecto, al cargar equipos guardados se pide elegir uno o registrar nuevo:
+    // ocultamos el formulario hasta que el usuario decida.
+    ntkOcultarFormEquipo();
+  }
+
+  function ntkEscapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+
+  /* Oculta el formulario de equipo (cuando aún no se eligió tarjeta ni "nuevo") */
+  function ntkOcultarFormEquipo() {
+    document.getElementById('ntk-equipo-form')?.classList.add('nv-hidden');
+    document.getElementById('ntk-equipo-preview')?.classList.add('nv-hidden');
+  }
+
+  /* Click en "+ Registrar Nuevo Equipo": limpia selección y muestra el formulario normal */
+  window.ntkMostrarFormNuevoEquipo = function() {
+    ntkIdEquipoSel = 0;
+    document.getElementById('ntk-id-equipo').value = '0';
+
+    document.querySelectorAll('.ntk-eq-saved-card').forEach(c => c.classList.remove('ntk-eq-saved-card--sel'));
+    document.getElementById('ntk-btn-nuevo-equipo')?.classList.add('ntk-eq-saved-card--sel');
+
+    document.getElementById('ntk-equipo-preview')?.classList.add('nv-hidden');
+    document.getElementById('ntk-equipo-form')?.classList.remove('nv-hidden');
+
+    // Limpia el formulario para que no queden datos de un equipo guardado
+    document.querySelectorAll('.ntk-device-opt').forEach(o => o.classList.remove('selected'));
+    document.getElementById('ntk-tipo-dispositivo').value = '';
+    document.getElementById('extra-laptop')?.classList.remove('visible');
+    document.getElementById('extra-pc')?.classList.remove('visible');
+    ['ntk-marca', 'ntk-modelo', 'ntk-serie'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const soL = document.getElementById('ntk-so-laptop'); if (soL) soL.value = '';
+    const soP = document.getElementById('ntk-so-pc');     if (soP) soP.value = '';
+  };
+
+  /* Click en una tarjeta de equipo guardado: oculta el formulario y muestra el resumen */
+  window.ntkSeleccionarEquipoGuardado = function(idEquipo) {
+    const eq = ntkEquiposGuardados.find(e => Number(e.idEquipo) === Number(idEquipo));
+    if (!eq) return;
+
+    ntkIdEquipoSel = Number(idEquipo);
+    document.getElementById('ntk-id-equipo').value = String(ntkIdEquipoSel);
+
+    document.querySelectorAll('.ntk-eq-saved-card').forEach(c => {
+      c.classList.toggle('ntk-eq-saved-card--sel', Number(c.dataset.idEquipo) === ntkIdEquipoSel);
+    });
+    document.getElementById('ntk-btn-nuevo-equipo')?.classList.remove('ntk-eq-saved-card--sel');
+
+    const esLaptop = (eq.tipoEquipo || '') === 'Laptop';
+    let titulo = [eq.marca, eq.modelo].filter(Boolean).join(' ').trim();
+    if (!titulo) titulo = esLaptop ? 'Laptop' : 'PC de escritorio';
+    const sub = [eq.tipoEquipo, eq.sistemaOperativo, eq.numSerie ? ('S/N ' + eq.numSerie) : '']
+      .filter(Boolean).join(' · ');
+
+    const titleEl = document.getElementById('ntk-equipo-preview__title');
+    const subEl   = document.getElementById('ntk-equipo-preview__sub');
+    if (titleEl) titleEl.textContent = titulo;
+    if (subEl)   subEl.textContent   = sub || '—';
+
+    document.getElementById('ntk-equipo-form')?.classList.add('nv-hidden');
+    document.getElementById('ntk-equipo-preview')?.classList.remove('nv-hidden');
+  };
+
+  /* Reinicia toda la sección de equipos (p. ej. cuando cambia el DNI) */
+  function ntkResetSeccionEquipos() {
+    ntkEquiposGuardados = [];
+    ntkIdEquipoSel = 0;
+    document.getElementById('ntk-id-equipo').value = '0';
+    document.getElementById('ntk-eq-saved-wrap')?.classList.add('nv-hidden');
+    document.getElementById('ntk-eq-cards').innerHTML = '';
+    document.getElementById('ntk-equipo-preview')?.classList.add('nv-hidden');
+    document.getElementById('ntk-equipo-form')?.classList.remove('nv-hidden');
+    document.querySelectorAll('.ntk-device-opt').forEach(o => o.classList.remove('selected'));
+    document.getElementById('ntk-tipo-dispositivo').value = '';
+    document.getElementById('extra-laptop')?.classList.remove('visible');
+    document.getElementById('extra-pc')?.classList.remove('visible');
+  }
+
+  async function ntkCargarEquiposCliente(idCliente) {
+    if (!idCliente) { ntkResetSeccionEquipos(); return; }
+    try {
+      const res  = await fetch(`nuevo_ticket.php?action=listar_equipos&idCliente=${encodeURIComponent(idCliente)}`);
+      const data = await res.json();
+      ntkPintarEquiposGuardados(data.equipos || []);
+    } catch {
+      ntkResetSeccionEquipos();
+    }
+  }
+
+
   /* ── Accordion adicionales ── */
   window.ntkToggleAdd = function() {
     document.getElementById('ntk-add-toggle').classList.toggle('open');
     document.getElementById('ntk-add-panel').classList.toggle('open');
   };
-
+ 
   /* ── Cotización en vivo ── */
   window.ntkUpdateQuote = function() {
     document.querySelectorAll('#ntk-servicios-base .ntk-service-item').forEach(row => {
@@ -875,7 +1014,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     const badge = document.getElementById('ntk-add-badge');
     if (badge) { badge.textContent = n; badge.classList.toggle('hidden', n === 0); }
   };
-
+ 
   function ntkGetItems() {
     const items = [];
     const base  = document.querySelector('input[name="ntk_srv_base"]:checked');
@@ -886,16 +1025,48 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     return items;
   }
 
+  /* Datos del dispositivo: del equipo guardado seleccionado o del formulario nuevo */
+  function ntkGetDeviceData() {
+    if (ntkIdEquipoSel > 0) {
+      const eq = ntkEquiposGuardados.find(e => Number(e.idEquipo) === ntkIdEquipoSel);
+      if (eq) {
+        return {
+          idEquipo: ntkIdEquipoSel,
+          tipo:     eq.tipoEquipo || '',
+          marca:    eq.marca || '',
+          modelo:   eq.modelo || '',
+          serie:    eq.numSerie || '',
+          so:       eq.sistemaOperativo || '',
+        };
+      }
+    }
+    const tipo     = document.getElementById('ntk-tipo-dispositivo')?.value || '';
+    const esLaptop = tipo === 'Laptop';
+    return {
+      idEquipo: 0,
+      tipo,
+      marca:  (esLaptop ? document.getElementById('ntk-marca')?.value  : '') || '',
+      modelo: (esLaptop ? document.getElementById('ntk-modelo')?.value : '') || '',
+      serie:  (esLaptop ? document.getElementById('ntk-serie')?.value  : '') || '',
+      so:     (esLaptop
+        ? document.getElementById('ntk-so-laptop')?.value
+        : document.getElementById('ntk-so-pc')?.value) || '',
+    };
+  }
+ 
   /* ── Resumen paso 4 ── */
   function ntkBuildSummary() {
-    const nombre = document.getElementById('ntk-nombre-cliente')?.value || '—';
-    const dni    = document.getElementById('ntk-dni')?.value             || '—';
-    const tel    = document.getElementById('ntk-telefono')?.value        || '—';
-    const correo = document.getElementById('ntk-correo')?.value          || '';
-    const tipo   = document.getElementById('ntk-tipo-dispositivo')?.value|| '—';
-    const marca  = document.getElementById('ntk-marca')?.value           || '';
-    const obs    = document.getElementById('ntk-observaciones')?.value   || '';
-
+    const nombres   = document.getElementById('ntk-nombres')?.value    || '';
+    const apellidos = document.getElementById('ntk-apellidos')?.value  || '';
+    const nombre    = [nombres, apellidos].filter(Boolean).join(' ')   || '—';
+    const dni       = document.getElementById('ntk-dni')?.value        || '—';
+    const tel       = document.getElementById('ntk-telefono')?.value   || '—';
+    const correo    = document.getElementById('ntk-correo')?.value     || '';
+    const dev       = ntkGetDeviceData();
+    const tipo      = dev.tipo  || '—';
+    const marca     = dev.marca || '';
+    const obs       = document.getElementById('ntk-observaciones')?.value || '';
+ 
     const summaryLeft = document.getElementById('ntk-summary-left');
     if (summaryLeft) {
       summaryLeft.innerHTML = `
@@ -915,21 +1086,21 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
           </div>
         </div>`;
     }
-
+ 
     const items    = ntkGetItems();
     const quoteBox = document.getElementById('ntk-summary-quote');
     if (!quoteBox) return;
-
+ 
     if (!items.length) {
       quoteBox.innerHTML = `<div class="ntk-quote-box__title">Resumen de Cotización</div>
         <p style="opacity:.7;font-size:13px;text-align:center;padding:20px 0">Sin servicios seleccionados.</p>`;
       return;
     }
-
+ 
     const subtotal = items.reduce((a, i) => a + i.price, 0);
     const igv      = subtotal * 0.18;
     const total    = subtotal + igv;
-
+ 
     quoteBox.innerHTML = `
       <div class="ntk-quote-box__title">Resumen de Cotización</div>
       ${items.map(i => `
@@ -946,41 +1117,40 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
         <span class="ntk-q-total__amount">S/ ${total.toFixed(2)}</span>
       </div>`;
   }
-
+ 
   /* ── Crear ticket ── */
   window.ntkCrearTicket = function() {
-    const tipo      = document.getElementById('ntk-tipo-dispositivo')?.value || '';
-    const esLaptop  = tipo === 'Laptop';
-    const marca     = (esLaptop ? document.getElementById('ntk-marca')?.value  : '') || '';
-    const modelo    = (esLaptop ? document.getElementById('ntk-modelo')?.value : '') || '';
-    const serie     = (esLaptop ? document.getElementById('ntk-serie')?.value  : '') || '';
-    const so        = (esLaptop
-      ? document.getElementById('ntk-so-laptop')?.value
-      : document.getElementById('ntk-so-pc')?.value) || '';
+    const dev = ntkGetDeviceData();
+    const { idEquipo, tipo, marca, modelo, serie, so } = dev;
     const observaciones = document.getElementById('ntk-observaciones')?.value || '';
-    const nombre    = document.getElementById('ntk-nombre-cliente')?.value || '';
-    const dni       = document.getElementById('ntk-dni')?.value || '';
-    const ruc       = document.getElementById('ntk-ruc')?.value || '';
-    const telefono  = document.getElementById('ntk-telefono')?.value || '';
-    const correo    = document.getElementById('ntk-correo')?.value || '';
-
+ 
+    const nombres   = document.getElementById('ntk-nombres')?.value   || '';
+    const apellidos = document.getElementById('ntk-apellidos')?.value || '';
+    const dni       = document.getElementById('ntk-dni')?.value       || '';
+    const ruc       = document.getElementById('ntk-ruc')?.value       || '';
+    const telefono  = document.getElementById('ntk-telefono')?.value  || '';
+    const correo    = document.getElementById('ntk-correo')?.value    || '';
+ 
+    // nombre completo para PDF
+    const nombreCompleto = [nombres, apellidos].filter(Boolean).join(' ');
+ 
     const serviciosLocal = [];
     const base = document.querySelector('input[name="ntk_srv_base"]:checked');
     if (base) serviciosLocal.push({ nombre: base.dataset.nombre, precio: parseFloat(base.value) });
     document.querySelectorAll('#ntk-add-panel input[type="checkbox"]:checked').forEach(cb => {
       serviciosLocal.push({ nombre: cb.dataset.nombre, precio: parseFloat(cb.value) });
     });
-
+ 
     const hoy = new Date();
     const fecha = hoy.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
     const vencimiento = new Date(hoy);
     vencimiento.setDate(vencimiento.getDate() + 7);
     const fechaVencimiento = vencimiento.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
-
+ 
     window._ntkPdfData = {
       tipo, marca, modelo, serie, so, observaciones,
       servicios: serviciosLocal,
-      cliente: nombre,
+      cliente: nombreCompleto,
       email: correo,
       dni,
       tel: telefono,
@@ -989,21 +1159,21 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
       fechaVencimiento,
       codigo: null, subtotal: null, igv: null, total: null,
     };
-
+ 
     const btn = document.querySelector('.ntk-btn-finish');
     const textoOriginal = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = 'Guardando…'; }
-
+ 
     function restaurarBoton() {
       if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = textoOriginal; }
     }
-
+ 
     fetch('nuevo_ticket.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        nombre, dni, ruc, telefono, correo,
-        tipo, marca, modelo, serie, so, observaciones,
+        nombres, apellidos, dni, ruc, telefono, correo,
+        idEquipo, tipo, marca, modelo, serie, so, observaciones,
         servicios: serviciosLocal.map(s => ({ nombre: s.nombre, precio: s.precio }))
       })
     })
@@ -1030,20 +1200,124 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
         restaurarBoton();
       });
   };
-
+ 
   /* ── Solo números en campos del wizard ── */
   ['ntk-dni', 'ntk-ruc', 'ntk-telefono'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', function() { this.value = this.value.replace(/\D/g, ''); });
   });
+ 
+  /* ══════════════════════════════════════════
+     AUTOCOMPLETADO POR DNI
+     ══════════════════════════════════════════ */
+  (function ntkInitDniAutocomplete() {
+    const dniInput = document.getElementById('ntk-dni');
+    const statusEl = document.getElementById('ntk-dni-status');
+    const hintEl   = document.getElementById('ntk-dni-hint');
+    if (!dniInput) return;
+ 
+    let debounceTimer = null;
+ 
+    /* Helpers de UI */
+    function setStatus(state) {
+      // state: '' | 'loading' | 'found' | 'notfound'
+      if (!statusEl) return;
+      statusEl.className = 'ntk-dni-status';
+      if (state) statusEl.classList.add('ntk-dni-status--' + state);
+      statusEl.innerHTML = state === 'loading'
+        ? '<span class="ntk-dni-spinner"></span>'
+        : state === 'found'
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+          : state === 'notfound'
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+            : '';
+    }
+ 
+    function setHint(msg, type) {
+      // type: '' | 'ok' | 'new'
+      if (!hintEl) return;
+      hintEl.textContent = msg;
+      hintEl.className   = 'ntk-hint' + (type ? ' ntk-hint--' + type : '');
+    }
+ 
+    function fillFields(data) {
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || '';
+      };
+      set('ntk-nombres',   data.nombres);
+      set('ntk-apellidos', data.apellidos);
+      set('ntk-correo',    data.correo);
+      set('ntk-telefono',  data.telefono);
+    }
+ 
+    function clearFields() {
+      ['ntk-nombres', 'ntk-apellidos', 'ntk-correo', 'ntk-telefono'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+    }
+ 
+    async function buscarPorDni(dni) {
+      setStatus('loading');
+      setHint('Buscando cliente…', '');
+      try {
+        const res  = await fetch(`nuevo_ticket.php?action=buscar_dni&dni=${encodeURIComponent(dni)}`);
+        const data = await res.json();
+        if (data.found) {
+          fillFields(data);
+          setStatus('found');
+          setHint('Cliente encontrado. Campos completados automáticamente.', 'ok');
+          ntkCargarEquiposCliente(data.idCliente);
+        } else {
+          clearFields();
+          setStatus('notfound');
+          setHint('DNI no registrado. Completa los datos manualmente.', 'new');
+          ntkResetSeccionEquipos();
+        }
+      } catch {
+        setStatus('');
+        setHint('Error al consultar. Completa los datos manualmente.', '');
+        ntkResetSeccionEquipos();
+      }
+    }
+ 
+    dniInput.addEventListener('input', function() {
+      // El filtro de solo-dígitos ya lo maneja el listener de arriba;
+      // aquí solo disparamos la búsqueda con debounce.
+      const dni = this.value.trim();
+ 
+      clearTimeout(debounceTimer);
+      setStatus('');
+      setHint('', '');
+ 
+      if (dni.length === 8) {
+        debounceTimer = setTimeout(() => buscarPorDni(dni), 400);
+      } else {
+        clearFields();
+        ntkResetSeccionEquipos();
+      }
+    });
+ 
+    /* Avisa si el usuario sale del campo con un DNI incompleto */
+    dniInput.addEventListener('blur', function() {
+      const dni = this.value.trim();
+      if (dni.length > 0 && dni.length < 8) {
+        setStatus('');
+        setHint('El DNI debe tener exactamente 8 dígitos.', '');
+      }
+    });
+  })();
+ 
 })();
-
+ 
 /* ── Admin: PDF de cotización para nuevo_ticket.php ── */
 window._ntkPdfData = null;
 window.ntkGenerarPDF = function() {
   window._pdfData = window._ntkPdfData;
   if (typeof generarPDF === 'function') generarPDF();
 };
+
 
 /* ══════════════════════════════════════════
    INVENTARIO.PHP — filtros, stock y modal
