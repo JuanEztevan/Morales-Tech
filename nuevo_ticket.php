@@ -2,20 +2,65 @@
 require_once 'admin_protect.php';
 require_once 'conexion.php';
 
-/*session_start();
-require_once 'conexion.php';
-
-if (!isset($_SESSION['idAdmin'])) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        http_response_code(401);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+/* ──────────────────────────────────────────────────────────
+   AJAX: búsqueda de cliente por DNI
+   GET nuevo_ticket.php?action=buscar_dni&dni=XXXXXXXX
+   ────────────────────────────────────────────────────────── */
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'buscar_dni') {
+    header('Content-Type: application/json; charset=utf-8');
+    $dni = trim($_GET['dni'] ?? '');
+    if (strlen($dni) !== 8 || !ctype_digit($dni)) {
+        echo json_encode(['found' => false]);
         exit;
     }
-    header("Location: login_staff.php");
+    $stmt = $conn->prepare(
+        "SELECT idCliente, nombres, apellidos, email, numTelefono FROM CLIENTE WHERE numDNI = ? LIMIT 1"
+    );
+    $stmt->bind_param("s", $dni);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ($row) {
+        echo json_encode([
+            'found'     => true,
+            'idCliente' => (int) $row['idCliente'],
+            'nombres'   => $row['nombres'],
+            'apellidos' => $row['apellidos'],
+            'correo'    => $row['email'],
+            'telefono'  => $row['numTelefono'],
+        ]);
+    } else {
+        echo json_encode(['found' => false]);
+    }
     exit;
-}*/
+}
 
+/* ──────────────────────────────────────────────────────────
+   AJAX: equipos guardados de un cliente (Paso 2)
+   GET nuevo_ticket.php?action=listar_equipos&idCliente=N
+   ────────────────────────────────────────────────────────── */
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'listar_equipos') {
+    header('Content-Type: application/json; charset=utf-8');
+    $idCliente = (int) ($_GET['idCliente'] ?? 0);
+    if ($idCliente <= 0) {
+        echo json_encode(['equipos' => []]);
+        exit;
+    }
+    $stmt = $conn->prepare(
+        "SELECT idEquipo, tipoEquipo, marca, modelo, numSerie, sistemaOperativo
+         FROM EQUIPO WHERE idCliente = ? ORDER BY idEquipo DESC LIMIT 10"
+    );
+    $stmt->bind_param("i", $idCliente);
+    $stmt->execute();
+    $equipos = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+    echo json_encode(['equipos' => $equipos], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+/* ──────────────────────────────────────────────────────────
+   POST: guardar ticket
+   ────────────────────────────────────────────────────────── */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
     $datos = json_decode(file_get_contents('php://input'), true);
@@ -24,28 +69,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $idAdmin       = (int) $_SESSION['idAdmin'];
-    $nombre        = trim($datos['nombre']        ?? '');
-    $dni           = trim($datos['dni']           ?? '');
-    $ruc           = trim($datos['ruc']           ?? '');
-    $telefono      = trim($datos['telefono']      ?? '');
-    $correo        = trim($datos['correo']        ?? '');
-    $tipoEquipo    = trim($datos['tipo']          ?? '');
-    $marca         = trim($datos['marca']         ?? '');
-    $modelo        = trim($datos['modelo']        ?? '');
-    $serie         = trim($datos['serie']         ?? '');
-    $so            = trim($datos['so']            ?? '');
-    $observaciones = trim($datos['observaciones'] ?? '');
-    $servicios     = is_array($datos['servicios'] ?? null) ? $datos['servicios'] : [];
+    $idAdmin           = (int) $_SESSION['idAdmin'];
+    $nombres           = trim($datos['nombres']       ?? '');
+    $apellidos         = trim($datos['apellidos']     ?? '');
+    $dni               = trim($datos['dni']           ?? '');
+    $ruc               = trim($datos['ruc']           ?? '');
+    $telefono          = trim($datos['telefono']      ?? '');
+    $correo            = trim($datos['correo']        ?? '');
+    $idEquipoExistente = (int) ($datos['idEquipo']     ?? 0);
+    $tipoEquipo        = trim($datos['tipo']          ?? '');
+    $marca             = trim($datos['marca']         ?? '');
+    $modelo            = trim($datos['modelo']        ?? '');
+    $serie             = trim($datos['serie']         ?? '');
+    $so                = trim($datos['so']            ?? '');
+    $observaciones     = trim($datos['observaciones'] ?? '');
+    $servicios         = is_array($datos['servicios'] ?? null) ? $datos['servicios'] : [];
 
-    if ($nombre === '' || $dni === '' || $telefono === '' || $tipoEquipo === '' || !$servicios) {
+    // nombre completo para compatibilidad con lógica anterior
+    $nombre = trim("$nombres $apellidos");
+
+    if ($nombre === '' || $dni === '' || $telefono === '' || ($idEquipoExistente <= 0 && $tipoEquipo === '') || !$servicios) {
         echo json_encode(['success' => false, 'message' => 'Faltan campos obligatorios.']);
         exit;
     }
-
-    $partes    = preg_split('/\s+/', $nombre, 2);
-    $nombres   = $partes[0] ?? '';
-    $apellidos = $partes[1] ?? '';
 
     $subtotal = 0.0;
     foreach ($servicios as $s) {
@@ -82,8 +128,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // 2. EQUIPO
-    if ($ok) {
+    // 2. EQUIPO — reusar el seleccionado en el Paso 2 o crear uno nuevo
+    $idEquipo = 0;
+    if ($ok && $idEquipoExistente > 0) {
+        $stmtV = $conn->prepare("SELECT idEquipo FROM EQUIPO WHERE idEquipo = ? AND idCliente = ? LIMIT 1");
+        $stmtV->bind_param("ii", $idEquipoExistente, $idCliente);
+        $stmtV->execute();
+        $validRow = $stmtV->get_result()->fetch_assoc();
+        $stmtV->close();
+        if ($validRow) {
+            $idEquipo = $idEquipoExistente;
+        } else {
+            $ok = false;
+        }
+    } elseif ($ok) {
         $stmt = $conn->prepare(
             "INSERT INTO EQUIPO (idCliente, tipoEquipo, marca, modelo, numSerie, sistemaOperativo, observaciones)
              VALUES (?, ?, ?, ?, ?, ?, ?)"
@@ -300,31 +358,52 @@ $nombre_corto   = $partes[0];
                 </div>
                 <div>
                   <div class="ntk-step-card__title">Datos del Cliente</div>
-                  <div class="ntk-step-card__sub">Ingresa la información de identificación</div>
+                  <div class="ntk-step-card__sub">Ingresa el DNI para autocompletar o rellena manualmente</div>
                 </div>
               </div>
               <div class="ntk-step-card__body">
                 <div class="ntk-form-grid">
+
+                  <!-- DNI con indicador de estado -->
                   <div class="ntk-form-group">
                     <label>DNI <span class="ntk-req">*</span></label>
-                    <input type="text" id="ntk-dni" placeholder="8 dígitos" maxlength="8" class="ntk-input">
+                    <div class="ntk-input-wrap">
+                      <input type="text" id="ntk-dni" placeholder="8 dígitos" maxlength="8" class="ntk-input" autocomplete="off">
+                      <span class="ntk-dni-status" id="ntk-dni-status"></span>
+                    </div>
+                    <span class="ntk-hint" id="ntk-dni-hint"></span>
                   </div>
+
+                  <!-- RUC -->
                   <div class="ntk-form-group">
                     <label>RUC <span class="ntk-label-opt">Opcional</span></label>
                     <input type="text" id="ntk-ruc" placeholder="11 dígitos" maxlength="11" class="ntk-input">
                   </div>
-                  <div class="ntk-form-group ntk-span-2">
-                    <label>Nombre completo <span class="ntk-req">*</span></label>
-                    <input type="text" id="ntk-nombre-cliente" placeholder="Nombre y apellidos" class="ntk-input">
+
+                  <!-- Nombres (reemplaza "Nombre completo") -->
+                  <div class="ntk-form-group">
+                    <label>Nombres <span class="ntk-req">*</span></label>
+                    <input type="text" id="ntk-nombres" placeholder="Ej. Juan Carlos" class="ntk-input" autocomplete="off">
                   </div>
+
+                  <!-- Apellidos -->
+                  <div class="ntk-form-group">
+                    <label>Apellidos <span class="ntk-req">*</span></label>
+                    <input type="text" id="ntk-apellidos" placeholder="Ej. García López" class="ntk-input" autocomplete="off">
+                  </div>
+
+                  <!-- Teléfono -->
                   <div class="ntk-form-group">
                     <label>Teléfono <span class="ntk-req">*</span></label>
-                    <input type="text" id="ntk-telefono" placeholder="9 dígitos" maxlength="9" class="ntk-input">
+                    <input type="text" id="ntk-telefono" placeholder="9 dígitos" maxlength="9" class="ntk-input" autocomplete="off">
                   </div>
+
+                  <!-- Correo -->
                   <div class="ntk-form-group">
                     <label>Correo <span class="ntk-label-opt">Opcional</span></label>
-                    <input type="text" id="ntk-correo" placeholder="correo@email.com" class="ntk-input">
+                    <input type="text" id="ntk-correo" placeholder="correo@email.com" class="ntk-input" autocomplete="off">
                   </div>
+
                 </div>
               </div>
               <div class="ntk-step-nav">
@@ -350,59 +429,88 @@ $nombre_corto   = $partes[0];
                 </div>
               </div>
               <div class="ntk-step-card__body">
-                <div class="ntk-section-sm">Tipo de equipo</div>
-                <div class="ntk-device-grid">
-                  <div class="ntk-device-opt" onclick="ntkSelectDevice(this,'Laptop')" id="opt-laptop">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><polyline points="1 21 23 21"/></svg>
-                    <div class="ntk-device-opt__label">Laptop</div>
-                  </div>
-                  <div class="ntk-device-opt" onclick="ntkSelectDevice(this,'PC')" id="opt-pc">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                    <div class="ntk-device-opt__label">PC de escritorio</div>
-                  </div>
-                </div>
-                <input type="hidden" id="ntk-tipo-dispositivo">
 
-                <!-- Campos Laptop -->
-                <div class="ntk-extra-fields ntk-form-grid" id="extra-laptop">
-                  <div class="ntk-form-group">
-                    <label>Marca</label>
-                    <input type="text" id="ntk-marca" placeholder="HP, Apple, ASUS…" class="ntk-input">
+                <input type="hidden" id="ntk-id-equipo" value="0">
+
+                <!-- Equipos guardados del cliente (se llena por AJAX al validar el DNI) -->
+                <div id="ntk-eq-saved-wrap" class="nv-hidden">
+                  <div class="ntk-section-sm">Equipos del cliente</div>
+                  <div id="ntk-eq-cards" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+                    <button type="button" class="ntk-eq-saved-card ntk-eq-saved-card--new" id="ntk-btn-nuevo-equipo" onclick="ntkMostrarFormNuevoEquipo()">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Registrar Nuevo Equipo
+                    </button>
                   </div>
-                  <div class="ntk-form-group">
-                    <label>Modelo <span class="ntk-label-opt">Opcional</span></label>
-                    <input type="text" id="ntk-modelo" placeholder="Ej. Pavilion 15" class="ntk-input">
-                  </div>
-                  <div class="ntk-form-group">
-                    <label>N.° de serie <span class="ntk-label-opt">Opcional</span></label>
-                    <input type="text" id="ntk-serie" placeholder="Ej. 5CD1234XYZ" class="ntk-input">
-                  </div>
-                  <div class="ntk-form-group">
-                    <label>Sistema operativo</label>
-                    <select id="ntk-so-laptop" class="ntk-input ntk-select">
-                      <option value="">Seleccionar…</option>
-                      <option>Windows 11</option>
-                      <option>Windows 10</option>
-                      <option>macOS</option>
-                      <option>Linux</option>
-                      <option>Sin SO</option>
-                    </select>
+                  <hr class="ntk-divider">
+                </div>
+
+                <!-- Resumen del equipo existente seleccionado -->
+                <div class="ntk-equipo-preview nv-hidden" id="ntk-equipo-preview">
+                  <div class="ntk-equipo-preview__inner">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;color:var(--azul-tecnologico);flex-shrink:0;"><rect x="2" y="3" width="20" height="13" rx="2"/><polyline points="1 21 23 21"/></svg>
+                    <div>
+                      <div style="font-weight:700;font-size:13px;color:var(--admin-navy);" id="ntk-equipo-preview__title">—</div>
+                      <div style="font-size:12px;color:var(--admin-gray-400);margin-top:2px;" id="ntk-equipo-preview__sub">—</div>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Campos PC -->
-                <div class="ntk-extra-fields" id="extra-pc" style="margin-top:18px;">
-                  <div class="ntk-form-group" style="max-width:260px;">
-                    <label>Sistema operativo</label>
-                    <select id="ntk-so-pc" class="ntk-input ntk-select">
-                      <option value="">Seleccionar…</option>
-                      <option>Windows 11</option>
-                      <option>Windows 10</option>
-                      <option>Linux</option>
-                      <option>Sin SO</option>
-                    </select>
+                <!-- Formulario de equipo (tipo, marca, modelo, etc.) -->
+                <div id="ntk-equipo-form">
+                  <div class="ntk-section-sm">Tipo de equipo</div>
+                  <div class="ntk-device-grid">
+                    <div class="ntk-device-opt" onclick="ntkSelectDevice(this,'Laptop')" id="opt-laptop">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="13" rx="2"/><polyline points="1 21 23 21"/></svg>
+                      <div class="ntk-device-opt__label">Laptop</div>
+                    </div>
+                    <div class="ntk-device-opt" onclick="ntkSelectDevice(this,'PC')" id="opt-pc">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                      <div class="ntk-device-opt__label">PC de escritorio</div>
+                    </div>
                   </div>
-                </div>
+                  <input type="hidden" id="ntk-tipo-dispositivo">
+
+                  <!-- Campos Laptop -->
+                  <div class="ntk-extra-fields ntk-form-grid" id="extra-laptop">
+                    <div class="ntk-form-group">
+                      <label>Marca</label>
+                      <input type="text" id="ntk-marca" placeholder="HP, Apple, ASUS…" class="ntk-input">
+                    </div>
+                    <div class="ntk-form-group">
+                      <label>Modelo <span class="ntk-label-opt">Opcional</span></label>
+                      <input type="text" id="ntk-modelo" placeholder="Ej. Pavilion 15" class="ntk-input">
+                    </div>
+                    <div class="ntk-form-group">
+                      <label>N.° de serie <span class="ntk-label-opt">Opcional</span></label>
+                      <input type="text" id="ntk-serie" placeholder="Ej. 5CD1234XYZ" class="ntk-input">
+                    </div>
+                    <div class="ntk-form-group">
+                      <label>Sistema operativo</label>
+                      <select id="ntk-so-laptop" class="ntk-input ntk-select">
+                        <option value="">Seleccionar…</option>
+                        <option>Windows 11</option>
+                        <option>Windows 10</option>
+                        <option>macOS</option>
+                        <option>Linux</option>
+                        <option>Sin SO</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Campos PC -->
+                  <div class="ntk-extra-fields" id="extra-pc" style="margin-top:18px;">
+                    <div class="ntk-form-group" style="max-width:260px;">
+                      <label>Sistema operativo</label>
+                      <select id="ntk-so-pc" class="ntk-input ntk-select">
+                        <option value="">Seleccionar…</option>
+                        <option>Windows 11</option>
+                        <option>Windows 10</option>
+                        <option>Linux</option>
+                        <option>Sin SO</option>
+                      </select>
+                    </div>
+                  </div>
+                </div><!-- /ntk-equipo-form -->
 
                 <hr class="ntk-divider">
                 <div class="ntk-form-group">
