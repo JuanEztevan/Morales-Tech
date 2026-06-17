@@ -4389,3 +4389,23 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .ntk-hint--ok  { color: #22c55e; }
 .ntk-hint--new { color: #f59e0b; }
+/* ══════════════════════════════════════════════════════════════
+   CONSULTA TICKETS — badges nuevas fases + spinner del botón
+   ══════════════════════════════════════════════════════════════ */
+
+/* Fase 2: En proceso — amarillo/ámbar */
+.status-badge.proceso {
+  background: rgba(201, 150, 0, .18);
+  color: #f5c842;
+  border: 1px solid rgba(201, 150, 0, .32);
+}
+
+/* Fase 3: Listo para entrega — azul tecnológico */
+.status-badge.entrega {
+  background: rgba(23, 70, 234, .14);
+  color: var(--txt-accent);
+  border: 1px solid rgba(23, 70, 234, .32);
+}
+
+/* Spinner del botón Consultar estado */
+@keyframes ct-spin { to { transform: rotate(360deg); } }
