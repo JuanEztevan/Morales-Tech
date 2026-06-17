@@ -170,7 +170,7 @@ $preguntas = [
       <?php if ($success): ?>
       <div class="admin-alert admin-alert--success">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Solicitud enviada correctamente. El administrador activará tu cuenta en breve.
+        Cuenta creada correctamente. Dirígete al inicio de sesión para ingresar al sistema.
       </div>
       <?php elseif ($error): ?>
       <div class="admin-alert admin-alert--error">
