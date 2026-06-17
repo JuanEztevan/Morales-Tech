@@ -92,7 +92,10 @@ https://balsamiq.cloud/sty85pm/pppo8zi
 ### Página Pública (Landing Page)
 - Accesible sin iniciar sesión en `index.php`.
 - Visualización de servicios ofrecidos por Morales Tech.
-- Consulta pública del estado de tickets (`consulta_tickets.php`).
+- Consulta pública del estado de tickets (`consulta_tickets.php`):
+  - Búsqueda de tickets en tiempo real conectada a la base de datos.
+  - Visualización de información general del ticket (código, estado, equipo y servicios).
+  - Implementación de medidas de seguridad que evitan exponer datos sensibles del cliente (DNI, nombre, etc.).
 
 ### Portal de Clientes (Privado)
 - Requiere inicio de sesión.
@@ -201,6 +204,7 @@ Morales-Tech/
 - Implementación de cierre de sesión seguro (logout) con destrucción completa de la sesión.
 - Redirección automática al login en caso de sesión no válida o expirada.
 - Control de acceso por roles con validación continua de sesión.
+- Implementación de consultas públicas seguras que restringen la exposición de información sensible del cliente.
 
 ## Pruebas Funcionales y de Seguridad
 Se realizaron 10 casos de prueba funcionales sobre los módulos principales del sistema, documentados y ejecutados en TestRail.
