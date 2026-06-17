@@ -1,3 +1,139 @@
+<?php
+
+// ── Manejador AJAX ─────────────────────────────────────────────
+if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
+    header('Content-Type: application/json; charset=utf-8');
+
+    $codigo = isset($_GET['codigo']) ? trim($_GET['codigo']) : '';
+
+    // Formato MT- seguido de letras y/o números (6-10 chars)
+    if (!preg_match('/^MT-[A-F0-9]{4,10}$/i', $codigo)) {
+        echo json_encode(['found' => false]);
+        exit;
+    }
+    $codigo = strtoupper($codigo);
+
+    require_once 'conexion.php'; // usa el mysqli del proyecto
+
+    $sql = "
+        SELECT
+            t.codigo,
+            t.estado,
+            t.fechaCreacion,
+            e.tipoEquipo,
+            e.marca,
+            e.modelo,
+            GROUP_CONCAT(
+                s.nomServicio
+                ORDER BY s.tipo DESC
+                SEPARATOR '||'
+            ) AS servicios,
+            GROUP_CONCAT(
+                s.tipo
+                ORDER BY s.tipo DESC
+                SEPARATOR '||'
+            ) AS tiposServicio
+        FROM TICKET t
+        JOIN COTIZACION          c  ON t.idCotizacion = c.idCotizacion
+        JOIN EQUIPO              e  ON c.idEquipo      = e.idEquipo
+        JOIN COTIZACION_SERVICIO cs ON c.idCotizacion  = cs.idCotizacion
+        JOIN SERVICIO            s  ON cs.idServicio   = s.idServicio
+        WHERE t.codigo = ?
+        GROUP BY t.idTicket
+        LIMIT 1
+    ";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        error_log('consulta_tickets prepare error: ' . $conn->error);
+        echo json_encode(['found' => false]);
+        exit;
+    }
+
+    $stmt->bind_param('s', $codigo);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row    = $result->fetch_assoc();
+    $stmt->close();
+
+    if (!$row) {
+        echo json_encode(['found' => false]);
+        exit;
+    }
+
+    // ── Separar servicio principal de adicionales ───────────────
+    $nombresArr  = explode('||', $row['servicios']);
+    $tiposArr    = explode('||', $row['tiposServicio']);
+    $principal   = '';
+    $adicionales = [];
+
+    foreach ($nombresArr as $i => $nombre) {
+        $tipo = isset($tiposArr[$i]) ? $tiposArr[$i] : '';
+        if (strtolower($tipo) === 'principal' && $principal === '') {
+            $principal = $nombre;
+        } else {
+            $adicionales[] = $nombre;
+        }
+    }
+
+    // ── Mapeo de estado → número de paso (1–4) ─────────────────
+    $estadoMap = [
+        'Recibido'           => 1,
+        'En proceso'         => 2,
+        'Listo para entrega' => 3,
+        'Completado'         => 4,
+    ];
+    $estadoLabel = $row['estado'];
+    $estadoNum   = $estadoMap[$estadoLabel] ?? 1;
+
+    $badgeClasses = [
+        1 => 'recibido',
+        2 => 'proceso',
+        3 => 'entrega',
+        4 => 'completado',
+    ];
+
+    $updateTexts = [
+        1 => 'Tu equipo acaba de ser recibido y registrado en nuestro sistema. En breve un técnico comenzará a trabajar en él.',
+        2 => 'Tu equipo está siendo atendido por nuestro técnico. Estamos trabajando en el servicio solicitado para entregártelo en las mejores condiciones.',
+        3 => 'El servicio ha sido completado con éxito. Tu equipo ya está listo y disponible para ser recogido en nuestras instalaciones.',
+        4 => 'Servicio finalizado y equipo entregado. ¡Gracias por confiar en Morales Tech!',
+    ];
+
+    $etaTexts = [
+        1 => 'Un técnico será asignado en breve',
+        2 => 'En atención — tiempo estimado según el servicio contratado',
+        3 => 'Listo para recoger — visítanos en horario de atención',
+        4 => 'Servicio completado y entregado',
+    ];
+
+    // ── Descripción del equipo (sin datos del cliente) ──────────
+    $tipoLabel = $row['tipoEquipo'] ?? '—';
+    $modeloStr = '';
+    if (!empty($row['marca']) && !empty($row['modelo'])) {
+        $modeloStr = $row['marca'] . ' ' . $row['modelo'];
+    } elseif (!empty($row['marca'])) {
+        $modeloStr = $row['marca'];
+    }
+    $deviceStr = $modeloStr ? "$tipoLabel $modeloStr" : $tipoLabel;
+
+    echo json_encode([
+        'found'       => true,
+        'codigo'      => $row['codigo'],
+        'device'      => $deviceStr,
+        'service'     => $principal ?: '—',
+        'adicionales' => $adicionales,
+        'statusNum'   => $estadoNum,
+        'statusLabel' => $estadoLabel,
+        'statusClass' => $badgeClasses[$estadoNum] ?? 'recibido',
+        'updateText'  => $updateTexts[$estadoNum],
+        'eta'         => $etaTexts[$estadoNum],
+        'fecha'       => date('d/m/Y', strtotime($row['fechaCreacion'])),
+    ], JSON_UNESCAPED_UNICODE);
+
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -92,7 +228,7 @@
             <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/>
           </svg>
           <input id="ticketInput" class="ct-input" type="text"
-                 placeholder="Ej: MT-1234" maxlength="12"
+                 placeholder="Ej: MT-83AE28" maxlength="15"
                  autocomplete="off" spellcheck="false">
         </div>
 
@@ -101,15 +237,6 @@
           Consultar estado
         </button>
 
-        <div class="quick-tickets">
-          <div class="qt-label">Prueba un ejemplo</div>
-          <div class="qt-chips">
-            <div class="qt-chip" data-ticket="MT-8842">MT-8842</div>
-            <div class="qt-chip" data-ticket="MT-8843">MT-8843</div>
-            <div class="qt-chip" data-ticket="MT-8844">MT-8844</div>
-          </div>
-        </div>
-
         <div class="ct-help">
           <p>¿No recuerdas tu código de ticket? Escríbenos directamente y te ayudamos a recuperarlo. <a href="https://wa.me/51903208170" target="_blank" rel="noopener">Contactar soporte →</a></p>
         </div>
@@ -117,6 +244,7 @@
 
       <!-- ─ PANEL DERECHO ─ -->
       <div class="ct-result-panel">
+
         <!-- Estado vacío -->
         <div class="result-empty" id="resultEmpty">
           <div class="result-empty-icon">
@@ -133,10 +261,10 @@
           <div class="rc-header">
             <div>
               <div class="rc-header-label">Resultado de búsqueda</div>
-              <div class="rc-ticket-id" id="rcTicketId">Ticket #MT-8844</div>
-              <div class="rc-device" id="rcDevice">Laptop Apple MacBook · Diagnóstico técnico</div>
+              <div class="rc-ticket-id" id="rcTicketId">—</div>
+              <div class="rc-device"    id="rcDevice">—</div>
             </div>
-            <div class="status-badge reparacion" id="rcStatusBadge">En reparación</div>
+            <div class="status-badge" id="rcStatusBadge">—</div>
           </div>
 
           <div class="rc-progress">
@@ -144,30 +272,50 @@
               <div class="rcp-bar-fill" id="rcBarFill" style="width:0%"></div>
             </div>
             <div class="rcp-steps">
+
+              <!-- Paso 1: Recibido -->
               <div class="rcp-step" id="step1">
                 <div class="rcp-step-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                 </div>
                 <div class="rcp-step-name">Recibido</div>
               </div>
+
+              <!-- Paso 2: En proceso -->
               <div class="rcp-step" id="step2">
                 <div class="rcp-step-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                  </svg>
                 </div>
-                <div class="rcp-step-name">En diagnóstico</div>
+                <div class="rcp-step-name">En proceso</div>
               </div>
+
+              <!-- Paso 3: Listo para entrega -->
               <div class="rcp-step" id="step3">
                 <div class="rcp-step-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="3" width="15" height="13" rx="2"/>
+                    <path d="M16 8h4l3 5v3h-7V8z"/>
+                    <circle cx="5.5" cy="18.5" r="2.5"/>
+                    <circle cx="18.5" cy="18.5" r="2.5"/>
+                  </svg>
                 </div>
-                <div class="rcp-step-name">En reparación</div>
+                <div class="rcp-step-name">Listo para entrega</div>
               </div>
+
+              <!-- Paso 4: Completado -->
               <div class="rcp-step" id="step4">
                 <div class="rcp-step-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
                 </div>
                 <div class="rcp-step-name">Completado</div>
               </div>
+
             </div>
           </div>
 
@@ -178,10 +326,10 @@
               </div>
               <div>
                 <div class="rc-update-title">Actualización del sistema</div>
-                <div class="rc-update-text" id="rcUpdateText">Tu equipo completó el diagnóstico satisfactoriamente.</div>
+                <div class="rc-update-text" id="rcUpdateText">—</div>
                 <div class="rc-update-eta" id="rcEta">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  Tiempo estimado: 24–48 horas
+                  —
                 </div>
               </div>
             </div>
@@ -191,16 +339,16 @@
             <div class="rc-details-title">Información del servicio</div>
             <div class="rc-details-grid">
               <div class="rc-detail-item">
-                <div class="rc-detail-key">Técnico asignado</div>
-                <div class="rc-detail-val">Arnie Leyva</div>
-              </div>
-              <div class="rc-detail-item">
                 <div class="rc-detail-key">Fecha de ingreso</div>
                 <div class="rc-detail-val" id="rcdFecha">—</div>
               </div>
               <div class="rc-detail-item">
-                <div class="rc-detail-key">Tipo de servicio</div>
+                <div class="rc-detail-key">Servicio principal</div>
                 <div class="rc-detail-val" id="rcdServicio">—</div>
+              </div>
+              <div class="rc-detail-item">
+                <div class="rc-detail-key">Servicios adicionales</div>
+                <div class="rc-detail-val" id="rcdAdicionales">—</div>
               </div>
               <div class="rc-detail-item">
                 <div class="rc-detail-key">Estado actual</div>
@@ -209,8 +357,8 @@
             </div>
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
   </div>
 </div>
