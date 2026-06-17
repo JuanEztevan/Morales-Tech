@@ -149,126 +149,114 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   };
 })();
 
+
 /* ── CONSULTA TICKETS ── */
 (function initConsultaTickets() {
   const btnConsultar = document.getElementById('btnConsultar');
   const ticketInput  = document.getElementById('ticketInput');
   if (!btnConsultar || !ticketInput) return;
 
-  /* Datos de demo */
-  const TICKETS = {
-    'MT-8842': {
-      device: 'Laptop HP Pavilion',
-      service: 'Mantenimiento correctivo',
-      status: 1,
-      statusLabel: 'Recibido',
-      statusClass: 'recibido',
-      updateText: 'Tu equipo acaba de ser recibido y registrado en nuestro sistema. Un técnico ha sido asignado y comenzará el diagnóstico en breve.',
-      eta: 'Inicio de diagnóstico: dentro de 2–4 horas',
-      tecnico: 'Ángel Morales',
-      fecha: '20/05/2026',
-    },
-    'MT-8843': {
-      device: 'PC Escritorio',
-      service: 'Repotenciación',
-      status: 2,
-      statusLabel: 'En diagnóstico',
-      statusClass: 'diagnostico',
-      updateText: 'Tu equipo está siendo analizado por nuestro técnico. Estamos identificando los componentes a mejorar y calculando el alcance del servicio de repotenciación.',
-      eta: 'Diagnóstico estimado: 4–6 horas',
-      tecnico: 'Ángel Morales',
-      fecha: '19/05/2026',
-    },
-    'MT-8844': {
-      device: 'Laptop Apple MacBook',
-      service: 'Diagnóstico técnico',
-      status: 3,
-      statusLabel: 'En reparación',
-      statusClass: 'reparacion',
-      updateText: 'Tu equipo completó el diagnóstico satisfactoriamente. Actualmente se encuentra en el área de reparación con nuestro técnico asignado, quien está trabajando en el reemplazo de componentes identificados.',
-      eta: 'Tiempo estimado: 24–48 horas',
-      tecnico: 'Ángel Morales',
-      fecha: '18/05/2026',
-    },
-  };
-
   const PROGRESS = { 1: 12, 2: 40, 3: 72, 4: 100 };
 
   function normalize(raw) {
-    return raw.trim().toUpperCase().replace(/^MT-?/i, 'MT-');
+    return raw.trim().toUpperCase().replace(/^MT-?(\d)/i, 'MT-$1');
   }
 
-  function renderTicket(key) {
-    const data = TICKETS[key];
-    if (!data) return false;
+  function setBtnLoading(loading) {
+    btnConsultar.disabled      = loading;
+    btnConsultar.style.opacity = loading ? '.6' : '';
+    btnConsultar.innerHTML     = loading
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:ct-spin .8s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.18-7.3"/></svg> Buscando\u2026'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Consultar estado';
+  }
 
-    document.getElementById('rcTicketId').textContent  = 'Ticket #' + key;
-    document.getElementById('rcDevice').textContent    = data.device + ' · ' + data.service;
+  function renderTicket(data) {
+    document.getElementById('rcTicketId').textContent = 'Ticket #' + data.codigo;
+    document.getElementById('rcDevice').textContent   = data.device + ' \u00b7 ' + data.service;
 
     const badge = document.getElementById('rcStatusBadge');
     badge.textContent = data.statusLabel;
     badge.className   = 'status-badge ' + data.statusClass;
 
-    setTimeout(() => {
-      const fill = document.getElementById('rcBarFill');
-      if (fill) fill.style.width = PROGRESS[data.status] + '%';
+    setTimeout(function() {
+      var fill = document.getElementById('rcBarFill');
+      if (fill) fill.style.width = (PROGRESS[data.statusNum] || 12) + '%';
     }, 100);
 
-    for (let i = 1; i <= 4; i++) {
-      const el = document.getElementById('step' + i);
+    for (var i = 1; i <= 4; i++) {
+      var el = document.getElementById('step' + i);
       if (!el) continue;
       el.className = 'rcp-step';
-      if (i < data.status)  el.classList.add('done');
-      if (i === data.status) el.classList.add('active');
+      if (i < data.statusNum)  el.classList.add('done');
+      if (i === data.statusNum) el.classList.add('active');
     }
 
     document.getElementById('rcUpdateText').textContent = data.updateText;
-    const etaEl = document.getElementById('rcEta');
+
+    var etaEl = document.getElementById('rcEta');
     if (etaEl) {
       etaEl.innerHTML =
-        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${data.eta}`;
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' + data.eta;
     }
 
     document.getElementById('rcdFecha').textContent    = data.fecha;
     document.getElementById('rcdServicio').textContent = data.service;
     document.getElementById('rcdEstado').textContent   = data.statusLabel;
-    return true;
-  }
 
-  function doSearch() {
-    const raw   = ticketInput.value;
-    const key   = normalize(raw);
-    const empty = document.getElementById('resultEmpty');
-    const card  = document.getElementById('resultCard');
-    const fill  = document.getElementById('rcBarFill');
-
-    if (fill) fill.style.width = '0%';
-
-    if (renderTicket(key)) {
-      empty.style.display = 'none';
-      card.classList.add('visible');
-      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      card.classList.remove('visible');
-      empty.style.display = '';
-      const title = empty.querySelector('.result-empty-title');
-      const text  = empty.querySelector('.result-empty-text');
-      if (title) title.textContent = 'Ticket no encontrado';
-      if (text)  text.innerHTML =
-        `No encontramos un ticket con el código <strong style="color:var(--txt-main)">${raw || '—'}</strong>. Verifica el código e inténtalo de nuevo, o <a href="https://wa.me/51903208170" target="_blank" style="color:#8db4ff;font-weight:600">contáctanos por WhatsApp</a>.`;
+    var adicEl = document.getElementById('rcdAdicionales');
+    if (adicEl) {
+      adicEl.textContent = (data.adicionales && data.adicionales.length)
+        ? data.adicionales.join(', ')
+        : 'Ninguno';
     }
   }
 
-  btnConsultar.addEventListener('click', doSearch);
-  ticketInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+  function showError(rawInput) {
+    var empty = document.getElementById('resultEmpty');
+    var card  = document.getElementById('resultCard');
+    card.classList.remove('visible');
+    empty.style.display = '';
+    var title = empty.querySelector('.result-empty-title');
+    var text  = empty.querySelector('.result-empty-text');
+    if (title) title.textContent = 'Ticket no encontrado';
+    if (text)  text.innerHTML =
+      'No encontramos un ticket con el c\u00f3digo <strong style="color:var(--txt-main)">' + (rawInput || '\u2014') + '</strong>. Verifica el c\u00f3digo e int\u00e9ntalo de nuevo, o <a href="https://wa.me/51903208170" target="_blank" style="color:#8db4ff;font-weight:600">cont\u00e1ctanos por WhatsApp</a>.';
+  }
 
-  document.querySelectorAll('.qt-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      ticketInput.value = chip.dataset.ticket;
-      doSearch();
-    });
-  });
+  function doSearch() {
+    var raw  = ticketInput.value.trim();
+    var code = normalize(raw);
+    var fill = document.getElementById('rcBarFill');
+    if (fill) fill.style.width = '0%';
+    if (!raw) return;
+
+    setBtnLoading(true);
+
+    fetch('consulta_tickets.php?ajax=1&codigo=' + encodeURIComponent(code))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        setBtnLoading(false);
+        var empty = document.getElementById('resultEmpty');
+        var card  = document.getElementById('resultCard');
+        if (data.found) {
+          empty.style.display = 'none';
+          card.classList.add('visible');
+          renderTicket(data);
+          card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          showError(raw);
+        }
+      })
+      .catch(function() {
+        setBtnLoading(false);
+        showError(raw);
+      });
+  }
+
+  btnConsultar.addEventListener('click', doSearch);
+  ticketInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(); });
 })();
+
 
 /* ══════════════════════════════════════════
    DASHBOARD — inicio_clientes, tickets_cliente, nuevo_ticket_cliente
