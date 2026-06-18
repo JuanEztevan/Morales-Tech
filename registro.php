@@ -36,6 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'El RUC debe tener exactamente 11 dígitos.';
     } elseif (empty($pregunta1) || empty($respuesta1) || empty($pregunta2) || empty($respuesta2) || empty($pregunta3) || empty($respuesta3)) {
         $error = 'Completa las tres preguntas de seguridad y sus respuestas.';
+    } elseif ($pregunta1 === $pregunta2 || $pregunta1 === $pregunta3 || $pregunta2 === $pregunta3) {
+        $error = 'Las tres preguntas de seguridad deben ser diferentes.';
     } else {
         // Verificar si el correo ya existe
         $stmt = $conn->prepare("SELECT idCliente FROM CLIENTE WHERE email = ?");
@@ -406,6 +408,30 @@ $preguntas = [
         </div>
         <?php endfor; ?>
 
+        <script>
+        (function() {
+          var sels = [
+            document.getElementById('pregunta1'),
+            document.getElementById('pregunta2'),
+            document.getElementById('pregunta3')
+          ];
+          function actualizarOpciones() {
+            var vals = sels.map(function(s) { return s ? s.value : ''; });
+            sels.forEach(function(sel, idx) {
+              if (!sel) return;
+              Array.from(sel.options).forEach(function(opt) {
+                if (opt.value === '') return;
+                opt.disabled = vals.some(function(v, i) { return i !== idx && v === opt.value; });
+              });
+            });
+          }
+          sels.forEach(function(sel) {
+            if (sel) sel.addEventListener('change', actualizarOpciones);
+          });
+          actualizarOpciones();
+        })();
+        </script>
+
         <!-- Botones paso 2 -->
         <div class="ms-btn-row">
           <button type="button" class="ms-btn-back" onclick="msBack(1)">
@@ -539,5 +565,24 @@ $preguntas = [
   var MS_TOTAL_STEPS = 3;
 </script>
 <script src="script.js" defer></script>
+<script>
+(function() {
+  function setupToggle(btnId, inputId, showId, hideId) {
+    var btn   = document.getElementById(btnId);
+    var input = document.getElementById(inputId);
+    var show  = document.getElementById(showId);
+    var hide  = document.getElementById(hideId);
+    if (!btn || !input) return;
+    btn.addEventListener('click', function() {
+      var visible = input.type === 'text';
+      input.type  = visible ? 'password' : 'text';
+      if (show) show.style.display = visible ? '' : 'none';
+      if (hide) hide.style.display = visible ? 'none' : '';
+    });
+  }
+  setupToggle('pw-toggle-1', 'password', 'eye1-show', 'eye1-hide');
+  setupToggle('pw-toggle-2', 'confirm',  'eye2-show', 'eye2-hide');
+})();
+</script>
 </body>
 </html>
