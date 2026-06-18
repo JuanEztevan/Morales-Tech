@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $datos  = json_decode(file_get_contents('php://input'), true);
     $codigo = trim($datos['codigo'] ?? '');
     $estado = trim($datos['estado'] ?? '');
-    $validos = ['Recibido','En diagnóstico','En reparación','Completado'];
+    $validos = ['Recibido','En proceso','Listo para entrega','Completado'];
     if ($codigo === '' || !in_array($estado, $validos)) {
         echo json_encode(['success' => false, 'message' => 'Datos inválidos.']);
         exit;
@@ -35,7 +35,7 @@ $inicial        = strtoupper(substr($partes[0], 0, 1));
 $nombre_corto   = $partes[0];
 
 // ── Filtro activo ──
-$estados_validos = ['Recibido','En diagnóstico','En reparación','Completado'];
+$estados_validos = ['Recibido','En proceso','Listo para entrega','Completado'];
 $filtro_activo   = $_GET['estado'] ?? 'Todos';
 if (!in_array($filtro_activo, array_merge(['Todos'], $estados_validos))) {
     $filtro_activo = 'Todos';
@@ -75,25 +75,25 @@ while ($f = $res->fetch_assoc()) {
     ];
 }
 
-$estados = ['Todos','Recibido','En diagnóstico','En reparación','Completado'];
+$estados = ['Todos','Recibido','En proceso','Listo para entrega','Completado'];
 
 function clase_estado_ticket($estado) {
     $m = [
-        'Recibido'       => 'dash-badge--recibido',
-        'En diagnóstico' => 'dash-badge--diagnostico',
-        'En reparación'  => 'dash-badge--reparacion',
-        'Completado'     => 'dash-badge--completado',
+        'Recibido'           => 'dash-badge--recibido',
+        'En proceso'         => 'dash-badge--diagnostico',
+        'Listo para entrega' => 'dash-badge--reparacion',
+        'Completado'         => 'dash-badge--completado',
     ];
     return $m[$estado] ?? 'dash-badge--default';
 }
 
 function clase_filtro_ticket($estado) {
     $m = [
-        'Recibido'       => 'tk-filter--recibido',
-        'En diagnóstico' => 'tk-filter--diagnostico',
-        'En reparación'  => 'tk-filter--reparacion',
-        'Completado'     => 'tk-filter--completado',
-        'Todos'          => 'tk-filter--todos',
+        'Recibido'           => 'tk-filter--recibido',
+        'En proceso'         => 'tk-filter--diagnostico',
+        'Listo para entrega' => 'tk-filter--reparacion',
+        'Completado'         => 'tk-filter--completado',
+        'Todos'              => 'tk-filter--todos',
     ];
     return $m[$estado] ?? '';
 }
@@ -232,10 +232,10 @@ function clase_filtro_ticket($estado) {
                 <select class="tk-estado-select <?= clase_estado_ticket($t['estado']) ?>"
                         data-id="<?= htmlspecialchars($t['id']) ?>"
                         onchange="tkActualizarEstado(this)">
-                  <option <?= $t['estado']==='Recibido'       ? 'selected':'' ?>>Recibido</option>
-                  <option <?= $t['estado']==='En diagnóstico' ? 'selected':'' ?>>En diagnóstico</option>
-                  <option <?= $t['estado']==='En reparación'  ? 'selected':'' ?>>En reparación</option>
-                  <option <?= $t['estado']==='Completado'     ? 'selected':'' ?>>Completado</option>
+                  <option <?= $t['estado']==='Recibido'           ? 'selected':'' ?>>Recibido</option>
+                  <option <?= $t['estado']==='En proceso'         ? 'selected':'' ?>>En proceso</option>
+                  <option <?= $t['estado']==='Listo para entrega' ? 'selected':'' ?>>Listo para entrega</option>
+                  <option <?= $t['estado']==='Completado'         ? 'selected':'' ?> disabled>Completado</option>
                 </select>
               </td>
             </tr>

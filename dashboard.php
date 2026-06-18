@@ -136,8 +136,8 @@ foreach ($raw_donut as $i => $f) {
 function clase_estado_dash($e) {
     $m = [
         'Recibido'       => 'dash-badge--recibido',
-        'En diagnóstico' => 'dash-badge--diagnostico',
-        'En reparación'  => 'dash-badge--reparacion',
+        'En proceso'         => 'dash-badge--diagnostico',
+        'Listo para entrega' => 'dash-badge--reparacion',
         'Completado'     => 'dash-badge--completado',
     ];
     return $m[$e] ?? 'dash-badge--default';
