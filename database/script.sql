@@ -117,7 +117,7 @@ CREATE TABLE COMPONENTE (
 -- tabla venta
 CREATE TABLE VENTA (
     idVenta INT AUTO_INCREMENT PRIMARY KEY,
-    idTicket INT NOT NULL,
+    idTicket INT NULL,
     idAdmin INT NOT NULL,
     nombreCliente VARCHAR(150),
     dniCliente VARCHAR(8),
@@ -211,3 +211,6 @@ INSERT INTO componente (nombre, categoria, stockActual, stockMinimo, precioUnita
 ('RAM DDR4 16GB 3200MHz Kingston', 'Memoria RAM', 8, 3, 160.00),
 ('RAM DDR5 16GB 4800MHz Crucial', 'Memoria RAM', 5, 2, 240.00),
 ('RAM DDR4 4GB 2400MHz Genérica', 'Memoria RAM', 10, 3, 55.00);
+
+-- Actualización para Ventas por poducto
+ALTER TABLE VENTA MODIFY idTicket INT NULL;
