@@ -764,10 +764,10 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
 
 (function initTicketsAdmin() {
   const BADGE_MAP = {
-    'Recibido':       'dash-badge--recibido',
-    'En diagnóstico': 'dash-badge--diagnostico',
-    'En reparación':  'dash-badge--reparacion',
-    'Completado':     'dash-badge--completado',
+    'Recibido':           'dash-badge--recibido',
+    'En proceso':         'dash-badge--diagnostico',
+    'Listo para entrega': 'dash-badge--reparacion',
+    'Completado':         'dash-badge--completado',
   };
   const ALL_BADGES = Object.values(BADGE_MAP).concat(['dash-badge--default']);
 
