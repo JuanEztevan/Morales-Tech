@@ -37,23 +37,46 @@ $meses_largo = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Ago
 $mes_actual  = $meses_largo[(int)date('n')] . ' ' . date('Y');
 
 // ── KPIs ──
-$r = $conn->query("SELECT COALESCE(SUM(c.total),0) AS v FROM COTIZACION c JOIN TICKET t ON t.idCotizacion=c.idCotizacion WHERE DATE_FORMAT(t.fechaCreacion,'%Y-%m')=DATE_FORMAT(NOW(),'%Y-%m')");
+$r = $conn->query("SELECT COALESCE(SUM(c.total),0) AS v FROM COTIZACION c JOIN TICKET t ON t.idCotizacion=c.idCotizacion WHERE t.estado='Completado' AND DATE_FORMAT(t.fechaCreacion,'%Y-%m')=DATE_FORMAT(NOW(),'%Y-%m')");
 $ingresos_mes = (float) $r->fetch_assoc()['v'];
+
+$r = $conn->query("SELECT COALESCE(SUM(c.total),0) AS v FROM COTIZACION c JOIN TICKET t ON t.idCotizacion=c.idCotizacion WHERE t.estado='Completado' AND DATE_FORMAT(t.fechaCreacion,'%Y-%m')=DATE_FORMAT(NOW() - INTERVAL 1 MONTH,'%Y-%m')");
+$ingresos_mes_anterior = (float) $r->fetch_assoc()['v'];
+if ($ingresos_mes_anterior > 0) {
+    $ingresos_pct = round(($ingresos_mes - $ingresos_mes_anterior) / $ingresos_mes_anterior * 100, 1);
+} else {
+    $ingresos_pct = null;
+}
 
 $r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE DATE(fechaCreacion)=CURDATE()");
 $tickets_hoy = (int) $r->fetch_assoc()['v'];
 
+$r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE DATE(fechaCreacion)=CURDATE() - INTERVAL 1 DAY");
+$tickets_ayer = (int) $r->fetch_assoc()['v'];
+$tickets_delta = $tickets_hoy - $tickets_ayer;
+
 $r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE estado != 'Completado'");
 $tickets_pendientes = (int) $r->fetch_assoc()['v'];
 
+$r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE estado='En proceso'");
+$tickets_en_proceso = (int) $r->fetch_assoc()['v'];
+
 $r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE estado='Completado' AND DATE_FORMAT(fechaCreacion,'%Y-%m')=DATE_FORMAT(NOW(),'%Y-%m')");
 $tickets_completados = (int) $r->fetch_assoc()['v'];
+
+$r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE estado='Completado' AND DATE_FORMAT(fechaCreacion,'%Y-%m')=DATE_FORMAT(NOW() - INTERVAL 1 MONTH,'%Y-%m')");
+$tickets_completados_anterior = (int) $r->fetch_assoc()['v'];
+if ($tickets_completados_anterior > 0) {
+    $completados_pct = round(($tickets_completados - $tickets_completados_anterior) / $tickets_completados_anterior * 100, 1);
+} else {
+    $completados_pct = null;
+}
 
 // ── Resumen del día ──
 $r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE estado='Completado' AND DATE(fechaCreacion)=CURDATE()");
 $completados_hoy = (int) $r->fetch_assoc()['v'];
 
-$r = $conn->query("SELECT COALESCE(SUM(c.total),0) AS v FROM COTIZACION c JOIN TICKET t ON t.idCotizacion=c.idCotizacion WHERE DATE(t.fechaCreacion)=CURDATE()");
+$r = $conn->query("SELECT COALESCE(SUM(c.total),0) AS v FROM COTIZACION c JOIN TICKET t ON t.idCotizacion=c.idCotizacion WHERE t.estado='Completado' AND DATE(t.fechaCreacion)=CURDATE()");
 $ingresos_hoy = (float) $r->fetch_assoc()['v'];
 
 // ── Tickets recientes (últimos 5) ──
@@ -222,10 +245,12 @@ function clase_estado_dash($e) {
                 <div class="dash-kpi-card__icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                 </div>
-                <span class="dash-kpi-badge dash-kpi-badge--up">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-                  +18%
+                <?php if ($ingresos_pct !== null): ?>
+                <span class="dash-kpi-badge <?= $ingresos_pct >= 0 ? 'dash-kpi-badge--up' : 'dash-kpi-badge--down' ?>">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="<?= $ingresos_pct >= 0 ? '18 15 12 9 6 15' : '6 9 12 15 18 9' ?>"/></svg>
+                  <?= ($ingresos_pct >= 0 ? '+' : '') . $ingresos_pct ?>%
                 </span>
+                <?php endif; ?>
               </div>
               <div class="dash-kpi-card__label">Ingresos del mes</div>
               <div class="dash-kpi-card__value">S/ <?= number_format($ingresos_mes, 0) ?></div>
@@ -237,9 +262,9 @@ function clase_estado_dash($e) {
                 <div class="dash-kpi-card__icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
                 </div>
-                <span class="dash-kpi-badge dash-kpi-badge--up">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-                  +2 hoy
+                <span class="dash-kpi-badge <?= $tickets_delta >= 0 ? 'dash-kpi-badge--up' : 'dash-kpi-badge--down' ?>">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="<?= $tickets_delta >= 0 ? '18 15 12 9 6 15' : '6 9 12 15 18 9' ?>"/></svg>
+                  <?= ($tickets_delta >= 0 ? '+' : '') . $tickets_delta ?> hoy
                 </span>
               </div>
               <div class="dash-kpi-card__label">Tickets hoy</div>
@@ -252,7 +277,9 @@ function clase_estado_dash($e) {
                 <div class="dash-kpi-card__icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 </div>
-                <span class="dash-kpi-badge dash-kpi-badge--warn">3 en diag.</span>
+                <?php if ($tickets_en_proceso > 0): ?>
+                <span class="dash-kpi-badge dash-kpi-badge--warn"><?= $tickets_en_proceso ?> en proc.</span>
+                <?php endif; ?>
               </div>
               <div class="dash-kpi-card__label">Pendientes</div>
               <div class="dash-kpi-card__value"><?= $tickets_pendientes ?></div>
@@ -264,10 +291,12 @@ function clase_estado_dash($e) {
                 <div class="dash-kpi-card__icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
-                <span class="dash-kpi-badge dash-kpi-badge--up">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-                  6.2%
+                <?php if ($completados_pct !== null): ?>
+                <span class="dash-kpi-badge <?= $completados_pct >= 0 ? 'dash-kpi-badge--up' : 'dash-kpi-badge--down' ?>">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="<?= $completados_pct >= 0 ? '18 15 12 9 6 15' : '6 9 12 15 18 9' ?>"/></svg>
+                  <?= ($completados_pct >= 0 ? '+' : '') . $completados_pct ?>%
                 </span>
+                <?php endif; ?>
               </div>
               <div class="dash-kpi-card__label">Completados</div>
               <div class="dash-kpi-card__value"><?= $tickets_completados ?></div>
