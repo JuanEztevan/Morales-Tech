@@ -30,7 +30,7 @@ $stmt->bind_param("i", $_SESSION['idCliente']);
 $stmt->execute();
 $resultado = $stmt->get_result();
 
-$sqlServicios = "SELECT s.nomServicio
+$sqlServicios = "SELECT s.nomServicio, s.precio
                    FROM COTIZACION_SERVICIO cs
                    JOIN SERVICIO s ON s.idServicio = cs.idServicio
                   WHERE cs.idCotizacion = ?
@@ -42,25 +42,28 @@ while ($fila = $resultado->fetch_assoc()) {
     $stmtServicios->execute();
     $resServicios = $stmtServicios->get_result();
 
-    $nombres_servicios = [];
+    $servicios_arr = [];
     while ($s = $resServicios->fetch_assoc()) {
-        $nombres_servicios[] = $s['nomServicio'];
+        $servicios_arr[] = ['nombre' => $s['nomServicio'], 'precio' => (float) $s['precio']];
     }
-    $servicio_principal = array_shift($nombres_servicios) ?? 'Servicio técnico';
+    $principal_obj      = array_shift($servicios_arr) ?? ['nombre' => 'Servicio técnico', 'precio' => 0];
+    $servicio_principal = $principal_obj['nombre'];
+    $precio_principal   = $principal_obj['precio'];
 
     $todos_los_tickets[] = [
-        "id"          => $fila['codigo'],
-        "tipo"        => $fila['tipoEquipo'],
-        "marca"       => $fila['marca'],
-        "so"          => $fila['sistemaOperativo'],
-        "servicio"    => $servicio_principal,
-        "adicionales" => $nombres_servicios,
-        "estado"      => $fila['estado'],
-        "fecha"       => fecha_es($fila['fechaCreacion']),
-        "subtotal"    => 'S/ ' . number_format((float) $fila['subtotal'], 2),
-        "igv"         => 'S/ ' . number_format((float) $fila['igv'], 2),
-        "total"       => 'S/ ' . number_format((float) $fila['total'], 2),
-        "obs"         => $fila['observaciones'] ?? '',
+        "id"            => $fila['codigo'],
+        "tipo"          => $fila['tipoEquipo'],
+        "marca"         => $fila['marca'],
+        "so"            => $fila['sistemaOperativo'],
+        "servicio"      => $servicio_principal,
+        "precio_svc"    => $precio_principal,
+        "adicionales"   => $servicios_arr,
+        "estado"        => $fila['estado'],
+        "fecha"         => fecha_es($fila['fechaCreacion']),
+        "subtotal"      => 'S/ ' . number_format((float) $fila['subtotal'], 2),
+        "igv"           => 'S/ ' . number_format((float) $fila['igv'], 2),
+        "total"         => 'S/ ' . number_format((float) $fila['total'], 2),
+        "obs"           => $fila['observaciones'] ?? '',
     ];
 }
 $stmtServicios->close();
@@ -192,7 +195,7 @@ $reciente = $todos_los_tickets[0] ?? null;
       <div class="dash-tag">Mis tickets</div>
       <?php $ec = estado_cfg($reciente['estado']); ?>
       <div class="ticket-hero-card"
-           onclick="abrirModal('<?= htmlspecialchars($reciente['id']) ?>','<?= htmlspecialchars($reciente['tipo'].' '.$reciente['marca']) ?>','<?= htmlspecialchars($reciente['so']) ?>','<?= htmlspecialchars($reciente['servicio']) ?>',<?= htmlspecialchars(json_encode($reciente['adicionales']), ENT_QUOTES) ?>,'<?= htmlspecialchars($reciente['estado']) ?>','<?= htmlspecialchars($reciente['fecha']) ?>','<?= htmlspecialchars($reciente['subtotal']) ?>','<?= htmlspecialchars($reciente['igv']) ?>','<?= htmlspecialchars($reciente['total']) ?>','<?= addslashes(htmlspecialchars($reciente['obs'])) ?>')">
+           onclick="abrirModal('<?= htmlspecialchars($reciente['id']) ?>','<?= htmlspecialchars($reciente['tipo'].' '.$reciente['marca']) ?>','<?= htmlspecialchars($reciente['so']) ?>','<?= htmlspecialchars($reciente['servicio']) ?>',<?= $reciente['precio_svc'] ?>,<?= htmlspecialchars(json_encode($reciente['adicionales']), ENT_QUOTES) ?>,'<?= htmlspecialchars($reciente['estado']) ?>','<?= htmlspecialchars($reciente['fecha']) ?>','<?= htmlspecialchars($reciente['subtotal']) ?>','<?= htmlspecialchars($reciente['igv']) ?>','<?= htmlspecialchars($reciente['total']) ?>','<?= addslashes(htmlspecialchars($reciente['obs'])) ?>')">
         <div class="ticket-hero-card__label">Ticket más reciente</div>
         <div class="ticket-hero-card__inner">
           <div class="ticket-hero-card__left">
@@ -206,7 +209,7 @@ $reciente = $todos_los_tickets[0] ?? null;
           </div>
           <div class="ticket-hero-card__right">
             <div class="ticket-hero-card__fecha"><?= htmlspecialchars($reciente['fecha']) ?></div>
-            <button class="btn-hero-detail" onclick="event.stopPropagation(); abrirModal('<?= htmlspecialchars($reciente['id']) ?>','<?= htmlspecialchars($reciente['tipo'].' '.$reciente['marca']) ?>','<?= htmlspecialchars($reciente['so']) ?>','<?= htmlspecialchars($reciente['servicio']) ?>',<?= htmlspecialchars(json_encode($reciente['adicionales']), ENT_QUOTES) ?>,'<?= htmlspecialchars($reciente['estado']) ?>','<?= htmlspecialchars($reciente['fecha']) ?>','<?= htmlspecialchars($reciente['subtotal']) ?>','<?= htmlspecialchars($reciente['igv']) ?>','<?= htmlspecialchars($reciente['total']) ?>','<?= addslashes(htmlspecialchars($reciente['obs'])) ?>')">
+            <button class="btn-hero-detail" onclick="event.stopPropagation(); abrirModal('<?= htmlspecialchars($reciente['id']) ?>','<?= htmlspecialchars($reciente['tipo'].' '.$reciente['marca']) ?>','<?= htmlspecialchars($reciente['so']) ?>','<?= htmlspecialchars($reciente['servicio']) ?>',<?= $reciente['precio_svc'] ?>,<?= htmlspecialchars(json_encode($reciente['adicionales']), ENT_QUOTES) ?>,'<?= htmlspecialchars($reciente['estado']) ?>','<?= htmlspecialchars($reciente['fecha']) ?>','<?= htmlspecialchars($reciente['subtotal']) ?>','<?= htmlspecialchars($reciente['igv']) ?>','<?= htmlspecialchars($reciente['total']) ?>','<?= addslashes(htmlspecialchars($reciente['obs'])) ?>')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               Ver detalle
             </button>
@@ -286,6 +289,7 @@ $reciente = $todos_los_tickets[0] ?? null;
                   '<?= htmlspecialchars($t['tipo'].' '.$t['marca']) ?>',
                   '<?= htmlspecialchars($t['so']) ?>',
                   '<?= htmlspecialchars($t['servicio']) ?>',
+                  <?= $t['precio_svc'] ?>,
                   <?= htmlspecialchars(json_encode($t['adicionales']), ENT_QUOTES) ?>,
                   '<?= htmlspecialchars($t['estado']) ?>',
                   '<?= htmlspecialchars($t['fecha']) ?>',

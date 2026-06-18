@@ -91,22 +91,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // 3. COTIZACION_SERVICIO
+    // 3. COTIZACION_SERVICIO — usa idServicio directo enviado desde el wizard
     if ($ok) {
-        $stmtServicio = $conn->prepare("SELECT idServicio FROM SERVICIO WHERE nomServicio = ? LIMIT 1");
-        $stmtRel      = $conn->prepare("INSERT INTO COTIZACION_SERVICIO (idCotizacion, idServicio) VALUES (?, ?)");
+        $stmtRel = $conn->prepare("INSERT INTO COTIZACION_SERVICIO (idCotizacion, idServicio) VALUES (?, ?)");
         foreach ($servicios as $s) {
-            $nombre = trim($s['nombre'] ?? '');
-            if ($nombre === '') continue;
-            $stmtServicio->bind_param("s", $nombre);
-            $stmtServicio->execute();
-            $fila = $stmtServicio->get_result()->fetch_assoc();
-            if (!$fila) continue;
-            $idServicio = (int) $fila['idServicio'];
+            $idServicio = (int) ($s['idServicio'] ?? 0);
+            if ($idServicio <= 0) continue;
             $stmtRel->bind_param("ii", $idCotizacion, $idServicio);
             if (!$stmtRel->execute()) { $ok = false; break; }
         }
-        $stmtServicio->close();
         $stmtRel->close();
     }
 
@@ -173,6 +166,15 @@ $resEq->bind_param("i", $idC);
 $resEq->execute();
 $equipos_guardados = $resEq->get_result()->fetch_all(MYSQLI_ASSOC);
 $resEq->close();
+
+// Servicios del catálogo agrupados por tipo
+$resSvcs = $conn->query("SELECT idServicio, nomServicio, precio, tipo FROM SERVICIO ORDER BY (tipo='Principal') DESC, nomServicio ASC");
+$svcs_principal = [];
+$svcs_adicional = [];
+while ($sv = $resSvcs->fetch_assoc()) {
+    if ($sv['tipo'] === 'Principal') $svcs_principal[] = $sv;
+    else $svcs_adicional[] = $sv;
+}
 
 // Equipo preseleccionado via GET ?idEquipo=N
 $idEquipoPresel = 0;
@@ -508,26 +510,20 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
               <div class="wizard-step-card__body">
                 <div class="wizard-section-sm">Servicio principal</div>
                 <div class="wizard-service-list" id="servicios-base">
+                  <?php foreach ($svcs_principal as $sv): ?>
                   <label class="wizard-service-item">
-                    <input type="radio" name="srv_base" value="30" data-nombre="Diagnóstico" onchange="updateQuote()">
-                    <span class="wizard-service-item__name">Diagnóstico</span>
-                    <span class="wizard-service-item__price">S/ 30.00</span>
+                    <input type="radio" name="srv_base"
+                           value="<?= $sv['precio'] ?>"
+                           data-id="<?= (int)$sv['idServicio'] ?>"
+                           data-nombre="<?= htmlspecialchars($sv['nomServicio'], ENT_QUOTES) ?>"
+                           onchange="updateQuote()">
+                    <span class="wizard-service-item__name"><?= htmlspecialchars($sv['nomServicio']) ?></span>
+                    <span class="wizard-service-item__price">S/ <?= number_format($sv['precio'], 2) ?></span>
                   </label>
-                  <label class="wizard-service-item">
-                    <input type="radio" name="srv_base" value="60" data-nombre="Mantenimiento preventivo" onchange="updateQuote()">
-                    <span class="wizard-service-item__name">Mantenimiento preventivo</span>
-                    <span class="wizard-service-item__price">S/ 60.00</span>
-                  </label>
-                  <label class="wizard-service-item">
-                    <input type="radio" name="srv_base" value="90" data-nombre="Mantenimiento correctivo" onchange="updateQuote()">
-                    <span class="wizard-service-item__name">Mantenimiento correctivo</span>
-                    <span class="wizard-service-item__price">S/ 90.00</span>
-                  </label>
-                  <label class="wizard-service-item">
-                    <input type="radio" name="srv_base" value="80" data-nombre="Instalación / Formateo" onchange="updateQuote()">
-                    <span class="wizard-service-item__name">Instalación / Formateo</span>
-                    <span class="wizard-service-item__price">S/ 80.00</span>
-                  </label>
+                  <?php endforeach; ?>
+                  <?php if (empty($svcs_principal)): ?>
+                  <p style="color:#6b74a8;font-size:13px;padding:12px 0">No hay servicios disponibles.</p>
+                  <?php endif; ?>
                 </div>
                 <hr class="wizard-divider">
                 <div class="wizard-add-toggle" id="add-toggle" onclick="toggleAdd()">
@@ -541,26 +537,17 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
                   </div>
                 </div>
                 <div class="wizard-add-panel" id="add-panel">
+                  <?php foreach ($svcs_adicional as $sv): ?>
                   <label class="wizard-service-item">
-                    <input type="checkbox" value="25" data-nombre="Limpieza profunda" onchange="updateQuote()">
-                    <span class="wizard-service-item__name">Limpieza profunda</span>
-                    <span class="wizard-service-item__price">S/ 25.00</span>
+                    <input type="checkbox"
+                           value="<?= $sv['precio'] ?>"
+                           data-id="<?= (int)$sv['idServicio'] ?>"
+                           data-nombre="<?= htmlspecialchars($sv['nomServicio'], ENT_QUOTES) ?>"
+                           onchange="updateQuote()">
+                    <span class="wizard-service-item__name"><?= htmlspecialchars($sv['nomServicio']) ?></span>
+                    <span class="wizard-service-item__price">S/ <?= number_format($sv['precio'], 2) ?></span>
                   </label>
-                  <label class="wizard-service-item">
-                    <input type="checkbox" value="20" data-nombre="Instalación de programas" onchange="updateQuote()">
-                    <span class="wizard-service-item__name">Instalación de programas</span>
-                    <span class="wizard-service-item__price">S/ 20.00</span>
-                  </label>
-                  <label class="wizard-service-item">
-                    <input type="checkbox" value="30" data-nombre="Optimización del sistema" onchange="updateQuote()">
-                    <span class="wizard-service-item__name">Optimización del sistema</span>
-                    <span class="wizard-service-item__price">S/ 30.00</span>
-                  </label>
-                  <label class="wizard-service-item">
-                    <input type="checkbox" value="50" data-nombre="Repotenciación (mano de obra)" onchange="updateQuote()">
-                    <span class="wizard-service-item__name">Repotenciación (mano de obra)</span>
-                    <span class="wizard-service-item__price">S/ 50.00</span>
-                  </label>
+                  <?php endforeach; ?>
                 </div>
               </div>
               <div class="wizard-nav">

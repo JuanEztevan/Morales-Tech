@@ -1,3 +1,10 @@
+const ESTADO_COLORES = {
+  'Recibido':           { bg: 'rgba(245,166,35,.18)',  color: '#f5c048', dot: '#f5a623' },
+  'En proceso':         { bg: 'rgba(23,70,234,.22)',   color: '#8db4ff', dot: '#1746EA' },
+  'Listo para entrega': { bg: 'rgba(201,74,0,.20)',    color: '#f5a07a', dot: '#e85d04' },
+  'Completado':         { bg: 'rgba(26,122,74,.22)',   color: '#5fc98a', dot: '#1a7a4a' },
+};
+
 /* ── Navbar scroll ── */
 (function initNavbar() {
   const navbar = document.getElementById('navbar');
@@ -302,14 +309,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     'Instalación de programas': 20, 'Optimización del sistema': 30,
   };
 
-  const ESTADO_COLORES = {
-    'Recibido':           { bg: 'rgba(245,166,35,.18)',  color: '#f5c048', dot: '#f5a623' },
-    'En proceso':         { bg: 'rgba(23,70,234,.22)',   color: '#8db4ff', dot: '#1746EA' },
-    'Listo para entrega': { bg: 'rgba(201,74,0,.20)',    color: '#f5a07a', dot: '#e85d04' },
-    'Completado':         { bg: 'rgba(26,122,74,.22)',   color: '#5fc98a', dot: '#1a7a4a' },
-  };
-
-  window.abrirModal = function(id, equipo, so, servicio, adicionales, estado, fecha, subtotal, igv, total, obs) {
+  window.abrirModal = function(id, equipo, so, servicio, precio_svc, adicionales, estado, fecha, subtotal, igv, total, obs) {
     document.getElementById('m-id').textContent     = '#' + id;
     document.getElementById('m-equipo').textContent = equipo;
     document.getElementById('m-estado').textContent = estado;
@@ -340,14 +340,16 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     let html = `<div class="dash-modal-svc-item dash-modal-svc-item--main">
       <span class="dash-modal-svc-dot" style="background:#6fa3ff;"></span>
       <span class="dash-modal-svc-name">${servicio}</span>
-      <span class="dash-modal-svc-price">S/ ${((PRECIOS[servicio] || 0)).toFixed(2)}</span>
+      <span class="dash-modal-svc-price">S/ ${(precio_svc || 0).toFixed(2)}</span>
     </div>`;
     if (adicionales && adicionales.length) {
       adicionales.forEach(a => {
+        const nombre = typeof a === 'object' ? a.nombre : a;
+        const precio = typeof a === 'object' ? (a.precio || 0) : (PRECIOS[a] || 0);
         html += `<div class="dash-modal-svc-item">
           <span class="dash-modal-svc-dot" style="background:#3a4470;"></span>
-          <span class="dash-modal-svc-name">${a}</span>
-          <span class="dash-modal-svc-price" style="color:#6b74a8;">S/ ${((PRECIOS[a] || 0)).toFixed(2)}</span>
+          <span class="dash-modal-svc-name">${nombre}</span>
+          <span class="dash-modal-svc-price" style="color:#6b74a8;">S/ ${precio.toFixed(2)}</span>
         </div>`;
       });
     }
@@ -542,9 +544,9 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   function getItems() {
     const items = [];
     const base  = document.querySelector('input[name="srv_base"]:checked');
-    if (base) items.push({ name: base.dataset.nombre, price: parseFloat(base.value) });
+    if (base) items.push({ id: parseInt(base.dataset.id || 0), name: base.dataset.nombre, price: parseFloat(base.value) });
     document.querySelectorAll('#add-panel input[type="checkbox"]:checked').forEach(cb => {
-      items.push({ name: cb.dataset.nombre, price: parseFloat(cb.value) });
+      items.push({ id: parseInt(cb.dataset.id || 0), name: cb.dataset.nombre, price: parseFloat(cb.value) });
     });
     return items;
   }
@@ -607,55 +609,6 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
       <p class="wizard-quote-note">* Cotización referencial. El precio final puede variar según diagnóstico.</p>`;
   }
 
-  /* Enviar solicitud: guarda equipo + cotización + servicios + ticket en la BD */
-  window.enviarSolicitud = function() {
-    const tipo     = document.getElementById('tipo_dispositivo').value;
-    const esLaptop = tipo === 'Laptop';
-    const marca  = (esLaptop ? document.getElementById('marca')?.value  : '') || '';
-    const modelo = (esLaptop ? document.getElementById('modelo')?.value : '') || '';
-    const serie  = (esLaptop ? document.getElementById('serie')?.value  : '') || '';
-    const so     = (esLaptop
-      ? document.getElementById('so-laptop')?.value
-      : document.getElementById('so-pc')?.value) || '';
-    const observaciones = document.getElementById('observaciones')?.value || '';
-    const servicios = getItems().map(i => ({ nombre: i.name, precio: i.price }));
-
-    const btn = document.querySelector('.btn-wizard-send');
-    const textoOriginal = btn ? btn.innerHTML : '';
-    if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = 'Enviando…'; }
-
-    function restaurarBoton() {
-      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = textoOriginal; }
-    }
-
-    const idEquipoGuardado = parseInt(document.getElementById('id_equipo_guardado')?.value || '0') || 0;
-    // Siempre enviar idEquipo: 0 = nuevo, N = reusar existente
-    const payload = { tipo, marca, modelo, serie, so, observaciones, servicios, idEquipo: idEquipoGuardado };
-
-    fetch('nuevo_ticket_cliente.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          const modal = document.getElementById('modal-success');
-          if (modal) {
-            modal.style.opacity      = '1';
-            modal.style.pointerEvents = 'all';
-            modal.classList.add('show');
-          }
-        } else {
-          alert(data.message || 'No se pudo enviar la solicitud. Inténtalo de nuevo.');
-          restaurarBoton();
-        }
-      })
-      .catch(() => {
-        alert('Ocurrió un error de conexión. Inténtalo de nuevo.');
-        restaurarBoton();
-      });
-  };
 })();
 
 /* ══════════════════════════════════════════
@@ -2037,9 +1990,8 @@ window.adminCheckMatch = function() {
 // Estado global que enviarSolicitud() llena al recibir éxito del servidor
 window._pdfData = null;
 
-/* Sobreescribir enviarSolicitud para capturar datos del servidor */
-(function patchEnviarSolicitud() {
-  const _original = window.enviarSolicitud;
+/* Enviar solicitud: guarda equipo + cotización + servicios + ticket */
+(function() {
   window.enviarSolicitud = function () {
     const tipo     = document.getElementById('tipo_dispositivo').value;
     const esLaptop = tipo === 'Laptop';
@@ -2051,13 +2003,14 @@ window._pdfData = null;
       ? document.getElementById('so-laptop')?.value
       : document.getElementById('so-pc')?.value) || '';
     const observaciones = document.getElementById('observaciones')?.value || '';
+    const idEquipo = parseInt(document.getElementById('id_equipo_guardado')?.value || '0') || 0;
 
     // Capturar servicios antes de enviar
     const base = document.querySelector('input[name="srv_base"]:checked');
     const serviciosLocal = [];
-    if (base) serviciosLocal.push({ nombre: base.dataset.nombre, precio: parseFloat(base.value) });
+    if (base) serviciosLocal.push({ idServicio: parseInt(base.dataset.id || 0), nombre: base.dataset.nombre, precio: parseFloat(base.value) });
     document.querySelectorAll('#add-panel input[type="checkbox"]:checked').forEach(cb => {
-      serviciosLocal.push({ nombre: cb.dataset.nombre, precio: parseFloat(cb.value) });
+      serviciosLocal.push({ idServicio: parseInt(cb.dataset.id || 0), nombre: cb.dataset.nombre, precio: parseFloat(cb.value) });
     });
 
     // Fecha de emisión
@@ -2087,7 +2040,7 @@ window._pdfData = null;
     };
 
     // Enviar al servidor
-    const serviciosPayload = serviciosLocal.map(s => ({ nombre: s.nombre, precio: s.precio }));
+    const serviciosPayload = serviciosLocal.map(s => ({ idServicio: s.idServicio, nombre: s.nombre, precio: s.precio }));
     const btn = document.querySelector('.btn-wizard-send');
     const textoOriginal = btn ? btn.innerHTML : '';
     if (btn) { btn.disabled = true; btn.style.opacity = '.6'; btn.textContent = 'Enviando…'; }
@@ -2099,7 +2052,7 @@ window._pdfData = null;
     fetch('nuevo_ticket_cliente.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo, marca, modelo, serie, so, observaciones, servicios: serviciosPayload })
+      body: JSON.stringify({ tipo, marca, modelo, serie, so, observaciones, servicios: serviciosPayload, idEquipo })
     })
       .then(r => r.json())
       .then(data => {
@@ -2638,13 +2591,14 @@ window.generarPDF = function () {
   window.nvUpdateQuote = function() {
     const items = [];
 
+    // Items para mostrar en pantalla (solo display, no se usan para calcular totales de servicio)
     if (nvTipoVenta === 'ticket' && nvTicketSel) {
       if (Array.isArray(nvTicketSel.servicios) && nvTicketSel.servicios.length) {
         nvTicketSel.servicios.forEach(s => {
-          items.push({ nombre: s.nombre, cantidad: 1, precio: s.precio, total: s.precio });
+          items.push({ nombre: s.nombre, cantidad: 1, precio: s.precio, total: s.precio, esServicio: true });
         });
       } else {
-        items.push({ nombre: nvTicketSel.servicio || 'Servicio técnico', cantidad: 1, precio: nvTicketSel.subtotal, total: nvTicketSel.subtotal });
+        items.push({ nombre: nvTicketSel.servicio || 'Servicio técnico', cantidad: 1, precio: nvTicketSel.subtotal, total: nvTicketSel.subtotal, esServicio: true });
       }
     }
     items.push(...nvGetProductItems());
@@ -2679,16 +2633,21 @@ window.generarPDF = function () {
     empty.classList.add('nv-hidden');
     details.classList.remove('nv-hidden');
 
+    // Para el display mostramos precio de cada ítem, pero el subtotal de servicio
+    // viene siempre de la cotización real (nvTicketSel.subtotal), no de los precios base.
+    const subtotalProductos = nvGetProductItems().reduce((acc, it) => acc + it.total, 0);
+    const subtotalServicio  = (nvTipoVenta === 'ticket' && nvTicketSel) ? nvTicketSel.subtotal : 0;
+    const subtotal = subtotalServicio + subtotalProductos;
+    const igv      = subtotal * 0.18;
+    const total    = subtotal + igv;
+
+    // En display: servicios con precios base (referencial), productos con precio real
     const itemsHtml = items.map(it => `
       <div class="nv-quote-item">
         <span class="nv-quote-item__name">${escapeHtml(it.nombre)}${it.cantidad > 1 ? ` ×${it.cantidad}` : ''}</span>
-        <span class="nv-quote-item__price">S/ ${fmt(it.total)}</span>
+        <span class="nv-quote-item__price">S/ ${fmt(it.esServicio ? it.precio : it.total)}</span>
       </div>`).join('');
     document.getElementById('nv-q-items').innerHTML = itemsHtml;
-
-    const subtotal = items.reduce((acc, it) => acc + it.total, 0);
-    const igv      = subtotal * 0.18;
-    const total     = subtotal + igv;
 
     document.getElementById('nv-q-subtotal').textContent = fmt(subtotal);
     document.getElementById('nv-q-igv').textContent      = fmt(igv);
