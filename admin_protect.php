@@ -1,4 +1,5 @@
 <?php
+session_name('morales_admin');
 session_start();
 require_once 'conexion.php';
 

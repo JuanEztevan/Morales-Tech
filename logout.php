@@ -1,5 +1,6 @@
 <?php
 
+session_name('morales_admin');
 session_start();
 
 // 1. Limpiar todas las variables de sesión

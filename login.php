@@ -148,7 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <input type="email" id="email" name="email"
                  placeholder="correo@ejemplo.com"
                  value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
-                 required autocomplete="email">
+                 required autocomplete="section-cliente email"
+                 readonly>
         </div>
       </div>
 
@@ -160,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </svg>
           <input type="password" id="password" name="password"
                  placeholder="••••••••"
-                 required autocomplete="current-password">
+                 required autocomplete="section-cliente current-password">
           <button type="button" class="pw-toggle" id="pw-toggle" tabindex="-1" aria-label="Ver contraseña">
             <svg id="eye-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
@@ -194,5 +195,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script src="script.js" defer></script>
+<script>
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      var f = document.getElementById('email');
+      if (!f) return;
+      f.removeAttribute('readonly');
+      if (f.value && f.value.endsWith('@moralestechs.com')) {
+        f.value = '';
+        var p = document.getElementById('password');
+        if (p) p.value = '';
+      }
+    }, 600);
+  });
+</script>
 </body>
 </html>
