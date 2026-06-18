@@ -1,4 +1,9 @@
-CREATE DATABASE IF NOT EXISTS morales_tech;
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
+CREATE DATABASE IF NOT EXISTS morales_tech
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
 
 USE morales_tech;
 -- demo
@@ -18,7 +23,7 @@ CREATE TABLE CLIENTE (
     respuesta2 VARCHAR(255),
     pregunta3  VARCHAR(255),
     respuesta3 VARCHAR(255)
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- tabla admin
 CREATE TABLE ADMIN (
@@ -34,7 +39,7 @@ CREATE TABLE ADMIN (
     respuesta2 VARCHAR(255),
     pregunta3  VARCHAR(255),
     respuesta3 VARCHAR(255)
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- tabla servicio
 CREATE TABLE SERVICIO (
@@ -42,7 +47,7 @@ CREATE TABLE SERVICIO (
     nomServicio VARCHAR(150) NOT NULL,
     tipo VARCHAR(100),
     precio DECIMAL(10,2) NOT NULL
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- tabla equipo
 CREATE TABLE EQUIPO (
@@ -57,7 +62,7 @@ CREATE TABLE EQUIPO (
 
     FOREIGN KEY (idCliente)
         REFERENCES CLIENTE(idCliente)
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- tabla cotizacion
 CREATE TABLE COTIZACION (
@@ -102,7 +107,7 @@ CREATE TABLE TICKET (
 
     FOREIGN KEY (idCotizacion)
         REFERENCES COTIZACION(idCotizacion)
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- tabla componente
 CREATE TABLE COMPONENTE (
@@ -112,7 +117,7 @@ CREATE TABLE COMPONENTE (
     stockActual INT NOT NULL DEFAULT 0,
     stockMinimo INT NOT NULL DEFAULT 0,
     precioUnitario DECIMAL(10,2) NOT NULL
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- tabla venta
 CREATE TABLE VENTA (
@@ -134,7 +139,7 @@ CREATE TABLE VENTA (
 
     FOREIGN KEY (idAdmin)
         REFERENCES ADMIN(idAdmin)
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- tabla detalle venta
 CREATE TABLE DETALLE_VENTA (
