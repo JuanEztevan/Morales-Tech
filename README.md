@@ -69,23 +69,27 @@ Este modelo permite la creación de tablas, relaciones y restricciones necesaria
 
 ## Prototipos de Interfaz
 
-Durante el desarrollo del sistema se trabajaron dos versiones de prototipos, reflejando la evolución del diseño de la interfaz de usuario.
+Durante el desarrollo del sistema se trabajaron dos versiones de prototipos de alta fidelidad, reflejando la evolución del diseño de la interfaz de usuario.
 
-### Prototipo v1 – Alta Fidelidad (Figma)
-Primer diseño visual del sistema con enfoque en la apariencia final y experiencia de usuario.
+### Prototipo v1 - Alta Fidelidad (Figma)
+Primer diseño visual del sistema con enfoque en la estructura inicial, funcionalidades básicas y experiencia de usuario planteada en la fase de análisis.
 
 **Enlace:**  
 https://www.figma.com/design/2CoKb19rchhnD5PpjKrTjQ/Morales-Tech---Integrador-II---v1?node-id=0-1
 
----
+### Prototipo v2 – Alta Fidelidad (Figma)
+Versión actualizada del sistema que incorpora mejoras funcionales y visuales respecto al prototipo inicial, incluyendo:
 
-### Prototipo v2 – Baja Fidelidad (Balsamiq)
-Wireframe estructural utilizado para replantear la distribución de componentes y mejorar la usabilidad.
+- Integración del módulo de ventas completo
+- Soporte para ventas por ticket y por producto
+- Generación de boletas en PDF
+- Mejoras en la experiencia de usuario
+- Ajustes en la arquitectura visual del sistema
 
-Este prototipo sirvió como base para redefinir el diseño final implementado en el sistema.
+Este prototipo representa el estado más cercano a la implementación final del sistema.
 
 **Enlace:**  
-https://balsamiq.cloud/sty85pm/pppo8zi
+https://www.figma.com/design/aacROpMdBOdo8JNwRwbyfo/Morales-Tech---Integrador-II---v2?node-id=0-1&t=0HkjUBEffHRkEPp0-1
 
 ## Funcionalidades Principales
 
@@ -110,18 +114,25 @@ https://balsamiq.cloud/sty85pm/pppo8zi
   - Visualización del historial de equipos registrados por el cliente.
   - Consulta de servicios asociados a cada equipo.
   - Seguimiento histórico de atenciones realizadas.
-- Generación de cotización en formato PDF:
-  - Descarga automática de la cotización desde el sistema.
-  - Inclusión de datos del cliente (nombre, DNI, teléfono y RUC opcional).
-  - Diseño del documento basado en la identidad corporativa de la empresa.
-  - Cálculo automático de subtotal, IGV y total.
 
 ### Portal Administrativo (Privado)
 - Acceso exclusivo mediante `login_staff.php` (solo correos con `@moralestechs.com`).
 - Dashboard principal con resumen, KPIs y gráficos.
 - **Módulo Tickets**: Visualización general, cambio de estado y registro manual de tickets.
 - **Módulo Inventario**: Gestión de productos, stock y registro de nuevos items.
-- **Módulo Ventas**: Registro de ventas por ticket o ventas independientes, con selección de método de pago (Efectivo, Yape, Transferencia).
+- **Módulo Ventas**:
+  - Registro de ventas asociadas a tickets.
+  - Registro de ventas por producto (sin ticket).
+  - Generación de boleta de venta en formato PDF.
+  - Descarga de boleta desde el sistema.
+  - Integración completa con la base de datos.
+  - Selección de método de pago (Efectivo, Yape, Transferencia).
+
+### Generación de documentos PDF
+- Generación de cotizaciones en PDF desde el portal cliente.
+- Generación de boletas de venta en PDF desde el módulo administrativo.
+- Descarga automática desde el sistema.
+- Diseño basado en identidad corporativa.
 
 ## Estructura del Proyecto
 
@@ -226,6 +237,28 @@ Se realizaron 10 casos de prueba funcionales sobre los módulos principales del 
 - **Ciclos de prueba ejecutados:** 2  
 - **Informe exportado:** `docs/pruebas/informe_pruebas.pdf`
 
+### Pruebas de Rendimiento (Apache Benchmark)
+
+Se planifica la ejecución de pruebas de carga utilizando la herramienta Apache Benchmark (ab), incluida en el entorno XAMPP, con el objetivo de evaluar el rendimiento del sistema bajo múltiples solicitudes concurrentes.
+
+- Herramienta: Apache Benchmark (ab)
+- Entorno: Servidor local (Apache - XAMPP)
+- Objetivo: Medir capacidad de respuesta y estabilidad del sistema
+
+#### Escenario de prueba:
+- Simulación de múltiples usuarios accediendo al sistema
+- Pruebas sobre endpoints críticos (login, ventas, consulta de tickets)
+- Evaluación con distintos niveles de concurrencia
+
+#### Métricas a evaluar:
+- Tiempo promedio de respuesta
+- Requests por segundo
+- Tiempo total de ejecución
+- Capacidad de concurrencia
+
+#### Estado:
+En proceso de ejecución. Los resultados serán documentados en futuras actualizaciones del proyecto.
+
 ## Credenciales de Prueba
 Las credenciales de prueba han sido removidas por seguridad.
 
@@ -244,7 +277,7 @@ Para acceder al sistema:
 <img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/3532f293-fd73-420c-b3cf-25d0d3fe8cb4" />
 
 ## Encargados del GitHub
-- Juan Esteban Carmona Rodríguez – Frontend
+- Juan Esteban Carmona Rodríguez – Frontend y Backend
 - Julio César Moisés Salazar Gutierrez – Backend
 - Lyan Stefano Torres Coello – Backend
 
@@ -258,6 +291,5 @@ Para acceder al sistema:
 - La seguridad se basa en preguntas de seguridad, lo cual podría mejorarse hacia métodos más robustos (tokens, verificación por correo, autenticación multifactor).
 - Implementación actual de generación de cotizaciones en PDF utilizando jsPDF.
 - Mejoras futuras:
-  - Generación de boleta de venta en PDF al registrar una venta como completada en el sistema.
-  - Integración del módulo de PDFs con el panel de administradores.
+  - Integración avanzada del módulo de boletas con reportes de ventas (futuro).
   - Implementación de un módulo de accesibilidad que permita ajustar tamaño de texto, contraste y legibilidad para usuarios con discapacidad visual.
