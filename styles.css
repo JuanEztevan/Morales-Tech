@@ -3619,6 +3619,8 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .nv-btn-add-prod:hover { border-color: var(--azul-tecnologico); color: var(--azul-tecnologico); }
 .nv-btn-add-prod svg   { width: 13px; height: 13px; }
+.nv-btn-add-prod:disabled { opacity: .45; cursor: not-allowed; }
+.nv-btn-add-prod:disabled:hover { border-color: var(--admin-border2); color: inherit; }
 
 /* Panel resumen (quote card) */
 .nv-quote-card {
@@ -3694,6 +3696,29 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   font-size: 28px; font-weight: 800; color: var(--azul-tecnologico); margin-bottom: 6px;
 }
 .nv-modal-method { font-size: 12px; font-weight: 600; color: var(--admin-gray-400); margin-bottom: 28px; }
+
+/* Botones del modal de éxito: mismo ancho, jerarquía primario/secundario */
+.nv-modal-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700;
+  padding: 13px 28px; border-radius: 50px; border: none;
+  cursor: pointer; transition: background .15s, transform .1s, border-color .15s;
+  box-sizing: border-box;
+}
+.nv-modal-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+.nv-modal-btn + .nv-modal-btn { margin-top: 10px; }
+
+.nv-modal-btn--primary {
+  background: var(--azul-tecnologico); color: var(--blanco);
+  box-shadow: 0 4px 14px rgba(23,70,234,.28);
+}
+.nv-modal-btn--primary:hover { background: #1238c2; transform: translateY(-1px); }
+
+.nv-modal-btn--secondary {
+  background: var(--blanco); color: var(--admin-gray-600);
+  border: 1.5px solid var(--admin-border2);
+}
+.nv-modal-btn--secondary:hover { border-color: var(--azul-tecnologico); color: var(--azul-tecnologico); transform: translateY(-1px); }
 
 /* ── Responsive ── */
 @media (max-width: 1100px) { .vt-charts-row { grid-template-columns: 1fr; } }
@@ -4389,6 +4414,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .ntk-hint--ok  { color: #22c55e; }
 .ntk-hint--new { color: #f59e0b; }
+
 /* ══════════════════════════════════════════════════════════════
    CONSULTA TICKETS — badges nuevas fases + spinner del botón
    ══════════════════════════════════════════════════════════════ */
