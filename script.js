@@ -2288,3 +2288,605 @@ window.generarPDF = function () {
 
     doc.save(`Cotizacion_${d.codigo}.pdf`);
 };
+
+/* ══════════════════════════════════════════════════════════
+   NUEVA_VENTA.PHP — Tipo de venta, ticket, cliente, productos,
+   resumen, registro de venta y boleta PDF
+   ══════════════════════════════════════════════════════════ */
+(function initNuevaVenta() {
+  if (!document.getElementById('nv-bloque-productos')) return; // no estamos en nueva_venta.php
+
+  const tickets   = Array.isArray(window.NV_TICKETS)   ? window.NV_TICKETS   : [];
+  const catalogo   = Array.isArray(window.NV_PRODUCTOS) ? window.NV_PRODUCTOS : [];
+
+  let nvTipoVenta   = 'ticket';   // 'ticket' | 'producto'
+  let nvMetodoPago  = 'Yape';
+  let nvTicketSel   = null;       // objeto del ticket elegido (con dataset)
+  let nvClienteDni  = { idCliente: 0, nombres: '', apellidos: '', ruc: '' };
+  let nvProdRows    = [];         // [{ uid, idComponente, cantidad }]
+  let nvUidSeq      = 1;
+  let nvUltimaVenta = null;       // datos devueltos por el servidor, usados luego en el PDF
+
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function fmt(n) { return (Number(n) || 0).toFixed(2); }
+
+  /* ── 1. Tipo de venta ── */
+  window.nvSelTipo = function(tipo, el) {
+    nvTipoVenta = tipo;
+    document.querySelectorAll('.nv-vtype-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+
+    const bloqueTicket      = document.getElementById('nv-bloque-ticket');
+    const bloqueDispositivo = document.getElementById('nv-bloque-dispositivo');
+    const bloqueCliente     = document.getElementById('nv-bloque-cliente');
+    const prodTitle = document.getElementById('nv-prod-card-title');
+    const prodSub   = document.getElementById('nv-prod-card-sub');
+
+    if (tipo === 'ticket') {
+      bloqueTicket.classList.remove('nv-hidden');
+      bloqueCliente.classList.add('nv-hidden');
+      if (!nvTicketSel) bloqueDispositivo.classList.add('nv-hidden');
+      prodTitle.textContent = 'Productos adicionales';
+      prodSub.textContent   = 'Añade repuestos o materiales usados en el servicio';
+    } else {
+      bloqueTicket.classList.add('nv-hidden');
+      bloqueDispositivo.classList.add('nv-hidden');
+      bloqueCliente.classList.remove('nv-hidden');
+      prodTitle.textContent = 'Productos de la venta';
+      prodSub.textContent   = 'Selecciona los productos que el cliente está comprando';
+    }
+    nvUpdateQuote();
+  };
+
+  /* ── 2A. Selección de ticket ── */
+  window.nvOnTicketChange = function() {
+    const sel = document.getElementById('nv-sel-ticket');
+    const opt = sel.options[sel.selectedIndex];
+    const bloqueDispositivo = document.getElementById('nv-bloque-dispositivo');
+
+    if (!opt || !opt.value) {
+      nvTicketSel = null;
+      bloqueDispositivo.classList.add('nv-hidden');
+      nvUpdateQuote();
+      return;
+    }
+
+    const ticketCompleto = tickets.find(t => t.idTicket === Number(opt.value));
+
+    nvTicketSel = {
+      idTicket: Number(opt.value),
+      idEquipo: Number(opt.dataset.idequipo) || 0,
+      codigo:   opt.dataset.codigo,
+      nombres:  opt.dataset.nombres,
+      apellidos:opt.dataset.apellidos,
+      dni:      opt.dataset.dni,
+      ruc:      opt.dataset.ruc,
+      servicio: opt.dataset.servicio,
+      servicios: (ticketCompleto && Array.isArray(ticketCompleto.servicios)) ? ticketCompleto.servicios : [],
+      subtotal: parseFloat(opt.dataset.subtotal) || 0,
+      tipo:     opt.dataset.tipo,
+      marca:    opt.dataset.marca,
+      modelo:   opt.dataset.modelo,
+      serie:    opt.dataset.serie,
+      so:       opt.dataset.so,
+    };
+
+    document.getElementById('nv-di-ticket').textContent   = nvTicketSel.codigo;
+    document.getElementById('nv-di-cliente').textContent  = `${nvTicketSel.nombres} ${nvTicketSel.apellidos}`.trim();
+    document.getElementById('nv-di-servicio').textContent = nvTicketSel.servicio || '—';
+    document.getElementById('nv-di-subtotal').textContent = 'S/ ' + fmt(nvTicketSel.subtotal);
+
+    nvPintarVistaEquipo();
+
+    // Siempre arrancamos en modo vista al cambiar de ticket
+    document.getElementById('nv-equipo-view').classList.remove('nv-hidden');
+    document.getElementById('nv-equipo-edit').classList.add('nv-hidden');
+    document.getElementById('nv-btn-editar').classList.remove('nv-hidden');
+    document.getElementById('nv-btn-guardar').classList.add('nv-hidden');
+    document.getElementById('nv-btn-cancelar').classList.add('nv-hidden');
+
+    bloqueDispositivo.classList.remove('nv-hidden');
+    nvUpdateQuote();
+  };
+
+  /* Pinta el modo VISTA de Detalles del Equipo según nvTicketSel actual */
+  function nvPintarVistaEquipo() {
+    if (!nvTicketSel) return;
+    const esLaptop = nvTicketSel.tipo === 'Laptop';
+
+    document.querySelectorAll('#nv-equipo-view .nv-field-laptop-only').forEach(el => {
+      el.classList.toggle('nv-visible', esLaptop);
+    });
+
+    document.getElementById('nv-view-marca').textContent  = nvTicketSel.marca  || '—';
+    document.getElementById('nv-view-modelo').textContent = nvTicketSel.modelo || '—';
+    document.getElementById('nv-view-serie').textContent  = nvTicketSel.serie  || '—';
+    document.getElementById('nv-view-so').textContent     = nvTicketSel.so     || '—';
+    document.getElementById('nv-equipo-type-text').textContent = nvTicketSel.tipo || '—';
+  }
+
+  /* ── 2A-EXTRA. Edición de Detalles del Equipo ── */
+  window.nvEquipoEditar = function() {
+    if (!nvTicketSel) return;
+    const esLaptop = nvTicketSel.tipo === 'Laptop';
+
+    document.getElementById('nv-edit-marca').value  = nvTicketSel.marca  || '';
+    document.getElementById('nv-edit-modelo').value = nvTicketSel.modelo || '';
+    document.getElementById('nv-edit-serie').value  = nvTicketSel.serie  || '';
+    document.getElementById('nv-edit-so').value     = nvTicketSel.so     || '';
+
+    document.querySelectorAll('#nv-equipo-edit .nv-field-laptop-only').forEach(el => {
+      el.classList.toggle('nv-form-visible', esLaptop);
+    });
+
+    document.getElementById('nv-equipo-view').classList.add('nv-hidden');
+    document.getElementById('nv-equipo-edit').classList.remove('nv-hidden');
+    document.getElementById('nv-btn-editar').classList.add('nv-hidden');
+    document.getElementById('nv-btn-guardar').classList.remove('nv-hidden');
+    document.getElementById('nv-btn-cancelar').classList.remove('nv-hidden');
+  };
+
+  window.nvEquipoCancelar = function() {
+    document.getElementById('nv-equipo-view').classList.remove('nv-hidden');
+    document.getElementById('nv-equipo-edit').classList.add('nv-hidden');
+    document.getElementById('nv-btn-editar').classList.remove('nv-hidden');
+    document.getElementById('nv-btn-guardar').classList.add('nv-hidden');
+    document.getElementById('nv-btn-cancelar').classList.add('nv-hidden');
+  };
+
+  window.nvEquipoGuardar = function() {
+    if (!nvTicketSel || !nvTicketSel.idEquipo) {
+      alert('No se pudo identificar el equipo a actualizar.');
+      return;
+    }
+    const esLaptop = nvTicketSel.tipo === 'Laptop';
+
+    const payload = {
+      idEquipo: nvTicketSel.idEquipo,
+      tipo:     nvTicketSel.tipo,
+      marca:    esLaptop ? document.getElementById('nv-edit-marca').value.trim()  : '',
+      modelo:   esLaptop ? document.getElementById('nv-edit-modelo').value.trim() : '',
+      serie:    esLaptop ? document.getElementById('nv-edit-serie').value.trim()  : '',
+      so:       document.getElementById('nv-edit-so').value.trim(),
+    };
+
+    const btnGuardar = document.getElementById('nv-btn-guardar');
+    btnGuardar.disabled = true;
+
+    fetch('nueva_venta.php?action=actualizar_equipo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(r => r.json())
+      .then(data => {
+        btnGuardar.disabled = false;
+        if (!data.success) {
+          alert('No se pudo guardar los cambios del equipo. Inténtalo de nuevo.');
+          return;
+        }
+        // Actualizar estado local y volver a modo vista
+        nvTicketSel.marca  = payload.marca;
+        nvTicketSel.modelo = payload.modelo;
+        nvTicketSel.serie  = payload.serie;
+        nvTicketSel.so     = payload.so;
+
+        nvPintarVistaEquipo();
+        window.nvEquipoCancelar();
+      })
+      .catch(() => {
+        btnGuardar.disabled = false;
+        alert('Ocurrió un error de conexión al guardar el equipo.');
+      });
+  };
+
+  /* ── 2B. Autocompletado por DNI (Venta por producto) ── */
+  (function initDniAutocomplete() {
+    const dniInput  = document.getElementById('nv-cli-dni');
+    const statusEl  = document.getElementById('nv-cli-dni-status');
+    if (!dniInput) return;
+
+    let debounceTimer = null;
+
+    function setStatus(html) { if (statusEl) statusEl.innerHTML = html; }
+
+    dniInput.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '');
+      clearTimeout(debounceTimer);
+      setStatus('');
+
+      if (this.value.length !== 8) {
+        nvClienteDni = { idCliente: 0, nombres: '', apellidos: '', ruc: '' };
+        return;
+      }
+
+      debounceTimer = setTimeout(() => {
+        setStatus('<span style="opacity:.5;font-size:11px;">Buscando…</span>');
+        fetch(`nueva_venta.php?action=buscar_dni&dni=${this.value}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.found) {
+              nvClienteDni = {
+                idCliente: data.idCliente,
+                nombres:   data.nombres || '',
+                apellidos: data.apellidos || '',
+                ruc:       data.ruc || '',
+              };
+              document.getElementById('nv-cli-nombres').value   = data.nombres || '';
+              document.getElementById('nv-cli-apellidos').value = data.apellidos || '';
+              if (data.ruc) document.getElementById('nv-cli-ruc').value = data.ruc;
+              setStatus('<span style="color:#1aa15a;font-size:11px;">✓ Cliente encontrado</span>');
+            } else {
+              nvClienteDni = { idCliente: 0, nombres: '', apellidos: '', ruc: '' };
+              setStatus('<span style="opacity:.5;font-size:11px;">Cliente nuevo</span>');
+            }
+            nvUpdateQuote();
+          })
+          .catch(() => setStatus(''));
+      }, 350);
+    });
+  })();
+
+  /* ── 3. Productos ── */
+  function nvProductosDisponibles(excluirUid) {
+    const usados = new Set(nvProdRows.filter(r => r.uid !== excluirUid).map(r => r.idComponente));
+    return catalogo.filter(p => !usados.has(p.id));
+  }
+
+  function nvRenderProdList() {
+    const cont = document.getElementById('nv-prod-list');
+    cont.innerHTML = nvProdRows.map(row => {
+      const opciones = nvProductosDisponibles(row.uid).map(p => {
+        const sel = p.id === row.idComponente ? 'selected' : '';
+        return `<option value="${p.id}" data-precio="${p.precio}" data-stock="${p.stock}" ${sel}>${escapeHtml(p.nombre)}</option>`;
+      }).join('');
+
+      const prod   = catalogo.find(p => p.id === row.idComponente);
+      const precio = prod ? prod.precio * row.cantidad : 0;
+
+      return `
+        <div class="nv-prod-row" data-uid="${row.uid}">
+          <select onchange="nvCambiarProducto(${row.uid}, this.value)">
+            <option value="">Selecciona un producto…</option>
+            ${opciones}
+          </select>
+          <div class="nv-qty-ctrl">
+            <button type="button" class="nv-qty-btn" onclick="nvCambiarCantidad(${row.uid}, -1)">−</button>
+            <span class="nv-qty-num">${row.cantidad}</span>
+            <button type="button" class="nv-qty-btn" onclick="nvCambiarCantidad(${row.uid}, 1)">+</button>
+          </div>
+          <span class="nv-prod-precio">S/ ${fmt(precio)}</span>
+          <button type="button" class="nv-prod-remove" onclick="nvQuitarProd(${row.uid})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`;
+    }).join('');
+  }
+
+  window.nvAgregarProd = function() {
+    nvProdRows.push({ uid: nvUidSeq++, idComponente: 0, cantidad: 1 });
+    nvRenderProdList();
+    nvUpdateQuote();
+  };
+
+  window.nvQuitarProd = function(uid) {
+    nvProdRows = nvProdRows.filter(r => r.uid !== uid);
+    nvRenderProdList();
+    nvUpdateQuote();
+  };
+
+  window.nvCambiarProducto = function(uid, idComponenteStr) {
+    const row = nvProdRows.find(r => r.uid === uid);
+    if (!row) return;
+    row.idComponente = Number(idComponenteStr) || 0;
+    nvRenderProdList();
+    nvUpdateQuote();
+  };
+
+  window.nvCambiarCantidad = function(uid, delta) {
+    const row = nvProdRows.find(r => r.uid === uid);
+    if (!row) return;
+    const prod = catalogo.find(p => p.id === row.idComponente);
+    const maxStock = prod ? prod.stock : 99;
+    row.cantidad = Math.min(maxStock, Math.max(1, row.cantidad + delta));
+    nvRenderProdList();
+    nvUpdateQuote();
+  };
+
+  /* ── 4. Método de pago ── */
+  window.nvSelMetodo = function(metodo, el) {
+    nvMetodoPago = metodo;
+    document.querySelectorAll('.nv-metodo-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  };
+
+  /* ── 5. Resumen / cotización en vivo ── */
+  function nvGetProductItems() {
+    return nvProdRows
+      .map(row => {
+        const prod = catalogo.find(p => p.id === row.idComponente);
+        if (!prod) return null;
+        return { nombre: prod.nombre, cantidad: row.cantidad, precio: prod.precio, total: prod.precio * row.cantidad };
+      })
+      .filter(Boolean);
+  }
+
+  window.nvUpdateQuote = function() {
+    const items = [];
+
+    if (nvTipoVenta === 'ticket' && nvTicketSel) {
+      if (Array.isArray(nvTicketSel.servicios) && nvTicketSel.servicios.length) {
+        nvTicketSel.servicios.forEach(s => {
+          items.push({ nombre: s.nombre, cantidad: 1, precio: s.precio, total: s.precio });
+        });
+      } else {
+        items.push({ nombre: nvTicketSel.servicio || 'Servicio técnico', cantidad: 1, precio: nvTicketSel.subtotal, total: nvTicketSel.subtotal });
+      }
+    }
+    items.push(...nvGetProductItems());
+
+    const empty   = document.getElementById('nv-q-empty');
+    const details = document.getElementById('nv-q-details');
+    const clientBox = document.getElementById('nv-q-client');
+    const clientName = document.getElementById('nv-q-client-name');
+
+    // Nombre del cliente en el resumen
+    let nombreMostrar = '';
+    if (nvTipoVenta === 'ticket' && nvTicketSel) {
+      nombreMostrar = `${nvTicketSel.nombres} ${nvTicketSel.apellidos}`.trim();
+    } else if (nvTipoVenta === 'producto') {
+      const n = document.getElementById('nv-cli-nombres')?.value || '';
+      const a = document.getElementById('nv-cli-apellidos')?.value || '';
+      nombreMostrar = `${n} ${a}`.trim();
+    }
+    if (nombreMostrar) {
+      clientName.textContent = nombreMostrar;
+      clientBox.classList.remove('nv-hidden');
+    } else {
+      clientBox.classList.add('nv-hidden');
+    }
+
+    if (!items.length) {
+      empty.classList.remove('nv-hidden');
+      details.classList.add('nv-hidden');
+      return;
+    }
+
+    empty.classList.add('nv-hidden');
+    details.classList.remove('nv-hidden');
+
+    const itemsHtml = items.map(it => `
+      <div class="nv-quote-item">
+        <span class="nv-quote-item__name">${escapeHtml(it.nombre)}${it.cantidad > 1 ? ` ×${it.cantidad}` : ''}</span>
+        <span class="nv-quote-item__price">S/ ${fmt(it.total)}</span>
+      </div>`).join('');
+    document.getElementById('nv-q-items').innerHTML = itemsHtml;
+
+    const subtotal = items.reduce((acc, it) => acc + it.total, 0);
+    const igv      = subtotal * 0.18;
+    const total     = subtotal + igv;
+
+    document.getElementById('nv-q-subtotal').textContent = fmt(subtotal);
+    document.getElementById('nv-q-igv').textContent      = fmt(igv);
+    document.getElementById('nv-q-total').textContent    = fmt(total);
+  };
+
+  /* ── 6. Registrar venta ── */
+  window.nvGuardarVenta = function() {
+    const items = [];
+    if (nvTipoVenta === 'ticket' && nvTicketSel) {
+      items.push({ nombre: nvTicketSel.servicio || 'Servicio técnico', cantidad: 1, precio: nvTicketSel.subtotal, total: nvTicketSel.subtotal });
+    }
+    const productItems = nvGetProductItems();
+    items.push(...productItems);
+
+    if (nvTipoVenta === 'ticket' && !nvTicketSel) {
+      alert('Selecciona un ticket para continuar.');
+      return;
+    }
+    if (nvTipoVenta === 'producto') {
+      const nombres   = document.getElementById('nv-cli-nombres').value.trim();
+      const apellidos = document.getElementById('nv-cli-apellidos').value.trim();
+      const dni       = document.getElementById('nv-cli-dni').value.trim();
+      if (!nombres || !apellidos || dni.length !== 8) {
+        alert('Completa nombres, apellidos y un DNI de 8 dígitos.');
+        return;
+      }
+      if (!productItems.length) {
+        alert('Añade al menos un producto a la venta.');
+        return;
+      }
+    }
+
+    const payload = {
+      tipoVenta:  nvTipoVenta,
+      metodoPago: nvMetodoPago,
+      productos: nvProdRows
+        .filter(r => r.idComponente > 0)
+        .map(r => ({ idComponente: r.idComponente, cantidad: r.cantidad })),
+    };
+
+    if (nvTipoVenta === 'ticket') {
+      payload.idTicket = nvTicketSel.idTicket;
+    } else {
+      payload.nombres   = document.getElementById('nv-cli-nombres').value.trim();
+      payload.apellidos = document.getElementById('nv-cli-apellidos').value.trim();
+      payload.dni       = document.getElementById('nv-cli-dni').value.trim();
+      payload.ruc       = document.getElementById('nv-cli-ruc').value.trim();
+    }
+
+    const btn = document.getElementById('nv-btn-registrar');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Registrando…';
+
+    fetch('nueva_venta.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) {
+          alert(data.message || 'No se pudo registrar la venta.');
+          btn.disabled = false;
+          btn.textContent = textoOriginal;
+          return;
+        }
+
+        nvUltimaVenta = data;
+
+        document.getElementById('nv-modal-amount').textContent = 'S/ ' + fmt(data.total);
+        document.getElementById('nv-modal-method').textContent = data.metodoPago;
+        document.getElementById('nv-modal-success').classList.add('show');
+      })
+      .catch(() => {
+        alert('Ocurrió un error de conexión. Inténtalo de nuevo.');
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+      });
+  };
+
+  /* ── 7. Boleta de venta en PDF ── */
+  window.nvGenerarPDF = function() {
+    if (!nvUltimaVenta) { alert('No hay datos de la venta.'); return; }
+    const d = nvUltimaVenta;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const azulTecnologico = [23, 70, 234];
+    const azulProfundo    = [0, 0, 25];
+
+    const xDerecha = 195;
+    const xPrecios = 190;
+    const xLabel   = 130;
+    const aRight   = { align: 'right' };
+
+    let y = 20;
+
+    // ===== HEADER =====
+    doc.addImage('img/logo-horizontal-color.png', 'PNG', 15, y, 40, 15);
+
+    doc.setFontSize(9);
+    doc.setTextColor(...azulProfundo);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MORALES TECH SOLUTIONS ADVANCED S.A.C.', xDerecha, y + 5, aRight);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Urb. Jardines de Casablanca F-06, Ica', xDerecha, y + 10, aRight);
+    doc.text('(51) 903-208-170', xDerecha, y + 15, aRight);
+    doc.text('RUC: 20613424238', xDerecha, y + 20, aRight);
+
+    y += 35;
+
+    // ===== TITULO =====
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(...azulTecnologico);
+    doc.text('BOLETA DE VENTA', 15, y);
+    y += 8;
+
+    doc.setDrawColor(200);
+    doc.line(15, y, 195, y);
+    y += 8;
+
+    // ===== N° VENTA / FECHA =====
+    const hoy = new Date();
+    const fecha = hoy.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+    const numeroVenta = 'V-' + String(d.idVenta).padStart(6, '0');
+
+    doc.setTextColor(...azulProfundo);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('N° BOLETA', 15, y);
+    doc.text('FECHA', xDerecha, y, aRight);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.text(numeroVenta, 15, y);
+    doc.text(fecha, xDerecha, y, aRight);
+    y += 12;
+
+    // ===== CLIENTE / MÉTODO DE PAGO =====
+    doc.setFont('helvetica', 'bold');
+    doc.text('CLIENTE', 15, y);
+    doc.text('MÉTODO DE PAGO', xDerecha, y, aRight);
+    y += 6;
+
+    doc.setFont('helvetica', 'normal');
+    if (d.cliente) doc.text(d.cliente, 15, y);
+    if (d.metodoPago) doc.text(d.metodoPago, xDerecha, y, aRight);
+    y += 6;
+
+    if (d.dni) { doc.text('DNI: ' + d.dni, 15, y); y += 6; }
+    if (d.ruc) { doc.text('RUC: ' + d.ruc, 15, y); y += 6; }
+
+    y += 4;
+    doc.line(15, y, 195, y);
+    y += 10;
+
+    // ===== ITEMS =====
+    doc.setFont('helvetica', 'bold');
+    doc.text('DESCRIPCIÓN', 15, y);
+    y += 6;
+
+    doc.setFillColor(...azulTecnologico);
+    doc.roundedRect(15, y, 180, 8, 4, 4, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.text('ITEM', 20, y + 5.5);
+    doc.text('MONTO', xPrecios, y + 5.5, aRight);
+    y += 12;
+
+    doc.setTextColor(...azulProfundo);
+    doc.setFont('helvetica', 'normal');
+    const items = Array.isArray(d.items) ? d.items : [];
+    items.forEach(it => {
+      const cantidad = Number(it.cantidad) || 1;
+      const precio   = Number(it.precio) || 0;
+      const totalLinea = precio * cantidad;
+      const etiqueta = cantidad > 1 ? `${it.nombre} ×${cantidad}` : it.nombre;
+      doc.text(etiqueta, 20, y);
+      doc.text(`S/ ${totalLinea.toFixed(2)}`, xPrecios, y, aRight);
+      y += 7;
+    });
+    y += 5;
+
+    // ===== TOTALES =====
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Subtotal', xLabel, y);
+    doc.text(`S/ ${Number(d.subtotal).toFixed(2)}`, xPrecios, y, aRight);
+    y += 6;
+
+    doc.text('IGV (18%)', xLabel, y);
+    doc.text(`S/ ${Number(d.igv).toFixed(2)}`, xPrecios, y, aRight);
+    y += 8;
+
+    doc.setDrawColor(200);
+    doc.line(xLabel, y, 195, y);
+    y += 7;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(...azulProfundo);
+    doc.text('TOTAL:', xLabel, y);
+    doc.setTextColor(...azulTecnologico);
+    doc.text(`S/ ${Number(d.total).toFixed(2)}`, xPrecios, y, aRight);
+
+    // ===== FOOTER =====
+    y = 270;
+    doc.setTextColor(...azulProfundo);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Gracias por confiar en Morales Tech Solutions Advanced.', 15, y);
+
+    doc.save(`Boleta_${numeroVenta}.pdf`);
+  };
+
+  /* ── Inicialización ── */
+  window.nvUpdateQuote();
+})();
