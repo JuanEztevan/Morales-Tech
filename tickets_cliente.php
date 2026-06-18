@@ -199,8 +199,8 @@ $reciente = $todos_los_tickets[0] ?? null;
             <div class="ticket-hero-card__id">#<?= htmlspecialchars($reciente['id']) ?></div>
             <div class="ticket-hero-card__equipo"><?= htmlspecialchars($reciente['tipo'] . ' · ' . $reciente['marca']) ?></div>
             <div class="ticket-hero-card__svc"><?= htmlspecialchars($reciente['servicio']) ?></div>
-            <div class="ticket-hero-badge">
-              <span class="ticket-hero-badge__dot"></span>
+            <div class="ticket-hero-badge" style="background:<?= $ec['bg'] ?>;color:<?= $ec['color'] ?>;">
+              <span class="ticket-hero-badge__dot" style="background:<?= $ec['dot'] ?>;"></span>
               <?= htmlspecialchars($reciente['estado']) ?>
             </div>
           </div>
@@ -326,8 +326,8 @@ $reciente = $todos_los_tickets[0] ?? null;
       </button>
       <div class="dash-modal-hero__id"     id="m-id"></div>
       <div class="dash-modal-hero__equipo" id="m-equipo"></div>
-      <div class="dash-modal-hero__badge">
-        <span class="dash-modal-hero__dot"></span>
+      <div class="dash-modal-hero__badge" id="m-estado-badge">
+        <span class="dash-modal-hero__dot" id="m-estado-dot"></span>
         <span id="m-estado"></span>
       </div>
     </div>

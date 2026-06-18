@@ -2603,6 +2603,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .dash-kpi-badge svg { width: 10px; height: 10px; }
 .dash-kpi-badge--up      { background: rgba(24,131,237,.12); color: var(--celeste); }
+.dash-kpi-badge--down    { background: rgba(220,53,69,.1);   color: #dc3545; }
 .dash-kpi-badge--neutral { background: var(--admin-surface);  color: #7a8096; }
 .dash-kpi-badge--warn    { background: #fff8e6; color: #9a6c00; }
 .dash-kpi-card--highlight .dash-kpi-badge--up { background: rgba(255,255,255,.18); color: var(--blanco); }

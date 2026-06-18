@@ -302,10 +302,23 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     'Instalación de programas': 20, 'Optimización del sistema': 30,
   };
 
+  const ESTADO_COLORES = {
+    'Recibido':           { bg: 'rgba(245,166,35,.18)',  color: '#f5c048', dot: '#f5a623' },
+    'En proceso':         { bg: 'rgba(23,70,234,.22)',   color: '#8db4ff', dot: '#1746EA' },
+    'Listo para entrega': { bg: 'rgba(201,74,0,.20)',    color: '#f5a07a', dot: '#e85d04' },
+    'Completado':         { bg: 'rgba(26,122,74,.22)',   color: '#5fc98a', dot: '#1a7a4a' },
+  };
+
   window.abrirModal = function(id, equipo, so, servicio, adicionales, estado, fecha, subtotal, igv, total, obs) {
     document.getElementById('m-id').textContent     = '#' + id;
     document.getElementById('m-equipo').textContent = equipo;
     document.getElementById('m-estado').textContent = estado;
+
+    const ec = ESTADO_COLORES[estado] || { bg: 'rgba(100,100,120,.18)', color: '#a0a8bb', dot: '#7a8096' };
+    const badge = document.getElementById('m-estado-badge');
+    const dot   = document.getElementById('m-estado-dot');
+    if (badge) { badge.style.background = ec.bg; badge.style.color = ec.color; }
+    if (dot)   { dot.style.background   = ec.dot; }
     document.getElementById('m-tipo').textContent   = equipo;
     document.getElementById('m-so').textContent     = so || '—';
     document.getElementById('m-fecha').textContent  = fecha;
@@ -358,8 +371,14 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     if (!t) return;
 
     document.getElementById('dt-codigo').textContent = '#' + t.codigo;
-    document.getElementById('dt-estado').textContent = t.estado;
     document.getElementById('dt-fecha').textContent  = t.fecha;
+
+    const ec2 = ESTADO_COLORES[t.estado] || { bg: 'rgba(100,100,120,.18)', color: '#a0a8bb', dot: '#7a8096' };
+    const dtEstado = document.getElementById('dt-estado');
+    if (dtEstado) {
+      dtEstado.textContent = t.estado;
+      dtEstado.style.cssText = `background:${ec2.bg};color:${ec2.color};padding:2px 10px;border-radius:50px;font-weight:600;font-size:11px;`;
+    }
 
     const left = document.getElementById('dt-summary-left');
     if (left) {
