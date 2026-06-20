@@ -4,7 +4,7 @@ require_once 'conexion.php';
 $error     = '';
 $step      = intval($_POST['step'] ?? 1);
 $startStep = 1;
-// PASO 1 → verificar correo o DNI
+/* --- PASO 1: VERIFICAR CORREO O DNI --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
     $identificador = trim($_POST['identificador'] ?? '');
     if (!$identificador) {
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
                 $startStep = 1;
             } else {
                 $admin = $res->fetch_assoc();
-                // Limpiar datos anteriores por si se reintenta el flujo
+                // limpia datos anteriores por si se reintenta el flujo
                 unset(
                     $_SESSION['rec_staff_id'],
                     $_SESSION['rec_staff_p1'],
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
         }
     }
 }
-// PASO 2 → verificar respuestas
+/* --- PASO 2: VERIFICAR RESPUESTAS --- */
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
     $r1 = trim($_POST['respuesta1'] ?? '');
     $r2 = trim($_POST['respuesta2'] ?? '');
@@ -89,7 +89,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
         }
     }
 }
-// PASO 3 → guardar nueva contraseña
+/* --- PASO 3: GUARDAR NUEVA CONTRASEÑA --- */
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 3) {
     $nueva   = $_POST['password']  ?? '';
     $confirm = $_POST['password2'] ?? '';
@@ -149,7 +149,6 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
 </head>
 <body class="admin-body">
 <div class="admin-split">
-  <!-- ══ PANEL IZQUIERDO — formulario claro ══ -->
   <div class="admin-panel admin-panel--light">
     <div class="admin-form-wrap admin-form-wrap--wide">
       <div class="admin-form-isotipo">
@@ -161,7 +160,6 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
       </div>
       <h1 class="admin-form-heading">Recuperar contraseña</h1>
       <p class="admin-form-sub">Restablece el acceso a tu cuenta<br>de colaborador Morales Tech</p>
-      <!-- ══ Stepper (variante light) ══ -->
       <div class="ms-stepper ms-stepper--light" id="ms-stepper">
         <div class="ms-step ms-step--active ms-step--light" id="ms-dot-1">
           <div class="ms-step__dot">
@@ -201,7 +199,6 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
       <form method="POST" action="recuperar_contra_staff.php" autocomplete="off"
             id="rec-form" onsubmit="recStaffSyncStep()">
         <input type="hidden" name="step" id="rec-step-hidden" value="<?= $startStep ?>">
-        <!-- ══════════ PASO 1 ══════════ -->
         <div class="ms-panel" id="ms-panel-1">
           <div class="ms-sq-section-label" style="justify-content: center;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
@@ -228,8 +225,7 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
               <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
             </svg>
           </button>
-        </div><!-- /ms-panel-1 -->
-        <!-- ══════════ PASO 2 ══════════ -->
+        </div>
         <div class="ms-panel ms-panel--hidden" id="ms-panel-2">
           <div class="ms-sq-section-label" style="justify-content: center;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
@@ -252,7 +248,6 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
                   <svg class="admin-input-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                   </svg>
-                  <!-- SIN "required": evita el error de consola en paneles ocultos -->
                   <input type="text" id="respuesta<?= $i ?>" name="respuesta<?= $i ?>"
                          placeholder="Tu respuesta secreta"
                          autocomplete="off">
@@ -275,8 +270,7 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
               </svg>
             </button>
           </div>
-        </div><!-- /ms-panel-2 -->
-        <!-- ══════════ PASO 3 ══════════ -->
+        </div>
         <div class="ms-panel ms-panel--hidden" id="ms-panel-3">
           <div class="admin-form-group">
             <label for="password">Nueva contraseña</label>
@@ -333,7 +327,7 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
               Guardar contraseña
             </button>
           </div>
-        </div><!-- /ms-panel-3 -->
+        </div>
       </form>
       <a href="login_staff.php" class="admin-back-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -343,7 +337,6 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
       </a>
     </div>
   </div>
-  <!-- ══ PANEL DERECHO — decorativo oscuro ══ -->
   <div class="admin-panel admin-panel--dark">
     <div class="admin-panel-dots"></div>
     <div class="admin-panel__brand">
@@ -387,18 +380,16 @@ $p3 = $_SESSION['rec_staff_p3'] ?? '';
       © 2026 Morales Tech · Sistema interno · Acceso restringido
     </div>
   </div>
-</div><!-- /admin-split -->
+</div>
 <script>
-/* RECUPERAR CONTRASEÑA — STAFF */
+/* --- RECUPERAR CONTRASEÑA: STAFF --- */
 var MS_START_STEP  = <?= (int)$startStep ?>;
 var MS_TOTAL_STEPS = 3;
 var _staffActivePanel = MS_START_STEP;
 
-/**
- * recStaffSyncStep() — llamada por onsubmit del <form>.
- * Recorre los paneles, detecta cuál no está oculto y escribe
- * ese número en el campo hidden ANTES del envío al servidor.
- */
+// recStaffSyncStep(): se llama desde el onsubmit del formulario
+// recorre los paneles, detecta cuál no está oculto y guarda
+// ese número en el campo hidden antes de enviarlo al servidor
 function recStaffSyncStep() {
   for (var i = 1; i <= MS_TOTAL_STEPS; i++) {
     var panel = document.getElementById('ms-panel-' + i);
@@ -410,7 +401,7 @@ function recStaffSyncStep() {
   }
 }
 
-/** Muestra el panel anterior sin hacer submit */
+// muestra el panel anterior sin hacer submit
 function recStaffBack(targetStep) {
   var panelPrev = document.getElementById('ms-panel-' + targetStep);
   var panelCurr = document.getElementById('ms-panel-' + (targetStep + 1));
@@ -422,7 +413,7 @@ function recStaffBack(targetStep) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/** Actualiza los dots del stepper */
+// actualiza los dots del stepper
 function recStaffUpdateStepper(activeStep) {
   for (var i = 1; i <= MS_TOTAL_STEPS; i++) {
     var dot       = document.getElementById('ms-dot-' + i);
@@ -435,7 +426,7 @@ function recStaffUpdateStepper(activeStep) {
   }
 }
 
-// Al cargar: mostrar el paso que PHP indicó y ocultar los demás
+// al cargar, muestra el paso que indicó PHP y oculta los demás
 (function initStaffRecPage() {
   for (var i = 1; i <= MS_TOTAL_STEPS; i++) {
     var p = document.getElementById('ms-panel-' + i);
@@ -445,7 +436,7 @@ function recStaffUpdateStepper(activeStep) {
   if (target) target.classList.remove('ms-panel--hidden');
   _staffActivePanel = MS_START_STEP;
   recStaffUpdateStepper(MS_START_STEP);
-  // Sincronizar el hidden con el paso inicial de PHP
+  // sincroniza el hidden con el paso inicial de PHP
   document.getElementById('rec-step-hidden').value = MS_START_STEP;
 })();
 </script>
