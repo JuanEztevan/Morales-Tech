@@ -2,7 +2,7 @@
 require_once 'admin_protect.php';
 require_once 'conexion.php';
 
-// ── AJAX: actualizar estado de un ticket ──
+/* --- AJAX: ACTUALIZAR ESTADO --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
     $datos  = json_decode(file_get_contents('php://input'), true);
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// ── Datos del admin para el header ──
+// datos del administrador para el encabezado
 $stmt = $conn->prepare("SELECT nombres, apellidos FROM ADMIN WHERE idAdmin=? LIMIT 1");
 $stmt->bind_param("i", $_SESSION['idAdmin']);
 $stmt->execute();
@@ -34,14 +34,14 @@ $partes         = explode(' ', trim($nombre_usuario));
 $inicial        = strtoupper(substr($partes[0], 0, 1));
 $nombre_corto   = $partes[0];
 
-// ── Filtro activo ──
+// filtro activo según el parámetro GET
 $estados_validos = ['Recibido','En proceso','Listo para entrega','Completado'];
 $filtro_activo   = $_GET['estado'] ?? 'Todos';
 if (!in_array($filtro_activo, array_merge(['Todos'], $estados_validos))) {
     $filtro_activo = 'Todos';
 }
 
-// ── Consulta tickets ──
+/* --- CONSULTA DE TICKETS --- */
 $sql = "SELECT t.codigo, t.estado,
                cl.nombres, cl.apellidos,
                e.tipoEquipo, e.marca,
@@ -115,7 +115,6 @@ function clase_filtro_ticket($estado) {
 
 <div class="dash-shell">
 
-  <!-- SIDEBAR -->
   <aside class="dash-sidebar">
     <div class="dash-sidebar__logo">
       <img src="img/isotipo-color.png" alt="Morales Tech" class="dash-sidebar__isotipo"
@@ -148,9 +147,12 @@ function clase_filtro_ticket($estado) {
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="dash-main">
+
     <header class="dash-header">
+      <button class="dash-header__hamburger" id="dash-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
       <div class="dash-header__breadcrumb">Panel / <span>Tickets</span></div>
       <div class="dash-header__user">
         <div class="dash-header__avatar"><?= $inicial ?></div>
@@ -162,7 +164,7 @@ function clase_filtro_ticket($estado) {
     </header>
 
     <main class="dash-page-content">
-      <!-- Page header -->
+
       <div class="tk-page-header">
         <div>
           <h1 class="tk-page-title">Tickets</h1>
@@ -174,7 +176,6 @@ function clase_filtro_ticket($estado) {
         </a>
       </div>
 
-      <!-- Filtros -->
       <div class="tk-filters">
         <?php foreach ($estados as $estado):
           $url_f    = ($estado === 'Todos') ? 'tickets.php' : 'tickets.php?estado='.urlencode($estado);
@@ -188,7 +189,6 @@ function clase_filtro_ticket($estado) {
         <?php endforeach; ?>
       </div>
 
-      <!-- Tabla -->
       <div class="dash-panel-block">
         <div class="dash-table-wrap">
           <table class="dash-admin-table">
@@ -255,9 +255,33 @@ function clase_filtro_ticket($estado) {
       </div>
 
     </main>
-  </div><!-- /dash-main -->
+  </div>
 
-</div><!-- /dash-shell -->
+<div class="dash-admin-mob" id="admin-mob-menu">
+  <a href="dashboard.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+  <a href="tickets.php" class="dash-admin-mob--active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+    Tickets
+  </a>
+  <a href="inventario.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    Inventario
+  </a>
+  <a href="ventas.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Ventas
+  </a>
+  <hr class="dash-admin-mob__divider">
+  <a href="logout.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Cerrar sesión
+  </a>
+</div>
+
+</div>
 
 <script src="script.js" defer></script>
 </body>
