@@ -2,7 +2,7 @@
 require_once 'admin_protect.php';
 require_once 'conexion.php';
 
-// Admin header
+// datos del administrador para el encabezado
 $stmt = $conn->prepare("SELECT nombres, apellidos FROM ADMIN WHERE idAdmin=? LIMIT 1");
 $stmt->bind_param("i", $_SESSION['idAdmin']);
 $stmt->execute();
@@ -14,7 +14,7 @@ $partes         = explode(' ', trim($nombre_usuario));
 $inicial        = strtoupper(substr($partes[0], 0, 1));
 $nombre_corto   = $partes[0];
 
-// KPIs — mes actual
+/* --- KPIS DEL MES --- */
 $kpi = $conn->query("
     SELECT COUNT(*) AS cnt,
            COALESCE(SUM(total),0) AS sum_total,
@@ -28,7 +28,7 @@ $ventas_mes      = (int)$kpi['cnt'];
 $ticket_promedio = (float)$kpi['avg_total'];
 $clientes_mes    = (int)$kpi['clientes'];
 
-// KPIs — mes anterior (para % cambio)
+// KPIs del mes anterior para calcular variación
 $kpi_prev = $conn->query("
     SELECT COALESCE(SUM(total),0) AS sum_total, COUNT(*) AS cnt
     FROM VENTA
@@ -45,7 +45,7 @@ function pct_change($curr, $prev) {
 $pct_ingresos = pct_change($ingresos_mes, $ingresos_prev);
 $pct_ventas   = pct_change($ventas_mes,   $ventas_prev);
 
-// Métodos de pago — mes actual (para donut)
+// métodos de pago del mes para el gráfico donut
 $res_metodos = $conn->query("
     SELECT metodoPago, COUNT(*) AS cnt, COALESCE(SUM(total),0) AS suma
     FROM VENTA
@@ -55,7 +55,7 @@ $res_metodos = $conn->query("
 $metodos = [];
 while ($r = $res_metodos->fetch_assoc()) $metodos[] = $r;
 
-// Ventas por mes — para gráfico de barras
+// ventas por mes para el gráfico de barras
 $res_meses = $conn->query("
     SELECT YEAR(fechaVenta) AS yr, MONTH(fechaVenta) AS mo, SUM(total) AS val
     FROM VENTA GROUP BY yr, mo ORDER BY yr, mo
@@ -64,7 +64,7 @@ $ventas_por_mes = [];
 while ($r = $res_meses->fetch_assoc())
     $ventas_por_mes[] = ['yr'=>(int)$r['yr'],'mo'=>(int)$r['mo'],'val'=>round((float)$r['val'],2)];
 
-// Lista de ventas para la tabla
+/* --- TABLA DE VENTAS --- */
 $res_ventas = $conn->query("
     SELECT v.idVenta, v.nombreCliente, v.metodoPago,
            v.total, v.fechaVenta,
@@ -85,7 +85,7 @@ $res_ventas = $conn->query("
 $ventas = [];
 while ($r = $res_ventas->fetch_assoc()) $ventas[] = $r;
 
-// Donut — colores y cálculo de arcos SVG
+// calcula arcos SVG para el gráfico donut
 $METODO_COLORES = [
     'Yape'          => '#000019',
     'Transferencia' => '#1883ED',
@@ -127,7 +127,6 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
 
 <div class="dash-shell">
 
-  <!-- SIDEBAR -->
   <aside class="dash-sidebar">
     <div class="dash-sidebar__logo">
       <img src="img/isotipo-color.png" alt="Morales Tech" class="dash-sidebar__isotipo"
@@ -160,9 +159,11 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="dash-main">
     <header class="dash-header">
+      <button class="dash-header__hamburger" id="dash-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
       <div class="dash-header__breadcrumb">Panel / <span>Ventas</span></div>
       <div class="dash-header__user">
         <div class="dash-header__avatar"><?= $inicial ?></div>
@@ -175,7 +176,6 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
 
     <main class="dash-page-content">
 
-      <!-- Page header -->
       <div class="tk-page-header">
         <div>
           <h1 class="tk-page-title">Ventas</h1>
@@ -183,10 +183,8 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
         </div>
       </div>
 
-      <!-- KPI cards -->
       <div class="dash-kpi-row" style="margin-bottom:24px;">
 
-        <!-- Ingresos del mes -->
         <div class="dash-kpi-card dash-kpi-card--highlight">
           <div class="dash-kpi-card__top">
             <div class="dash-kpi-card__icon">
@@ -211,7 +209,6 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
           <div class="dash-kpi-card__sub"><?= date('F Y') ?></div>
         </div>
 
-        <!-- Ventas este mes -->
         <div class="dash-kpi-card">
           <div class="dash-kpi-card__top">
             <div class="dash-kpi-card__icon">
@@ -236,7 +233,6 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
           <div class="dash-kpi-card__sub">vs mes anterior</div>
         </div>
 
-        <!-- Ticket promedio -->
         <div class="dash-kpi-card">
           <div class="dash-kpi-card__top">
             <div class="dash-kpi-card__icon">
@@ -249,7 +245,6 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
           <div class="dash-kpi-card__sub">por venta</div>
         </div>
 
-        <!-- Clientes atendidos -->
         <div class="dash-kpi-card">
           <div class="dash-kpi-card__top">
             <div class="dash-kpi-card__icon">
@@ -264,10 +259,8 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
 
       </div>
 
-      <!-- Gráfico + donut -->
       <div class="vt-charts-row">
 
-        <!-- Gráfico de barras -->
         <div class="dash-panel-block" style="padding:22px 24px 24px;">
           <div class="vt-chart-header">
             <div>
@@ -296,7 +289,6 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
           </div>
         </div>
 
-        <!-- Métodos de pago + botón -->
         <div class="dash-panel-block" style="padding:22px 24px 24px;">
           <div class="vt-chart-title" style="margin-bottom:4px;">Métodos de pago</div>
           <div class="vt-chart-sub" style="margin-bottom:18px;">Distribución del mes actual</div>
@@ -341,7 +333,6 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
 
       </div>
 
-      <!-- Filtros y tabla -->
       <div class="inv-filters-bar">
         <div class="inv-filter-tabs">
           <button class="inv-filter-tab active" onclick="vtFiltrar('Todos',this)">Todas</button>
@@ -414,9 +405,33 @@ function donut_circles($metodos, $colores, $default_color, $circ, $total) {
       </div>
 
     </main>
-  </div><!-- /dash-main -->
+  </div>
 
-</div><!-- /dash-shell -->
+<div class="dash-admin-mob" id="admin-mob-menu">
+  <a href="dashboard.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+  <a href="tickets.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+    Tickets
+  </a>
+  <a href="inventario.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    Inventario
+  </a>
+  <a href="ventas.php" class="dash-admin-mob--active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Ventas
+  </a>
+  <hr class="dash-admin-mob__divider">
+  <a href="logout.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Cerrar sesión
+  </a>
+</div>
+
+</div>
 
 <script>
 window._vtVentasPorMes = <?= json_encode($ventas_por_mes) ?>;
