@@ -36,7 +36,7 @@ El sistema centraliza el registro y seguimiento de tickets, la gestión de inven
 Optimizar la gestión del soporte técnico mediante un sistema web que permita el registro, seguimiento y control eficiente de incidencias, cotizaciones y ventas.
 
 ### Objetivos Específicos (SMART)
-- Implementar un sistema de gestión de tickets con registro, seguimiento y control de estados (Recibido, Diagnóstico, Reparación, Completado).
+- Implementar un sistema de gestión de tickets con registro, seguimiento y control de estados (Recibido, En proceso, Listo para entrega, Completado).
 - Desarrollar dos portales diferenciados (clientes y administradores) con autenticación segura basada en roles.
 - Diseñar e implementar una base de datos relacional con más de 10 tablas interconectadas para la gestión integral del sistema.
 - Implementar un sistema de cotización que permita asociar múltiples servicios a un equipo, generando automáticamente subtotal, IGV y total.
@@ -111,7 +111,7 @@ https://www.figma.com/design/aacROpMdBOdo8JNwRwbyfo/Morales-Tech---Integrador-II
 
 ### Portal de Clientes (Privado)
 - Requiere inicio de sesión.
-- Visualización de tickets recientes con sus estados (Recibido, En diagnóstico, En reparación, Completado).
+- Visualización de tickets recientes con sus estados (Recibido, En proceso, Listo para entrega, Completado).
 - Registro de **Nuevo Ticket** a través de un asistente por pasos:
   - Selección de dispositivo (PC de Escritorio o Laptop).
   - Descripción del problema y sistema operativo (obligatorio).
