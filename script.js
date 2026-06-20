@@ -5,7 +5,7 @@ const ESTADO_COLORES = {
   'Completado':         { bg: 'rgba(26,122,74,.22)',   color: '#5fc98a', dot: '#1a7a4a' },
 };
 
-/* ── Navbar scroll ── */
+/* --- NAVBAR SCROLL --- */
 (function initNavbar() {
   const navbar = document.getElementById('navbar');
   if (!navbar) return;
@@ -14,7 +14,7 @@ const ESTADO_COLORES = {
   });
 })();
 
-/* ── Hamburger / Mobile Menu ── */
+/* --- HAMBURGER / MOBILE MENU --- */
 (function initMobileMenu() {
   const hamburger  = document.getElementById('hamburger');
   const mobileMenu = document.getElementById('mobile-menu');
@@ -35,7 +35,7 @@ const ESTADO_COLORES = {
     }
   });
 
-  // Expuesto globalmente para los onclick en el HTML
+  // expuesto globalmente para los onclick en el HTML
   window.closeMobileMenu = function() {
     menuOpen = false;
     mobileMenu.classList.remove('open');
@@ -43,7 +43,7 @@ const ESTADO_COLORES = {
   };
 })();
 
-/* ── Reveal on scroll ── */
+/* --- REVEAL ON SCROLL --- */
 (function initReveal() {
   const reveals = document.querySelectorAll('.reveal');
   if (!reveals.length) return;
@@ -60,7 +60,7 @@ const ESTADO_COLORES = {
   reveals.forEach(el => observer.observe(el));
 })();
 
-/* ── Active nav link on scroll (solo index.php) ── */
+/* --- ACTIVE NAV LINK ON SCROLL (SOLO INDEX.PHP) --- */
 (function initActiveNavScroll() {
   const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
   if (!navLinks.length) return;
@@ -76,7 +76,7 @@ const ESTADO_COLORES = {
   });
 })();
 
-/* ── Toggle visibilidad de contraseña ── */
+/* --- TOGGLE VISIBILIDAD DE CONTRASEÑA --- */
 function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   const btn   = document.getElementById(btnId);
   const input = document.getElementById(inputId);
@@ -92,14 +92,14 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   });
 }
 
-/* ── LOGIN: toggle password ── */
+/* --- LOGIN: TOGGLE PASSWORD --- */
 (function initLoginPage() {
   setupPasswordToggle('pw-toggle', 'password', 'eye-show', 'eye-hide');
 })();
 
-/* ── REGISTRO: solo dígitos, strength, match, toggles ── */
+/* --- REGISTRO: SOLO DÍGITOS, STRENGTH, MATCH, TOGGLES --- */
 (function initRegistroPage() {
-  // Solo números
+  // solo números
   ['dni', 'telefono', 'ruc'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', function() {
@@ -107,11 +107,11 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     });
   });
 
-  // Toggles contraseña
+  // toggles de contraseña
   setupPasswordToggle('pw-toggle-1', 'password', 'eye1-show', 'eye1-hide');
   setupPasswordToggle('pw-toggle-2', 'confirm',  'eye2-show', 'eye2-hide');
 
-  // Fuerza de contraseña
+  // fuerza de la contraseña
   const bars   = ['bar1','bar2','bar3','bar4'].map(id => document.getElementById(id));
   const pwInput = document.getElementById('password');
   if (!pwInput || !bars[0]) return;
@@ -157,7 +157,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
 })();
 
 
-/* ── CONSULTA TICKETS ── */
+/* --- CONSULTA TICKETS --- */
 (function initConsultaTickets() {
   const btnConsultar = document.getElementById('btnConsultar');
   const ticketInput  = document.getElementById('ticketInput');
@@ -265,11 +265,9 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
 })();
 
 
-/* ══════════════════════════════════════════
-   DASHBOARD — inicio_clientes, tickets_cliente, nuevo_ticket_cliente
-   ══════════════════════════════════════════ */
+/* --- DASHBOARD DE CLIENTE: INICIO_CLIENTES, TICKETS_CLIENTE Y NUEVO_TICKET_CLIENTE --- */
 
-/* ── Hamburger del dashboard (usa mob-menu en lugar de mobile-menu) ── */
+/* --- HAMBURGER DEL DASHBOARD (USA MOB-MENU EN LUGAR DE MOBILE-MENU) --- */
 (function initDashMobileMenu() {
   const hamburger = document.getElementById('hamburger');
   const mobMenu   = document.getElementById('mob-menu');
@@ -297,7 +295,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   };
 })();
 
-/* ── Modal de tickets (tickets_cliente) ── */
+/* --- MODAL DE TICKETS (TICKETS_CLIENTE) --- */
 (function initTicketsModal() {
   const overlay = document.getElementById('modal-overlay');
   if (!overlay) return;
@@ -363,7 +361,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   window.cerrarOverlay = function(e) { if (e.target === overlay) cerrarModal(); };
 })();
 
-/* ── Modal de detalle de ticket (inicio_clientes) ── */
+/* --- MODAL DE DETALLE DE TICKET (INICIO_CLIENTES) --- */
 (function initDetalleTicketModal() {
   const overlay = document.getElementById('modal-detalle-ticket');
   if (!overlay) return;
@@ -428,7 +426,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   window.cerrarDetalleOverlay = function(e) { if (e.target === overlay) cerrarDetalleTicket(); };
 })();
 
-/* ── Wizard (nuevo_ticket_cliente) ── */
+/* --- WIZARD (NUEVO_TICKET_CLIENTE) --- */
 (function initWizard() {
   if (!document.getElementById('step-1')) return;
 
@@ -508,7 +506,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     return true;
   }
 
-  /* Selector de dispositivo */
+  // selector de dispositivo
   window.selectDevice = function(el, type) {
     document.querySelectorAll('.device-opt').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
@@ -517,13 +515,13 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     document.getElementById('extra-pc').classList.toggle('visible',     type === 'PC');
   };
 
-  /* Accordion adicionales */
+  // accordion de servicios adicionales
   window.toggleAdd = function() {
     document.getElementById('add-toggle').classList.toggle('open');
     document.getElementById('add-panel').classList.toggle('open');
   };
 
-  /* Cotización en vivo */
+  // cotización en vivo
   window.updateQuote = function() {
     document.querySelectorAll('#servicios-base .wizard-service-item').forEach(row => {
       const r = row.querySelector('input[type="radio"]');
@@ -611,19 +609,14 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
 
 })();
 
-/* ══════════════════════════════════════════
-   EQUIPOS GUARDADOS — nuevo_ticket_cliente.php
-   Preselección manejada server-side via ?idEquipo=N
-   ══════════════════════════════════════════ */
+/* --- EQUIPOS GUARDADOS DE NUEVO_TICKET_CLIENTE.PHP (PRESELECCIÓN VÍA ?IDEQUIPO=N) --- */
 
-/* ══════════════════════════════════════════
-   ADMIN PORTAL — login_staff & registro_staff
-   ══════════════════════════════════════════ */
+/* --- ADMIN PORTAL: LOGIN_STAFF Y REGISTRO_STAFF --- */
 
 (function initAdminAuth() {
   const ALLOWED_DOMAIN = 'moralestechs.com';
 
-  /* ── Validación de dominio en tiempo real ── */
+  /* --- VALIDACIÓN DE DOMINIO EN TIEMPO REAL --- */
   window.adminCheckDomain = function(input) {
     const hint = document.getElementById('domain-hint');
     if (!hint) return;
@@ -639,7 +632,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     input.classList.toggle('input-error', !ok && domain !== '');
   };
 
-  /* Blur: valida dominio completo */
+  // blur: valida el dominio completo
   const emailEl = document.getElementById('email');
   if (emailEl) {
     emailEl.addEventListener('blur', function() {
@@ -653,10 +646,10 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     });
   }
 
-  /* ── Toggle contraseña — login_staff ── */
+  /* --- TOGGLE CONTRASEÑA — LOGIN_STAFF --- */
   setupAdminToggle('pw-toggle-staff', 'password', 'eye-show-staff', 'eye-hide-staff');
 
-  /* ── Toggles contraseña — registro_staff ── */
+  /* --- TOGGLES CONTRASEÑA — REGISTRO_STAFF --- */
   setupAdminToggle('pw-toggle-reg1', 'password',  'eye-show-reg1', 'eye-hide-reg1');
   setupAdminToggle('pw-toggle-reg2', 'password2', 'eye-show-reg2', 'eye-hide-reg2');
 
@@ -674,7 +667,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     });
   }
 
-  /* ── Indicador de fuerza — registro_staff ── */
+  /* --- INDICADOR DE FUERZA — REGISTRO_STAFF --- */
   const strengthLevels = ['', 'Débil', 'Regular', 'Buena', 'Segura'];
   const strengthColors = ['', '#e05040', '#f59e0b', '#3b82f6', '#22c55e'];
 
@@ -699,7 +692,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     adminCheckMatch();
   };
 
-  /* ── Coincidencia contraseñas — registro_staff ── */
+  /* --- COINCIDENCIA CONTRASEÑAS — REGISTRO_STAFF --- */
   window.adminCheckMatch = function() {
     const p1 = document.getElementById('password');
     const p2 = document.getElementById('password2');
@@ -711,9 +704,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   };
 })();
 
-/* ══════════════════════════════════════════
-   TICKETS.PHP — actualización de estado con select
-   ══════════════════════════════════════════ */
+/* --- TICKETS.PHP: ACTUALIZACIÓN DE ESTADO CON SELECT --- */
 
 (function initTicketsAdmin() {
   const BADGE_MAP = {
@@ -744,9 +735,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
 })();
 
 
-/* ════════════════════════════════════════════
-   NUEVO_TICKET.PHP — wizard staff (4 pasos)
-   ══════════════════════════════════════════ */
+/* --- NUEVO_TICKET.PHP: WIZARD STAFF (4 PASOS) --- */
  
 (function initNuevoTicket() {
   if (!document.getElementById('step-1')) return;
@@ -755,11 +744,11 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   const TOTAL    = 4;
   const PROGRESS = [25, 50, 75, 100];
 
-  /* ── Estado del equipo del cliente (Paso 2) ── */
+  /* --- ESTADO DEL EQUIPO DEL CLIENTE (PASO 2) --- */
   let ntkEquiposGuardados = [];   // equipos del cliente actual, traídos por AJAX
   let ntkIdEquipoSel      = 0;    // 0 = equipo nuevo / sin cliente con equipos
  
-  /* ── Navegación ── */
+  /* --- NAVEGACIÓN --- */
   window.ntkGoStep = function(n) {
     if (n > currentStep + 1 || n < 1) return;
     document.getElementById('step-'  + currentStep).classList.remove('active');
@@ -792,7 +781,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
  
-  /* ── Validaciones ── */
+  /* --- VALIDACIONES --- */
   function ntkValidateStep(n) {
     if (n === 1) {
       const dni = document.getElementById('ntk-dni')?.value.trim()       || '';
@@ -813,7 +802,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     return true;
   }
  
-  /* ── Selector de dispositivo ── */
+  /* --- SELECTOR DE DISPOSITIVO --- */
   window.ntkSelectDevice = function(el, type) {
     document.querySelectorAll('.ntk-device-opt').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
@@ -822,11 +811,9 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     document.getElementById('extra-pc').classList.toggle('visible',     type === 'PC');
   };
 
-  /* ══════════════════════════════════════════
-     EQUIPOS DEL CLIENTE (Paso 2)
-     ══════════════════════════════════════════ */
+  /* --- EQUIPOS DEL CLIENTE (PASO 2) --- */
 
-  /* Pinta las tarjetas de equipos guardados + tarjeta "Registrar Nuevo Equipo" */
+  // pinta las tarjetas de equipos guardados y la tarjeta "registrar nuevo equipo"
   function ntkPintarEquiposGuardados(equipos) {
     ntkEquiposGuardados = Array.isArray(equipos) ? equipos : [];
     const wrap  = document.getElementById('ntk-eq-saved-wrap');
@@ -861,8 +848,8 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     cards.innerHTML = guardadosHtml + nuevoCardHtml;
 
     wrap.classList.remove('nv-hidden');
-    // Por defecto, al cargar equipos guardados se pide elegir uno o registrar nuevo:
-    // ocultamos el formulario hasta que el usuario decida.
+    // por defecto, al cargar equipos guardados se pide elegir uno o registrar nuevo:
+    // ocultamos el formulario hasta que el usuario decida
     ntkOcultarFormEquipo();
   }
 
@@ -872,13 +859,13 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     return d.innerHTML;
   }
 
-  /* Oculta el formulario de equipo (cuando aún no se eligió tarjeta ni "nuevo") */
+  // oculta el formulario de equipo (cuando aún no se eligió tarjeta ni "nuevo")
   function ntkOcultarFormEquipo() {
     document.getElementById('ntk-equipo-form')?.classList.add('nv-hidden');
     document.getElementById('ntk-equipo-preview')?.classList.add('nv-hidden');
   }
 
-  /* Click en "+ Registrar Nuevo Equipo": limpia selección y muestra el formulario normal */
+  // click en "+ registrar nuevo equipo": limpia la selección y muestra el formulario normal
   window.ntkMostrarFormNuevoEquipo = function() {
     ntkIdEquipoSel = 0;
     document.getElementById('ntk-id-equipo').value = '0';
@@ -889,7 +876,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     document.getElementById('ntk-equipo-preview')?.classList.add('nv-hidden');
     document.getElementById('ntk-equipo-form')?.classList.remove('nv-hidden');
 
-    // Limpia el formulario para que no queden datos de un equipo guardado
+    // limpia el formulario para que no queden datos de un equipo guardado
     document.querySelectorAll('.ntk-device-opt').forEach(o => o.classList.remove('selected'));
     document.getElementById('ntk-tipo-dispositivo').value = '';
     document.getElementById('extra-laptop')?.classList.remove('visible');
@@ -899,7 +886,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     const soP = document.getElementById('ntk-so-pc');     if (soP) soP.value = '';
   };
 
-  /* Click en una tarjeta de equipo guardado: oculta el formulario y muestra el resumen */
+  // click en una tarjeta de equipo guardado: oculta el formulario y muestra el resumen
   window.ntkSeleccionarEquipoGuardado = function(idEquipo) {
     const eq = ntkEquiposGuardados.find(e => Number(e.idEquipo) === Number(idEquipo));
     if (!eq) return;
@@ -927,7 +914,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     document.getElementById('ntk-equipo-preview')?.classList.remove('nv-hidden');
   };
 
-  /* Reinicia toda la sección de equipos (p. ej. cuando cambia el DNI) */
+  // reinicia toda la sección de equipos (por ejemplo, cuando cambia el dni)
   function ntkResetSeccionEquipos() {
     ntkEquiposGuardados = [];
     ntkIdEquipoSel = 0;
@@ -954,13 +941,13 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
   }
 
 
-  /* ── Accordion adicionales ── */
+  /* --- ACCORDION ADICIONALES --- */
   window.ntkToggleAdd = function() {
     document.getElementById('ntk-add-toggle').classList.toggle('open');
     document.getElementById('ntk-add-panel').classList.toggle('open');
   };
  
-  /* ── Cotización en vivo ── */
+  /* --- COTIZACIÓN EN VIVO --- */
   window.ntkUpdateQuote = function() {
     document.querySelectorAll('#ntk-servicios-base .ntk-service-item').forEach(row => {
       const r = row.querySelector('input[type="radio"]');
@@ -985,7 +972,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     return items;
   }
 
-  /* Datos del dispositivo: del equipo guardado seleccionado o del formulario nuevo */
+  // datos del dispositivo: del equipo guardado seleccionado o del formulario nuevo
   function ntkGetDeviceData() {
     if (ntkIdEquipoSel > 0) {
       const eq = ntkEquiposGuardados.find(e => Number(e.idEquipo) === ntkIdEquipoSel);
@@ -1014,7 +1001,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     };
   }
  
-  /* ── Resumen paso 4 ── */
+  /* --- RESUMEN PASO 4 --- */
   function ntkBuildSummary() {
     const nombres   = document.getElementById('ntk-nombres')?.value    || '';
     const apellidos = document.getElementById('ntk-apellidos')?.value  || '';
@@ -1078,7 +1065,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
       </div>`;
   }
  
-  /* ── Crear ticket ── */
+  /* --- CREAR TICKET --- */
   window.ntkCrearTicket = function() {
     const dev = ntkGetDeviceData();
     const { idEquipo, tipo, marca, modelo, serie, so } = dev;
@@ -1091,7 +1078,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     const telefono  = document.getElementById('ntk-telefono')?.value  || '';
     const correo    = document.getElementById('ntk-correo')?.value    || '';
  
-    // nombre completo para PDF
+    // nombre completo para el pdf
     const nombreCompleto = [nombres, apellidos].filter(Boolean).join(' ');
  
     const serviciosLocal = [];
@@ -1161,15 +1148,13 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
       });
   };
  
-  /* ── Solo números en campos del wizard ── */
+  /* --- SOLO NÚMEROS EN CAMPOS DEL WIZARD --- */
   ['ntk-dni', 'ntk-ruc', 'ntk-telefono'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', function() { this.value = this.value.replace(/\D/g, ''); });
   });
  
-  /* ══════════════════════════════════════════
-     AUTOCOMPLETADO POR DNI
-     ══════════════════════════════════════════ */
+  /* --- AUTOCOMPLETADO POR DNI --- */
   (function ntkInitDniAutocomplete() {
     const dniInput = document.getElementById('ntk-dni');
     const statusEl = document.getElementById('ntk-dni-status');
@@ -1178,7 +1163,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
  
     let debounceTimer = null;
  
-    /* Helpers de UI */
+    // helpers de interfaz
     function setStatus(state) {
       // state: '' | 'loading' | 'found' | 'notfound'
       if (!statusEl) return;
@@ -1243,8 +1228,8 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
     }
  
     dniInput.addEventListener('input', function() {
-      // El filtro de solo-dígitos ya lo maneja el listener de arriba;
-      // aquí solo disparamos la búsqueda con debounce.
+      // el filtro de solo dígitos ya lo maneja el listener de arriba;
+      // aquí solo se dispara la búsqueda con debounce
       const dni = this.value.trim();
  
       clearTimeout(debounceTimer);
@@ -1259,7 +1244,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
       }
     });
  
-    /* Avisa si el usuario sale del campo con un DNI incompleto */
+    // avisa si el usuario sale del campo con un dni incompleto
     dniInput.addEventListener('blur', function() {
       const dni = this.value.trim();
       if (dni.length > 0 && dni.length < 8) {
@@ -1271,7 +1256,7 @@ function setupPasswordToggle(btnId, inputId, showIconId, hideIconId) {
  
 })();
  
-/* ── Admin: PDF de cotización para nuevo_ticket.php ── */
+/* --- ADMIN: PDF DE COTIZACIÓN PARA NUEVO_TICKET.PHP --- */
 window._ntkPdfData = null;
 window.ntkGenerarPDF = function() {
   window._pdfData = window._ntkPdfData;
@@ -1279,9 +1264,7 @@ window.ntkGenerarPDF = function() {
 };
 
 
-/* ══════════════════════════════════════════
-   INVENTARIO.PHP — filtros, stock y modal
-   ══════════════════════════════════════════ */
+/* --- INVENTARIO.PHP: FILTROS, STOCK Y MODAL --- */
 
 (function initInventario() {
   if (!document.getElementById('inv-tbody')) return;
@@ -1291,7 +1274,7 @@ window.ntkGenerarPDF = function() {
   let filtroActual   = 'Todos';
   let busquedaActual = '';
 
-  /* ── Control de cantidad ── */
+  /* --- CONTROL DE CANTIDAD --- */
   window.invCambiarQty = function(id, delta) {
     const el = document.getElementById('inv-qty-' + id);
     if (!el) return;
@@ -1338,7 +1321,7 @@ window.ntkGenerarPDF = function() {
     }
   };
 
-  /* ── Filtros y búsqueda ── */
+  /* --- FILTROS Y BÚSQUEDA --- */
   window.invFiltrar = function(e, cat) {
     e.preventDefault();
     filtroActual = cat;
@@ -1393,7 +1376,7 @@ window.ntkGenerarPDF = function() {
 
   invAplicarFiltros();
 
-  /* ── Modal nuevo producto ── */
+  /* --- MODAL NUEVO PRODUCTO --- */
   window.invAbrirModal  = function() { document.getElementById('inv-modal-overlay').classList.add('open'); };
   window.invCerrarModal = function() { document.getElementById('inv-modal-overlay').classList.remove('open'); invLimpiarModal(); };
   window.invCerrarOverlay = function(e) { if (e.target === document.getElementById('inv-modal-overlay')) invCerrarModal(); };
@@ -1504,9 +1487,7 @@ window.ntkGenerarPDF = function() {
   }
 })();
 
-/* ══════════════════════════════════════════
-   VENTAS.PHP — gráfico de barras y filtros
-   ══════════════════════════════════════════ */
+/* --- VENTAS.PHP: GRÁFICO DE BARRAS Y FILTROS --- */
 
 (function initVentas() {
   if (!document.getElementById('vt-bars-area')) return;
@@ -1586,7 +1567,7 @@ window.ntkGenerarPDF = function() {
       ? `${first.label} — ${last.label}`
       : `${first.label} ${first.year} — ${last.label} ${last.year}`;
 
-    /* Y-axis: 5 ticks redondeados */
+    // eje y: 5 ticks redondeados
     const rawStep = maxVal / 4;
     const mag     = Math.pow(10, Math.floor(Math.log10(rawStep)));
     const step    = Math.ceil(rawStep / mag) * mag;
@@ -1595,7 +1576,7 @@ window.ntkGenerarPDF = function() {
     yAxisEl.style.height = (CHART_H + 26) + 'px';
     yAxisEl.innerHTML    = ticks.map(t => `<span class="vt-y-tick">${vtFmtTick(t)}</span>`).join('');
 
-    /* Barras */
+    // barras del gráfico
     barsEl.style.height = CHART_H + 'px';
     barsEl.innerHTML = slice.map((d, i) => {
       const gIdx    = vtOffset + i;
@@ -1623,7 +1604,7 @@ window.ntkGenerarPDF = function() {
   vtOffset = Math.max(0, vtCurrentIdx - VISIBLE + 1);
   vtRenderChart();
 
-  /* ── Filtros y búsqueda ── */
+  /* --- FILTROS Y BÚSQUEDA --- */
   let vtFiltroTipo = 'Todos';
   let vtBusqueda   = '';
 
@@ -1675,14 +1656,11 @@ window.ntkGenerarPDF = function() {
 
 
 
-/* ════════════════════════════════════════════════════════════
-   MULTI-STEP FORMS — registro.php & registro_staff.php
-   Añadir al final de script.js (o incluir como bloque separado)
-   ════════════════════════════════════════════════════════════ */
+/* --- MULTI-STEP FORMS: REGISTRO.PHP Y REGISTRO_STAFF.PHP --- */
 
 (function initMultiStep() {
 
-  /* ── Campos que se validan en cada paso ── */
+  /* --- CAMPOS QUE SE VALIDAN EN CADA PASO --- */
   const STEP_FIELDS = {
     // registro.php (cliente)
     'reg-form': {
@@ -1691,10 +1669,7 @@ window.ntkGenerarPDF = function() {
     },
   };
 
-  /* ─────────────────────────────────────────
-     msNext(formId, currentStep)
-     Valida el paso actual y avanza al siguiente
-  ───────────────────────────────────────────*/
+  // msNext(formId, currentStep): valida el paso actual y avanza al siguiente
   window.msNext = function(formId, currentStep) {
     const form       = document.getElementById(formId);
     const nextStep   = currentStep + 1;
@@ -1703,12 +1678,12 @@ window.ntkGenerarPDF = function() {
 
     if (!form || !panelCurr || !panelNext) return;
 
-    // ── Validación de campos del paso actual ──
+    // validación de los campos del paso actual
     const fieldsToCheck = (STEP_FIELDS[formId] && STEP_FIELDS[formId][currentStep])
       ? STEP_FIELDS[formId][currentStep]
       : [];
 
-    // Recoge todos los inputs/selects requeridos dentro del panel actual
+    // recoge todos los inputs y selects requeridos dentro del panel actual
     const requiredEls = panelCurr.querySelectorAll('input[required], select[required]');
     let firstInvalid  = null;
 
@@ -1732,7 +1707,7 @@ window.ntkGenerarPDF = function() {
       return;
     }
 
-    // ── Validación específica del paso 1 (cliente): correo ──
+    // validación específica del paso 1 (cliente): correo
     if (currentStep === 1) {
       const correoEl = document.getElementById('correo');
       if (correoEl) {
@@ -1745,7 +1720,7 @@ window.ntkGenerarPDF = function() {
         }
       }
 
-      // DNI solo 8 dígitos
+      // dni solo 8 dígitos
       const dniEl = document.getElementById('dni');
       if (dniEl && !/^\d{8}$/.test(dniEl.value.trim())) {
         dniEl.classList.add('ms-field--error');
@@ -1754,7 +1729,7 @@ window.ntkGenerarPDF = function() {
         return;
       }
 
-      // Teléfono solo 9 dígitos
+      // teléfono solo 9 dígitos
       const telEl = document.getElementById('telefono');
       if (telEl && !/^\d{9}$/.test(telEl.value.trim())) {
         telEl.classList.add('ms-field--error');
@@ -1763,7 +1738,7 @@ window.ntkGenerarPDF = function() {
         return;
       }
 
-      // RUC opcional: si tiene algo, debe ser 11 dígitos
+      // ruc opcional: si tiene algo, debe ser 11 dígitos
       const rucEl = document.getElementById('ruc');
       if (rucEl && rucEl.value.trim() && !/^\d{11}$/.test(rucEl.value.trim())) {
         rucEl.classList.add('ms-field--error');
@@ -1773,7 +1748,7 @@ window.ntkGenerarPDF = function() {
       }
     }
 
-    // ── Validación específica paso 1 (staff): email corporativo & DNI ──
+    // validación específica del paso 1 (staff): email corporativo y dni
     if (currentStep === 1) {
       const emailEl = document.getElementById('email');
       if (emailEl) {
@@ -1786,22 +1761,19 @@ window.ntkGenerarPDF = function() {
       }
     }
 
-    // ── Avanzar ──
+    // avanza al siguiente paso
     panelCurr.classList.add('ms-panel--hidden');
     panelNext.classList.remove('ms-panel--hidden');
 
     msUpdateStepper(nextStep);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Foco en el primer campo del siguiente panel
+    // foco en el primer campo del siguiente panel
     const firstInput = panelNext.querySelector('input:not([type=hidden]), select');
     if (firstInput) setTimeout(() => firstInput.focus(), 80);
   };
 
-  /* ─────────────────────────────────────────
-     msBack(targetStep)
-     Regresa al paso anterior sin validar
-  ───────────────────────────────────────────*/
+  // msBack(targetStep): regresa al paso anterior sin validar
   window.msBack = function(targetStep) {
     const nextStep   = targetStep + 1;
     const panelPrev  = document.getElementById('ms-panel-' + targetStep);
@@ -1816,10 +1788,7 @@ window.ntkGenerarPDF = function() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  /* ─────────────────────────────────────────
-     msUpdateStepper(activeStep)
-     Actualiza los dots y conectores visuales
-  ───────────────────────────────────────────*/
+  // msUpdateStepper(activeStep): actualiza los dots y conectores visuales
   function msUpdateStepper(activeStep) {
     const totalSteps = document.querySelectorAll('[id^="ms-dot-"]').length;
 
@@ -1839,10 +1808,7 @@ window.ntkGenerarPDF = function() {
     }
   }
 
-  /* ─────────────────────────────────────────
-     msShakePanel(panel)
-     Sacudida visual de error
-  ───────────────────────────────────────────*/
+  // msShakePanel(panel): sacudida visual de error
   function msShakePanel(panel) {
     panel.style.animation = 'none';
     panel.offsetHeight; // reflow
@@ -1850,9 +1816,7 @@ window.ntkGenerarPDF = function() {
     setTimeout(() => panel.style.animation = '', 400);
   }
 
-  /* ─────────────────────────────────────────
-     Resalte visual de campos con error (CSS)
-  ───────────────────────────────────────────*/
+  // resalte visual de campos con error (css)
   (function injectErrorStyle() {
     if (document.getElementById('ms-error-style')) return;
     const style = document.createElement('style');
@@ -1873,9 +1837,7 @@ window.ntkGenerarPDF = function() {
     document.head.appendChild(style);
   })();
 
-  /* ─────────────────────────────────────────
-     Restaurar paso desde PHP (tras error POST)
-  ───────────────────────────────────────────*/
+  // restaura el paso desde PHP (tras un error en el POST)
   function restoreStepFromServer() {
     const startStep = typeof MS_START_STEP !== 'undefined' ? MS_START_STEP : 1;
     if (startStep <= 1) return;
@@ -1890,7 +1852,7 @@ window.ntkGenerarPDF = function() {
     msUpdateStepper(startStep);
   }
 
-  // Ejecutar al cargar
+  // se ejecuta al cargar la página
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', restoreStepFromServer);
   } else {
@@ -1899,10 +1861,7 @@ window.ntkGenerarPDF = function() {
 
 })();
 
-/* ════════════════════════════════════════════════════════════
-   VALIDACIÓN DE DOMINIO CORPORATIVO (registro_staff.php)
-   (ya existía parcialmente — se mantiene compatible)
-   ════════════════════════════════════════════════════════════ */
+/* --- VALIDACIÓN DE DOMINIO CORPORATIVO (REGISTRO_STAFF.PHP) --- */
 window.adminCheckDomain = function(input) {
   const hint = document.getElementById('domain-hint');
   if (!hint) return;
@@ -1914,9 +1873,7 @@ window.adminCheckDomain = function(input) {
   hint.querySelector('svg').style.stroke = isOk ? '#22c55e' : '#f87171';
 };
 
-/* ════════════════════════════════════════════════════════════
-   FUERZA DE CONTRASEÑA — versión admin (registro_staff.php)
-   ════════════════════════════════════════════════════════════ */
+/* --- FUERZA DE CONTRASEÑA: VERSIÓN ADMIN (REGISTRO_STAFF.PHP) --- */
 window.adminUpdateStrength = function(val) {
   const wrap  = document.getElementById('admin-pw-strength');
   const label = document.getElementById('admin-pw-strength-label');
@@ -1949,48 +1906,37 @@ window.adminCheckMatch = function() {
   const pw  = document.getElementById('password');
   const pw2 = document.getElementById('password2');
   if (!pw || !pw2) return;
-  // Feedback visual sutil en el campo de confirmación
+  // feedback visual sutil en el campo de confirmación
   if (!pw2.value) { pw2.style.borderColor = ''; return; }
   pw2.style.borderColor = pw.value === pw2.value ? '#22c55e' : '#ef4444';
 };
 
-/* ════════════════════════════════════════════════════════════
-   TOGGLES DE CONTRASEÑA — registro_staff.php
-   ════════════════════════════════════════════════════════════ */
+/* --- TOGGLES DE CONTRASEÑA DE REGISTRO_STAFF.PHP --- */
 (function initStaffPasswordToggles() {
   setupPasswordToggle('pw-toggle-reg1', 'password',  'eye-show-reg1', 'eye-hide-reg1');
   setupPasswordToggle('pw-toggle-reg2', 'password2', 'eye-show-reg2', 'eye-hide-reg2');
 })();
 
-/* ════════════════════════════════════════════════════════════
-   RECUPERAR CONTRASEÑA — clientes (recuperar_contrasena.php)
-   Toggles de contraseña para paso 3
-   ════════════════════════════════════════════════════════════ */
+/* --- RECUPERAR CONTRASEÑA: CLIENTES, TOGGLES DEL PASO 3 (RECUPERAR_CONTRASENA.PHP) --- */
 (function initRecuperarPage() {
-  // IDs de toggles en el paso 3 del formulario de clientes
+  // ids de toggles en el paso 3 del formulario de clientes
   setupPasswordToggle('pw-toggle-1', 'password', 'eye1-show', 'eye1-hide');
   setupPasswordToggle('pw-toggle-2', 'confirm',  'eye2-show', 'eye2-hide');
 })();
 
 
-/* ════════════════════════════════════════════════════════════
-   RECUPERAR CONTRASEÑA — staff (recuperar_contra_staff.php)
-   Toggles de contraseña para paso 3 (variante admin)
-   ════════════════════════════════════════════════════════════ */
+/* --- RECUPERAR CONTRASEÑA: STAFF, TOGGLES DEL PASO 3 (RECUPERAR_CONTRA_STAFF.PHP) --- */
 (function initRecuperarStaffPage() {
   setupPasswordToggle('pw-toggle-rec1', 'password',  'eye-show-rec1', 'eye-hide-rec1');
   setupPasswordToggle('pw-toggle-rec2', 'password2', 'eye-show-rec2', 'eye-hide-rec2');
 })();
 
 
-/* ══════════════════════════════════════════
-   COTIZACIÓN PDF — nuevo_ticket_cliente.php
-   Genera y descarga la cotización con jsPDF
-   ══════════════════════════════════════════ */
-// Estado global que enviarSolicitud() llena al recibir éxito del servidor
+/* --- COTIZACIÓN PDF DE NUEVO_TICKET_CLIENTE.PHP (GENERA Y DESCARGA CON JSPDF) --- */
+// estado global que enviarSolicitud() llena al recibir éxito del servidor
 window._pdfData = null;
 
-/* Enviar solicitud: guarda equipo + cotización + servicios + ticket */
+// enviarSolicitud(): guarda equipo, cotización, servicios y ticket
 (function() {
   window.enviarSolicitud = function () {
     const tipo     = document.getElementById('tipo_dispositivo').value;
@@ -2005,7 +1951,7 @@ window._pdfData = null;
     const observaciones = document.getElementById('observaciones')?.value || '';
     const idEquipo = parseInt(document.getElementById('id_equipo_guardado')?.value || '0') || 0;
 
-    // Capturar servicios antes de enviar
+    // captura los servicios antes de enviar
     const base = document.querySelector('input[name="srv_base"]:checked');
     const serviciosLocal = [];
     if (base) serviciosLocal.push({ idServicio: parseInt(base.dataset.id || 0), nombre: base.dataset.nombre, precio: parseFloat(base.value) });
@@ -2013,16 +1959,16 @@ window._pdfData = null;
       serviciosLocal.push({ idServicio: parseInt(cb.dataset.id || 0), nombre: cb.dataset.nombre, precio: parseFloat(cb.value) });
     });
 
-    // Fecha de emisión
+    // fecha de emisión
     const hoy = new Date();
     const fecha = hoy.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    // ✅ Fecha de vencimiento: emisión + 7 días, mismo formato
+    // fecha de vencimiento: emisión + 7 días, mismo formato
     const vencimiento = new Date(hoy);
     vencimiento.setDate(vencimiento.getDate() + 7);
     const fechaVencimiento = vencimiento.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    // Snapshot para el PDF
+    // snapshot para el pdf
     window._pdfData = {
       tipo, marca, modelo, serie, so, observaciones,
       servicios: serviciosLocal,
@@ -2039,7 +1985,7 @@ window._pdfData = null;
       total:    null,
     };
 
-    // Enviar al servidor
+    // envía al servidor
     const serviciosPayload = serviciosLocal.map(s => ({ idServicio: s.idServicio, nombre: s.nombre, precio: s.precio }));
     const btn = document.querySelector('.btn-wizard-send');
     const textoOriginal = btn ? btn.innerHTML : '';
@@ -2081,9 +2027,7 @@ window._pdfData = null;
   };
 })();
 
-/* =============================================
-   PDF COTIZACIÓN
-   ============================================= */
+/* --- PDF DE COTIZACIÓN --- */
 window.generarPDF = function () {
     const d = window._pdfData;
     if (!d) return alert("No hay datos.");
@@ -2094,8 +2038,8 @@ window.generarPDF = function () {
     const azulTecnologico = [23, 70, 234];
     const azulProfundo    = [0, 0, 25];
 
-    // Márgenes: todo alineado a derecha usa x=195 (margen real de la hoja)
-    // Solo los precios de la tabla usan x=190 para dar respiro visual
+    // márgenes: todo lo alineado a la derecha usa x=195 (margen real de la hoja);
+    // solo los precios de la tabla usan x=190 para dar respiro visual
     const xDerecha  = 195;  // margen derecho estándar (header, fechas, footer, totales)
     const xPrecios  = 190;  // columna de montos en la tabla de servicios
     const xLabel    = 130;  // etiquetas de subtotal / IGV / TOTAL
@@ -2103,7 +2047,7 @@ window.generarPDF = function () {
 
     let y = 20;
 
-    // ===== HEADER =====
+    /* --- HEADER --- */
     doc.addImage('img/logo-horizontal-color.png', 'PNG', 15, y, 40, 15);
 
     doc.setFontSize(9);
@@ -2117,7 +2061,7 @@ window.generarPDF = function () {
 
     y += 35;
 
-    // ===== TITULO =====
+    /* --- TÍTULO --- */
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.setTextColor(...azulTecnologico);
@@ -2128,7 +2072,7 @@ window.generarPDF = function () {
     doc.line(15, y, 195, y);
     y += 8;
 
-    // ===== TICKET / FECHA =====
+    /* --- TICKET Y FECHA --- */
     doc.setTextColor(...azulProfundo);
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
@@ -2140,7 +2084,7 @@ window.generarPDF = function () {
     doc.text(d.fecha, xDerecha, y, aRight);
     y += 12;
 
-    // ===== CLIENTE / EQUIPO =====
+    /* --- CLIENTE Y EQUIPO --- */
     doc.setFont("helvetica", "bold");
     doc.text("CLIENTE", 15, y);
 
@@ -2151,7 +2095,7 @@ window.generarPDF = function () {
 
     doc.setFont("helvetica", "normal");
 
-    // Fila 1: nombre cliente | (Laptop: marca) / (PC: tipo)
+    // fila 1: nombre del cliente | (laptop: marca) / (pc: tipo)
     if (d.cliente) doc.text(d.cliente, 15, y);
     if (esLaptop) {
         if (d.marca) doc.text(d.marca, xDerecha, y, aRight);
@@ -2160,7 +2104,7 @@ window.generarPDF = function () {
     }
     y += 6;
 
-    // Fila 2: DNI | (Laptop: modelo) / (PC: SO)
+    // fila 2: dni | (laptop: modelo) / (pc: so)
     if (d.dni) doc.text("DNI: " + d.dni, 15, y);
     if (esLaptop) {
         if (d.modelo) doc.text(d.modelo, xDerecha, y, aRight);
@@ -2169,19 +2113,19 @@ window.generarPDF = function () {
     }
     y += 6;
 
-    // Email (solo si existe)
+    // email (solo si existe)
     if (d.email) {
         doc.text("Correo: " + d.email, 15, y);
         y += 6;
     }
 
-    // Teléfono (solo si existe)
+    // teléfono (solo si existe)
     if (d.tel) {
         doc.text("Tel: " + d.tel, 15, y);
         y += 6;
     }
 
-    // RUC del cliente (OPCIONAL)
+    // ruc del cliente (opcional)
     if (d.ruc) {
         doc.text("RUC: " + d.ruc, 15, y);
         y += 6;
@@ -2191,7 +2135,7 @@ window.generarPDF = function () {
     doc.line(15, y, 195, y);
     y += 10;
 
-    // ===== SERVICIOS =====
+    /* --- SERVICIOS --- */
     doc.setFont("helvetica", "bold");
     doc.text("DESCRIPCIÓN DE SERVICIOS", 15, y);
     y += 6;
@@ -2215,7 +2159,7 @@ window.generarPDF = function () {
     });
     y += 5;
 
-    // ===== TOTALES =====
+    /* --- TOTALES --- */
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text("Subtotal", xLabel, y);
@@ -2238,7 +2182,7 @@ window.generarPDF = function () {
     doc.setTextColor(...azulTecnologico);
     doc.text(`S/. ${(subtotal + igv).toFixed(2)}`, xPrecios, y, aRight);
 
-    // ===== FOOTER =====
+    /* --- FOOTER --- */
     y = 260;
     doc.setTextColor(...azulProfundo);
     doc.setFontSize(9);
@@ -2249,7 +2193,7 @@ window.generarPDF = function () {
 
     doc.setFont("helvetica", "normal");
     doc.text("Cuenta: 38098136788029", 15, y);
-    // ✅ Fecha de vencimiento calculada: emisión + 7 días
+    // fecha de vencimiento calculada: emisión + 7 días
     doc.text(d.fechaVencimiento, xDerecha, y, aRight);
     y += 5;
     doc.text("CCI: 00238019813678802941", 15, y);
@@ -2261,10 +2205,7 @@ window.generarPDF = function () {
     doc.save(`Cotizacion_${d.codigo}.pdf`);
 };
 
-/* ══════════════════════════════════════════════════════════
-   NUEVA_VENTA.PHP — Tipo de venta, ticket, cliente, productos,
-   resumen, registro de venta y boleta PDF
-   ══════════════════════════════════════════════════════════ */
+/* --- NUEVA_VENTA.PHP: TIPO DE VENTA, TICKET, CLIENTE, PRODUCTOS, RESUMEN, REGISTRO Y BOLETA PDF --- */
 (function initNuevaVenta() {
   if (!document.getElementById('nv-bloque-productos')) return; // no estamos en nueva_venta.php
 
@@ -2277,7 +2218,7 @@ window.generarPDF = function () {
   let nvClienteDni  = { idCliente: 0, nombres: '', apellidos: '', ruc: '' };
   let nvProdRows    = [];         // [{ uid, idComponente, cantidad }]
   let nvUidSeq      = 1;
-  let nvUltimaVenta = null;       // datos devueltos por el servidor, usados luego en el PDF
+  let nvUltimaVenta = null;       // datos devueltos por el servidor, usados luego en el pdf
 
   function escapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, c => ({
@@ -2287,7 +2228,7 @@ window.generarPDF = function () {
 
   function fmt(n) { return (Number(n) || 0).toFixed(2); }
 
-  /* ── 1. Tipo de venta ── */
+  /* --- 1. TIPO DE VENTA --- */
   window.nvSelTipo = function(tipo, el) {
     nvTipoVenta = tipo;
     document.querySelectorAll('.nv-vtype-opt').forEach(o => o.classList.remove('selected'));
@@ -2315,7 +2256,7 @@ window.generarPDF = function () {
     nvUpdateQuote();
   };
 
-  /* ── 2A. Selección de ticket ── */
+  /* --- 2A. SELECCIÓN DE TICKET --- */
   window.nvOnTicketChange = function() {
     const sel = document.getElementById('nv-sel-ticket');
     const opt = sel.options[sel.selectedIndex];
@@ -2355,7 +2296,7 @@ window.generarPDF = function () {
 
     nvPintarVistaEquipo();
 
-    // Siempre arrancamos en modo vista al cambiar de ticket
+    // siempre arrancamos en modo vista al cambiar de ticket
     document.getElementById('nv-equipo-view').classList.remove('nv-hidden');
     document.getElementById('nv-equipo-edit').classList.add('nv-hidden');
     document.getElementById('nv-btn-editar').classList.remove('nv-hidden');
@@ -2366,7 +2307,7 @@ window.generarPDF = function () {
     nvUpdateQuote();
   };
 
-  /* Pinta el modo VISTA de Detalles del Equipo según nvTicketSel actual */
+  // pinta el modo vista de detalles del equipo según nvTicketSel actual
   function nvPintarVistaEquipo() {
     if (!nvTicketSel) return;
     const esLaptop = nvTicketSel.tipo === 'Laptop';
@@ -2382,7 +2323,7 @@ window.generarPDF = function () {
     document.getElementById('nv-equipo-type-text').textContent = nvTicketSel.tipo || '—';
   }
 
-  /* ── 2A-EXTRA. Edición de Detalles del Equipo ── */
+  /* --- 2A-EXTRA. EDICIÓN DE DETALLES DEL EQUIPO --- */
   window.nvEquipoEditar = function() {
     if (!nvTicketSel) return;
     const esLaptop = nvTicketSel.tipo === 'Laptop';
@@ -2442,7 +2383,7 @@ window.generarPDF = function () {
           alert('No se pudo guardar los cambios del equipo. Inténtalo de nuevo.');
           return;
         }
-        // Actualizar estado local y volver a modo vista
+        // actualiza el estado local y vuelve a modo vista
         nvTicketSel.marca  = payload.marca;
         nvTicketSel.modelo = payload.modelo;
         nvTicketSel.serie  = payload.serie;
@@ -2457,7 +2398,7 @@ window.generarPDF = function () {
       });
   };
 
-  /* ── 2B. Autocompletado por DNI (Venta por producto) ── */
+  /* --- 2B. AUTOCOMPLETADO POR DNI (VENTA POR PRODUCTO) --- */
   (function initDniAutocomplete() {
     const dniInput  = document.getElementById('nv-cli-dni');
     const statusEl  = document.getElementById('nv-cli-dni-status');
@@ -2504,7 +2445,7 @@ window.generarPDF = function () {
     });
   })();
 
-  /* ── 3. Productos ── */
+  /* --- 3. PRODUCTOS --- */
   function nvProductosDisponibles(excluirUid) {
     const usados = new Set(nvProdRows.filter(r => r.uid !== excluirUid).map(r => r.idComponente));
     return catalogo.filter(p => !usados.has(p.id));
@@ -2570,14 +2511,14 @@ window.generarPDF = function () {
     nvUpdateQuote();
   };
 
-  /* ── 4. Método de pago ── */
+  /* --- 4. MÉTODO DE PAGO --- */
   window.nvSelMetodo = function(metodo, el) {
     nvMetodoPago = metodo;
     document.querySelectorAll('.nv-metodo-opt').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
   };
 
-  /* ── 5. Resumen / cotización en vivo ── */
+  /* --- 5. RESUMEN / COTIZACIÓN EN VIVO --- */
   function nvGetProductItems() {
     return nvProdRows
       .map(row => {
@@ -2591,7 +2532,7 @@ window.generarPDF = function () {
   window.nvUpdateQuote = function() {
     const items = [];
 
-    // Items para mostrar en pantalla (solo display, no se usan para calcular totales de servicio)
+    // ítems para mostrar en pantalla (solo display, no se usan para calcular totales de servicio)
     if (nvTipoVenta === 'ticket' && nvTicketSel) {
       if (Array.isArray(nvTicketSel.servicios) && nvTicketSel.servicios.length) {
         nvTicketSel.servicios.forEach(s => {
@@ -2608,7 +2549,7 @@ window.generarPDF = function () {
     const clientBox = document.getElementById('nv-q-client');
     const clientName = document.getElementById('nv-q-client-name');
 
-    // Nombre del cliente en el resumen
+    // nombre del cliente en el resumen
     let nombreMostrar = '';
     if (nvTipoVenta === 'ticket' && nvTicketSel) {
       nombreMostrar = `${nvTicketSel.nombres} ${nvTicketSel.apellidos}`.trim();
@@ -2633,15 +2574,15 @@ window.generarPDF = function () {
     empty.classList.add('nv-hidden');
     details.classList.remove('nv-hidden');
 
-    // Para el display mostramos precio de cada ítem, pero el subtotal de servicio
-    // viene siempre de la cotización real (nvTicketSel.subtotal), no de los precios base.
+    // para el display se muestra el precio de cada ítem, pero el subtotal de servicio
+    // siempre viene de la cotización real (nvTicketSel.subtotal), no de los precios base
     const subtotalProductos = nvGetProductItems().reduce((acc, it) => acc + it.total, 0);
     const subtotalServicio  = (nvTipoVenta === 'ticket' && nvTicketSel) ? nvTicketSel.subtotal : 0;
     const subtotal = subtotalServicio + subtotalProductos;
     const igv      = subtotal * 0.18;
     const total    = subtotal + igv;
 
-    // En display: servicios con precios base (referencial), productos con precio real
+    // en el display: servicios con precios base (referencial), productos con precio real
     const itemsHtml = items.map(it => `
       <div class="nv-quote-item">
         <span class="nv-quote-item__name">${escapeHtml(it.nombre)}${it.cantidad > 1 ? ` ×${it.cantidad}` : ''}</span>
@@ -2654,7 +2595,7 @@ window.generarPDF = function () {
     document.getElementById('nv-q-total').textContent    = fmt(total);
   };
 
-  /* ── 6. Registrar venta ── */
+  /* --- 6. REGISTRAR VENTA --- */
   window.nvGuardarVenta = function() {
     const items = [];
     if (nvTipoVenta === 'ticket' && nvTicketSel) {
@@ -2730,7 +2671,7 @@ window.generarPDF = function () {
       });
   };
 
-  /* ── 7. Boleta de venta en PDF ── */
+  /* --- 7. BOLETA DE VENTA EN PDF --- */
   window.nvGenerarPDF = function() {
     if (!nvUltimaVenta) { alert('No hay datos de la venta.'); return; }
     const d = nvUltimaVenta;
@@ -2748,7 +2689,7 @@ window.generarPDF = function () {
 
     let y = 20;
 
-    // ===== HEADER =====
+    /* --- HEADER --- */
     doc.addImage('img/logo-horizontal-color.png', 'PNG', 15, y, 40, 15);
 
     doc.setFontSize(9);
@@ -2762,7 +2703,7 @@ window.generarPDF = function () {
 
     y += 35;
 
-    // ===== TITULO =====
+    /* --- TÍTULO --- */
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
     doc.setTextColor(...azulTecnologico);
@@ -2773,7 +2714,7 @@ window.generarPDF = function () {
     doc.line(15, y, 195, y);
     y += 8;
 
-    // ===== N° VENTA / FECHA =====
+    /* --- N.° DE VENTA Y FECHA --- */
     const hoy = new Date();
     const fecha = hoy.toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
     const numeroVenta = 'V-' + String(d.idVenta).padStart(6, '0');
@@ -2789,7 +2730,7 @@ window.generarPDF = function () {
     doc.text(fecha, xDerecha, y, aRight);
     y += 12;
 
-    // ===== CLIENTE / MÉTODO DE PAGO =====
+    /* --- CLIENTE Y MÉTODO DE PAGO --- */
     doc.setFont('helvetica', 'bold');
     doc.text('CLIENTE', 15, y);
     doc.text('MÉTODO DE PAGO', xDerecha, y, aRight);
@@ -2807,7 +2748,7 @@ window.generarPDF = function () {
     doc.line(15, y, 195, y);
     y += 10;
 
-    // ===== ITEMS =====
+    /* --- ÍTEMS --- */
     doc.setFont('helvetica', 'bold');
     doc.text('DESCRIPCIÓN', 15, y);
     y += 6;
@@ -2833,7 +2774,7 @@ window.generarPDF = function () {
     });
     y += 5;
 
-    // ===== TOTALES =====
+    /* --- TOTALES --- */
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.text('Subtotal', xLabel, y);
@@ -2855,7 +2796,7 @@ window.generarPDF = function () {
     doc.setTextColor(...azulTecnologico);
     doc.text(`S/ ${Number(d.total).toFixed(2)}`, xPrecios, y, aRight);
 
-    // ===== FOOTER =====
+    /* --- FOOTER --- */
     y = 270;
     doc.setTextColor(...azulProfundo);
     doc.setFontSize(9);
@@ -2865,6 +2806,53 @@ window.generarPDF = function () {
     doc.save(`Boleta_${numeroVenta}.pdf`);
   };
 
-  /* ── Inicialización ── */
+  /* --- INICIALIZACIÓN --- */
   window.nvUpdateQuote();
+})();
+
+/* --- ADMIN PANEL: MENÚ HAMBURGUESA DEL PANEL DE ADMINISTRADOR --- */
+
+/* --- MENÚ HAMBURGUESA DEL ADMIN (DASH-SHELL PAGES) --- */
+(function initAdminMobileMenu() {
+  const hamburger = document.getElementById('dash-hamburger');
+  const mobMenu   = document.getElementById('admin-mob-menu');
+  if (!hamburger || !mobMenu) return;   // si no estamos en una página admin, salir
+
+  let menuOpen = false;
+
+  hamburger.addEventListener('click', () => {
+    menuOpen = !menuOpen;
+    mobMenu.classList.toggle('open', menuOpen);
+
+    const spans = hamburger.querySelectorAll('span');
+    if (menuOpen) {
+      spans[0].style.transform = 'translateY(7px) rotate(45deg)';
+      spans[1].style.opacity   = '0';
+      spans[2].style.transform = 'translateY(-7px) rotate(-45deg)';
+    } else {
+      spans.forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
+    }
+  });
+
+  // cierra al hacer clic en un enlace del menú (navegación)
+  mobMenu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', closeAdminMenu);
+  });
+
+  // cierra con la tecla escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && menuOpen) closeAdminMenu();
+  });
+
+  function closeAdminMenu() {
+    menuOpen = false;
+    mobMenu.classList.remove('open');
+    hamburger.querySelectorAll('span').forEach(s => {
+      s.style.transform = '';
+      s.style.opacity   = '';
+    });
+  }
+
+  // expone la función globalmente por si se necesita desde PHP inline
+  window.closeAdminMenu = closeAdminMenu;
 })();
