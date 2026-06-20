@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idCotizacion = 0;
     $idEquipo = 0;
 
-    // 1. EQUIPO — reusar existente o crear nuevo
+    // reutiliza el equipo seleccionado o registra uno nuevo
     if ($idEquipoExistente > 0) {
         $stmtV = $conn->prepare("SELECT idEquipo FROM EQUIPO WHERE idEquipo=? AND idCliente=? LIMIT 1");
         $stmtV->bind_param("ii", $idEquipoExistente, $idCliente);
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // 2. COTIZACION
+    // crea la cotización
     if ($ok) {
         $stmt = $conn->prepare(
             "INSERT INTO COTIZACION (idCliente, idEquipo, idAdmin, subtotal, igv, total)
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // 3. COTIZACION_SERVICIO — usa idServicio directo enviado desde el wizard
+    // vincula los servicios con la cotización
     if ($ok) {
         $stmtRel = $conn->prepare("INSERT INTO COTIZACION_SERVICIO (idCotizacion, idServicio) VALUES (?, ?)");
         foreach ($servicios as $s) {
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmtRel->close();
     }
 
-    // 4. TICKET con código único MT-XXXXXX
+    // genera el código MT-XXXXXX y crea el ticket
     if ($ok) {
         do {
             $codigo = 'MT-' . strtoupper(bin2hex(random_bytes(3)));
@@ -244,7 +244,6 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
 </head>
 <body>
 
-<!-- ══ NAVBAR DASHBOARD ══ -->
 <nav class="navbar dash-navbar" id="navbar">
   <div class="dash-container">
     <div class="nav-inner">
@@ -294,7 +293,6 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
   </div>
 </nav>
 
-<!-- Mobile menu dashboard -->
 <div class="dash-mobile-menu" id="mob-menu">
   <a href="inicio_clientes.php" onclick="closeDashMenu()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -319,10 +317,8 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
   </a>
 </div>
 
-<!-- ══ PAGE ══ -->
 <div class="dash-page">
 
-  <!-- HERO -->
   <section class="dash-hero">
     <div class="dash-container">
       <div class="dash-hero-inner dash-hero-inner--row">
@@ -339,13 +335,11 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
     </div>
   </section>
 
-  <!-- WIZARD -->
   <section class="dash-section dash-section--bottom">
     <div class="dash-container">
       <div class="dash-section-label">Completa los pasos</div>
       <div class="wizard">
 
-        <!-- Panel de pasos -->
         <div class="wizard-steps-panel">
           <div class="wizard-steps-panel__header">Progreso</div>
           <div class="wizard-step-item active" id="nav-1" onclick="goStep(1)">
@@ -374,9 +368,8 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
           </div>
         </div>
 
-        <!-- Contenido pasos -->
         <div>
-          <!-- PASO 1: DISPOSITIVO -->
+
           <div class="wizard-step-content active" id="step-1">
             <div class="wizard-step-card">
               <div class="wizard-step-card__head">
@@ -433,7 +426,6 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
                 </div>
                 <input type="hidden" id="tipo_dispositivo" value="<?= htmlspecialchars($tipoP) ?>">
 
-                <!-- Campos laptop -->
                 <div class="wizard-extra-fields form-grid-2col<?= $isLaptopP ? ' visible' : '' ?>" id="extra-laptop">
                   <div class="wizard-form-group">
                     <label>Marca</label>
@@ -463,7 +455,6 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
                   </div>
                 </div>
 
-                <!-- Campos PC -->
                 <div class="wizard-extra-fields<?= $isPcP ? ' visible' : '' ?>" id="extra-pc" style="margin-top:18px;">
                   <div class="wizard-form-group" style="max-width:260px;">
                     <label>Sistema operativo</label>
@@ -477,7 +468,7 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
                   </div>
                 </div>
 
-                </div><!-- /device-section -->
+                </div>
 
                 <hr class="wizard-divider">
                 <div class="wizard-form-group">
@@ -495,7 +486,6 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
             </div>
           </div>
 
-          <!-- PASO 2: SERVICIOS -->
           <div class="wizard-step-content" id="step-2">
             <div class="wizard-step-card">
               <div class="wizard-step-card__head">
@@ -563,7 +553,6 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
             </div>
           </div>
 
-          <!-- PASO 3: RESUMEN -->
           <div class="wizard-step-content" id="step-3">
             <div class="wizard-step-card">
               <div class="wizard-step-card__head">
@@ -594,14 +583,13 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
             </div>
           </div>
 
-        </div><!-- /wizard cols -->
-      </div><!-- /wizard -->
+        </div>
+      </div>
     </div>
   </section>
 
-</div><!-- /dash-page -->
+</div>
 
-<!-- MODAL ÉXITO -->
 <div class="dash-modal-overlay" id="modal-success" style="pointer-events:none;opacity:0;">
   <div class="dash-modal-box dash-modal-box--success">
     <div class="dash-modal-success-icon">
@@ -622,12 +610,10 @@ $isPcP      = $tipoP !== '' && !$isLaptopP;
   </div>
 </div>
 
-<!-- WhatsApp flotante -->
 <a href="https://wa.me/51903208170" target="_blank" rel="noopener" class="float-wa" title="WhatsApp">
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
 </a>
 
-<!-- Datos del cliente disponibles para JS -->
 <script>
   const CLIENTE_NOMBRE = '<?= htmlspecialchars($nombre_cliente) ?>';
   const CLIENTE_EMAIL  = '<?= htmlspecialchars($email_cliente) ?>';
