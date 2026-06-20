@@ -2,6 +2,7 @@
 
 ## Tabla de Contenidos
 - [Descripción del Proyecto](#descripción-del-proyecto)
+- [Estado del Proyecto](#estado-del-proyecto)
 - [Objetivos](#objetivos)
 - [Stack Tecnológico](#stack-tecnológico)
 - [Modelos del Sistema](#modelos-del-sistema)
@@ -21,6 +22,13 @@
 Este proyecto fue desarrollado para Morales Tech con el propósito de mejorar la gestión del servicio de soporte técnico. 
 
 El sistema centraliza el registro y seguimiento de tickets, la gestión de inventario, el control de ventas y proporciona un portal para que los clientes consulten y soliciten cotizaciones de servicios.
+
+## Estado del Proyecto
+
+- Estado: Finalizado (versión funcional)
+- Despliegue: Disponible en entorno cloud (InfinityFree)
+- Acceso público: https://moralestech.xo.je/
+- Versión: 1.0
 
 ## Objetivos
 
@@ -141,6 +149,11 @@ Morales-Tech/
 ├── database/
 │   ├── script.sql
 ├── docs/
+│   ├── pruebas/
+│   │   ├── informe_pruebas.pdf
+│   ├── deployment/
+│   │   ├── cloud/
+│   │   │   ├── lighthouse/
 │   ├── diagrams/
 │   │   ├── modelo_er.png
 │   │   ├── modelo_logico.jpg
@@ -200,6 +213,15 @@ Morales-Tech/
 
 5. Acceder al sistema en: `http://localhost/Morales-Tech`
 
+## Despliegue en Producción (Cloud)
+
+El sistema Morales Tech se encuentra actualmente desplegado en un entorno de hosting gratuito mediante InfinityFree, permitiendo el acceso público vía internet.
+
+Acceso al sistema:
+`https://moralestech.xo.je/`
+
+Este entorno permite validar el comportamiento real del sistema en producción, incluyendo pruebas de rendimiento, persistencia de datos y disponibilidad del servicio.
+
 ## Medidas de Seguridad
 - Autenticación mediante sesiones PHP.
 - Validación de formularios en frontend y backend.
@@ -239,7 +261,7 @@ Se realizaron 10 casos de prueba funcionales sobre los módulos principales del 
 
 ### Pruebas de Rendimiento (Apache Benchmark)
 
-Se planifica la ejecución de pruebas de carga utilizando la herramienta Apache Benchmark (ab), incluida en el entorno XAMPP, con el objetivo de evaluar el rendimiento del sistema bajo múltiples solicitudes concurrentes.
+Se realizaron pruebas de carga utilizando la herramienta Apache Benchmark (ab), incluida en el entorno XAMPP, con el objetivo de evaluar el rendimiento del sistema bajo múltiples solicitudes concurrentes.
 
 - Herramienta: Apache Benchmark (ab)
 - Entorno: Servidor local (Apache - XAMPP)
@@ -250,22 +272,32 @@ Se planifica la ejecución de pruebas de carga utilizando la herramienta Apache 
 - Pruebas sobre endpoints críticos (login, ventas, consulta de tickets)
 - Evaluación con distintos niveles de concurrencia
 
-#### Métricas a evaluar:
+#### Métricas evaluadas:
 - Tiempo promedio de respuesta
 - Requests por segundo
 - Tiempo total de ejecución
 - Capacidad de concurrencia
 
-#### Estado:
-En proceso de ejecución. Los resultados serán documentados en futuras actualizaciones del proyecto.
+#### Resultado:
+Las pruebas realizadas evidencian que el sistema presenta un rendimiento óptimo en entorno local, manteniendo tiempos de respuesta bajos y sin fallos en las solicitudes bajo condiciones de carga controladas.
+
+### Pruebas de Rendimiento en Producción (Lighthouse)
+
+Se realizaron pruebas de rendimiento en el entorno cloud utilizando Lighthouse (PageSpeed Insights), evaluando el comportamiento del sistema en versiones de escritorio y móvil.
+
+- Reporte Desktop: docs/deployment/cloud/lighthouse/Reporte_Lighthouse_Desktop_MoralesTech.pdf
+- Reporte Mobile: docs/deployment/cloud/lighthouse/Reporte_Lighthouse_Mobile_MoralesTech.pdf
 
 ## Credenciales de Prueba
-Las credenciales de prueba han sido removidas por seguridad.
+El sistema se encuentra desplegado en un entorno cloud accesible públicamente.
 
 Para acceder al sistema:
-- **Portal Cliente:** Registrarse desde `registro.php`
-- **Portal Administrador:** Registrarse desde `registro_staff.php` 
-  usando un correo con dominio `@moralestechs.com`
+
+- **URL del sistema:** https://moralestech.xo.je/
+- **Portal Cliente:** Acceder desde `login.php` y registrarse en el sistema para realizar pruebas completas del flujo de usuario.
+- **Portal Administrador:** Acceder desde `login_staff.php` usando las siguientes credenciales:
+  Usuario: demo@moralestechs.com  
+  Contraseña: J0j0l10n!
 
 ## Capturas de Pantalla
 
@@ -286,10 +318,16 @@ Para acceder al sistema:
 **Semestre:** 2026-1
 
 ## Limitaciones y Trabajo Futuro
-- Sistema actualmente diseñado para entorno local.
-- No incluye pasarela de pagos real.
+- El sistema se encuentra desplegado en un entorno cloud (InfinityFree), sin embargo depende de un hosting gratuito con limitaciones de rendimiento y disponibilidad.
+- No se incluye integración con pasarelas de pago en línea.
 - La seguridad se basa en preguntas de seguridad, lo cual podría mejorarse hacia métodos más robustos (tokens, verificación por correo, autenticación multifactor).
 - Implementación actual de generación de cotizaciones en PDF utilizando jsPDF.
+- Rendimiento en dispositivos móviles inferior al de escritorio debido a limitaciones del hosting y optimización frontend.
+
 - Mejoras futuras:
-  - Integración avanzada del módulo de boletas con reportes de ventas (futuro).
+  - Migración a un entorno de hosting más robusto (VPS o cloud dedicado) para soportar mayor carga de usuarios.
+  - Integración de pasarelas de pago en línea.
+  - Implementación de autenticación multifactor (MFA).
+  - Optimización del rendimiento en móviles (mejoras responsive y carga de recursos).
+  - Integración avanzada del módulo de boletas con reportes de ventas.
   - Implementación de un módulo de accesibilidad que permita ajustar tamaño de texto, contraste y legibilidad para usuarios con discapacidad visual.
