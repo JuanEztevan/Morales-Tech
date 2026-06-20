@@ -299,14 +299,26 @@ Para acceder al sistema:
   Usuario: demo@moralestechs.com  
   Contraseña: J0j0l10n!
 
+
 ## Capturas de Pantalla
 
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/b47b6d0b-5bec-4ad3-8051-b5b7db6379a0" />
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/57ea19d8-63fd-4304-84d6-5096b0f7b027" />
+### Landing Page
+img/capturas/landing.png
 
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/9ec25c4a-24b2-4024-a279-5b57d0e89488" />
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/db67af13-3387-42cd-bdd0-deefb4b9c89a" />
-<img width="1874" height="988" alt="image" src="https://github.com/user-attachments/assets/3532f293-fd73-420c-b3cf-25d0d3fe8cb4" />
+### Consulta de Tickets
+img/capturas/consulta_ticket.png
+
+### Portal Cliente
+img/capturas/cliente_dashboard.png">
+
+### Cotización de Servicios
+img/capturas/cotizacion.png
+
+### Portal Administrativo
+img/capturas/admin_dashboard.png
+
+### Módulo de Ventas
+img/capturas/ventas.png
 
 ## Encargados del GitHub
 - Juan Esteban Carmona Rodríguez – Frontend y Backend
