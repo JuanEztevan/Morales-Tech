@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// Admin header
+/* --- DATOS DEL ADMINISTRADOR --- */
 $stmt = $conn->prepare("SELECT nombres, apellidos FROM ADMIN WHERE idAdmin=? LIMIT 1");
 $stmt->bind_param("i", $_SESSION['idAdmin']);
 $stmt->execute();
@@ -61,12 +61,12 @@ $partes         = explode(' ', trim($nombre_usuario));
 $inicial        = strtoupper(substr($partes[0], 0, 1));
 $nombre_corto   = $partes[0];
 
-// Productos desde BD
+/* --- INVENTARIO --- */
 $res = $conn->query("SELECT * FROM COMPONENTE ORDER BY nombre ASC");
 $productos = [];
 while ($f = $res->fetch_assoc()) $productos[] = $f;
 
-// KPIs
+/* --- KPIS DEL INVENTARIO --- */
 $total_productos = count($productos);
 $total_unidades  = (int) array_sum(array_column($productos, 'stockActual'));
 $stock_bajo      = count(array_filter($productos, fn($p) => $p['stockActual'] <= $p['stockMinimo']));
@@ -105,7 +105,6 @@ function inv_stock_class($stockActual, $stockMinimo) {
 
 <div class="dash-shell">
 
-  <!-- SIDEBAR -->
   <aside class="dash-sidebar">
     <div class="dash-sidebar__logo">
       <img src="img/isotipo-color.png" alt="Morales Tech" class="dash-sidebar__isotipo"
@@ -138,9 +137,11 @@ function inv_stock_class($stockActual, $stockMinimo) {
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="dash-main">
     <header class="dash-header">
+      <button class="dash-header__hamburger" id="dash-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
       <div class="dash-header__breadcrumb">Panel / <span>Inventario</span></div>
       <div class="dash-header__user">
         <div class="dash-header__avatar"><?= $inicial ?></div>
@@ -163,7 +164,6 @@ function inv_stock_class($stockActual, $stockMinimo) {
         </button>
       </div>
 
-      <!-- KPI cards -->
       <div class="dash-kpi-row" style="margin-bottom:24px;">
         <div class="dash-kpi-card dash-kpi-card--highlight">
           <div class="dash-kpi-card__top">
@@ -211,7 +211,6 @@ function inv_stock_class($stockActual, $stockMinimo) {
         </div>
       </div>
 
-      <!-- Filtros y buscador -->
       <div class="inv-filters-bar">
         <div class="inv-filter-tabs">
           <a href="#" class="inv-filter-tab active" onclick="invFiltrar(event,'Todos')">Todos</a>
@@ -226,7 +225,6 @@ function inv_stock_class($stockActual, $stockMinimo) {
         </div>
       </div>
 
-      <!-- Tabla -->
       <div class="dash-panel-block">
         <div class="dash-table-wrap">
           <table class="dash-admin-table" style="min-width:700px;">
@@ -321,11 +319,34 @@ function inv_stock_class($stockActual, $stockMinimo) {
       </div>
 
     </main>
-  </div><!-- /dash-main -->
+  </div>
 
-</div><!-- /dash-shell -->
+<div class="dash-admin-mob" id="admin-mob-menu">
+  <a href="dashboard.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+  <a href="tickets.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+    Tickets
+  </a>
+  <a href="inventario.php" class="dash-admin-mob--active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    Inventario
+  </a>
+  <a href="ventas.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Ventas
+  </a>
+  <hr class="dash-admin-mob__divider">
+  <a href="logout.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Cerrar sesión
+  </a>
+</div>
 
-<!-- MODAL NUEVO PRODUCTO -->
+</div>
+
 <div class="inv-modal-overlay" id="inv-modal-overlay" onclick="invCerrarOverlay(event)">
   <div class="inv-modal">
     <div class="inv-modal__header">
