@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $pass  = $_POST['password'] ?? '';
 
-    // Validar dominio corporativo
+    // rechaza el acceso si el correo no es del dominio @moralestechs.com
     if (!str_ends_with($email, '@moralestechs.com')) {
 
         $error = 'Ingresa tu correo corporativo institucional para continuar.';
@@ -68,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="admin-split">
 
-  <!-- ══ PANEL IZQUIERDO — decorativo oscuro ══ -->
   <div class="admin-panel admin-panel--dark">
     <div class="admin-panel-dots"></div>
     <div class="admin-panel__brand">
@@ -101,7 +100,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </div>
 
-  <!-- ══ PANEL DERECHO — formulario claro ══ -->
   <div class="admin-panel admin-panel--light">
     <div class="admin-form-wrap">
 
@@ -155,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <a href="recuperar_contra_staff.php" class="forgot-link forgot-link--light"
                 style="margin-top:14px;">
-                ¿Olvidaste tu contraseña? <!-- Botón nuevo para redirigir a Recuperar contraseña -->
+                ¿Olvidaste tu contraseña?
         </a>
         <button type="submit" class="admin-btn-submit">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
@@ -172,18 +170,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </div>
 
-</div><!-- /admin-split -->
+</div>
 
 <script src="script.js" defer></script>
 <script>
-  // El campo email inicia como readonly para bloquear el autofill del browser.
-  // Lo habilitamos después de 600ms (ya pasó cualquier autofill nativo).
+  // habilita el campo de correo 600ms después de cargar para evitar autofill del navegador
   window.addEventListener('load', function() {
     setTimeout(function() {
       var f = document.getElementById('email');
       if (!f) return;
       f.removeAttribute('readonly');
-      // Por si acaso algo se filtró, limpiar correos no corporativos
+      // limpia el campo si quedó guardado un correo no corporativo
       if (f.value && !f.value.endsWith('@moralestechs.com')) {
         f.value = '';
         var p = document.getElementById('password');
