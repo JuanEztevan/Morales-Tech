@@ -13,7 +13,6 @@
 </head>
 <body>
 
-<!-- ══ NAVBAR ══ -->
 <nav class="navbar" id="navbar">
   <div class="container">
     <div class="nav-inner">
@@ -54,7 +53,6 @@
   </div>
 </nav>
 
-<!-- Mobile Menu -->
 <div class="mobile-menu" id="mobile-menu">
   <a href="#inicio"        onclick="closeMobileMenu()">Inicio</a>
   <a href="#servicios"     onclick="closeMobileMenu()">Servicios</a>
@@ -66,7 +64,6 @@
   <a href="registro.php" class="mobile-cta">Crear cuenta →</a>
 </div>
 
-<!-- ══ HERO ══ -->
 <section class="hero" id="inicio">
   <div class="hero-glow"></div>
   <div class="hero-glow-tr"></div>
@@ -120,7 +117,6 @@
   </div>
 </section>
 
-<!-- ══ CLIENTES ══ -->
 <div class="clients">
   <div class="container">
     <p class="clients-label">Empresas que han confiado en nosotros</p>
@@ -134,7 +130,6 @@
   </div>
 </div>
 
-<!-- ══ BENEFICIOS ══ -->
 <section class="section" id="beneficios">
   <div class="container">
     <div class="benefits-inner">
@@ -201,7 +196,6 @@
   </div>
 </section>
 
-<!-- ══ CÓMO FUNCIONA ══ -->
 <section class="section section--alt" id="como-funciona">
   <div class="container">
     <div class="how-header">
@@ -234,7 +228,6 @@
   </div>
 </section>
 
-<!-- ══ SERVICIOS ══ -->
 <section class="section" id="servicios">
   <div class="container">
     <div class="services-header">
@@ -283,7 +276,6 @@
   </div>
 </section>
 
-<!-- ══ PORTAL ══ -->
 <section class="section section--alt" id="portal">
   <div class="container">
     <div class="portal-inner">
@@ -359,7 +351,6 @@
   </div>
 </section>
 
-<!-- ══ DIFERENCIAL ══ -->
 <section class="section" id="diferencial">
   <div class="container">
     <div class="diff-header">
@@ -392,7 +383,6 @@
   </div>
 </section>
 
-<!-- ══ CTA FINAL ══ -->
 <section class="cta-section">
   <div class="container">
     <div class="cta-inner">
@@ -420,7 +410,6 @@
   </div>
 </section>
 
-<!-- ══ FOOTER ══ -->
 <footer class="footer" id="contacto">
   <div class="container">
     <div class="footer-grid">
