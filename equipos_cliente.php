@@ -2,7 +2,7 @@
 require_once 'client_protect.php';
 require_once 'conexion.php';
 
-// POST: editar equipo
+/* --- EDITAR EQUIPO (AJAX) --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'editar_equipo') {
     header('Content-Type: application/json; charset=utf-8');
     $idC   = (int) $_SESSION['idCliente'];
@@ -31,10 +31,7 @@ function fecha_es($fechaSql) {
     $ts = strtotime($fechaSql);
     return date('j', $ts) . ' ' . $meses[date('n', $ts) - 1] . ' ' . date('Y', $ts);
 }
-// RFC-003: historial de equipos y sincronización con nueva venta
-/* ══════════════════════════════════════════
-   EQUIPOS DEL CLIENTE + SU HISTORIAL DE SERVICIOS
-   ══════════════════════════════════════════ */
+/* --- EQUIPOS DEL CLIENTE --- */
 $sql = "SELECT e.idEquipo, e.tipoEquipo, e.marca, e.modelo, e.numSerie, e.sistemaOperativo, e.observaciones,
                t.codigo, t.estado, t.fechaCreacion,
                c.idCotizacion, c.total
@@ -109,7 +106,7 @@ foreach ($equiposPorId as $eq) {
     $equipos[] = $eq;
 }
 
-/* ── helper: config de color por estado (igual que tickets_cliente) ── */
+// devuelve los colores del badge según el estado del ticket
 function estado_cfg($e) {
     $m = [
         'Recibido'       => ['bg'=>'rgba(245,166,35,.18)',  'color'=>'#f5c048', 'dot'=>'#f5a623'],
@@ -120,16 +117,16 @@ function estado_cfg($e) {
     return $m[$e] ?? ['bg'=>'rgba(100,100,120,.18)','color'=>'#a0a8bb','dot'=>'#7a8096'];
 }
 
-/* ── helper: icono SVG por tipo de equipo ── */
+// devuelve el icono SVG según el tipo de equipo
 function icono_equipo($tipo) {
     if ($tipo === 'PC') {
         return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
     }
-    // Laptop por defecto
+    // icono de laptop por defecto si el tipo no es PC
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55A1 1 0 0 1 20.37 20H3.63a1 1 0 0 1-.91-1.45L4 16"/></svg>';
 }
 
-/* Solo equipos con al menos un servicio registrado */
+// filtra equipos que tengan al menos un ticket registrado
 $equipos        = array_values(array_filter($equipos, fn($eq) => count($eq['tickets']) > 0));
 
 $total_equipos  = count($equipos);
@@ -149,12 +146,8 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
   <link rel="icon" type="image/png" href="img/isotipo-color.png" media="(prefers-color-scheme: light)">
   <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
   <style>
-    /* ════════════════════════════════════════
-       EQUIPOS_CLIENTE.PHP — estilos propios
-       Complementan los estilos de styles.css
-       ════════════════════════════════════════ */
-
-    /* ── KPI bar en la cabecera del panel ── */
+        /* --- ESTILOS DE EQUIPOS_CLIENTE --- */
+    /* barra de KPIs en la cabecera */
     .eq-kpi-bar {
       display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     }
@@ -189,14 +182,14 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
       width: 1px; height: 14px; background: var(--borde); flex-shrink: 0;
     }
 
-    /* ── Grid de tarjetas de equipos ── */
+    /* grid de tarjetas de equipos */
     .eq-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
       gap: 16px;
     }
 
-    /* ── Tarjeta individual de equipo ── */
+    /* tarjeta individual de equipo */
     .eq-card {
       background: var(--surface-2);
       border: 1px solid var(--borde);
@@ -211,7 +204,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
       transform: translateY(-2px);
     }
 
-    /* Cabecera de la tarjeta */
+    /* cabecera de la tarjeta */
     .eq-card__head {
       padding: 20px 22px 16px;
       display: flex; align-items: flex-start; gap: 14px;
@@ -244,7 +237,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
       align-self: flex-start; padding-top: 3px;
     }
 
-    /* Cuerpo de la tarjeta: datos del equipo */
+    /* cuerpo de la tarjeta */
     .eq-card__body { padding: 14px 22px 16px; }
     .eq-card__fields {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
@@ -267,7 +260,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
     }
     .eq-field--full { grid-column: span 2; }
 
-    /* Pie de la tarjeta */
+    /* pie de la tarjeta */
     .eq-card__footer {
       padding: 0 22px 18px;
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -279,7 +272,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
     }
     .eq-tickets-count svg { width: 13px; height: 13px; color: #6fa3ff; }
 
-    /* Botón "Ver Historial" */
+    /* botón para ver el historial */
     .btn-ver-historial {
       display: inline-flex; align-items: center; gap: 7px;
       background: rgba(23,70,234,.16);
@@ -297,14 +290,14 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
     .btn-ver-historial svg { width: 13px; height: 13px; flex-shrink: 0; transition: transform .25s; }
     .btn-ver-historial.open svg.chevron { transform: rotate(180deg); }
 
-    /* ── Accordion: historial de servicios ── */
+    /* acordeón del historial de servicios */
     .eq-historial {
       max-height: 0; overflow: hidden;
       transition: max-height .38s cubic-bezier(.4,0,.2,1), opacity .28s;
       opacity: 0;
     }
     .eq-historial.open {
-      max-height: 600px; /* suficientemente grande */
+      max-height: 600px;
       opacity: 1;
     }
     .eq-historial__inner {
@@ -317,7 +310,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
       text-transform: uppercase; color: var(--txt-muted); margin-bottom: 12px;
     }
 
-    /* Fila de ticket dentro del historial */
+    /* fila de ticket en el historial */
     .eq-ticket-row {
       display: flex; align-items: flex-start; gap: 12px;
       padding: 11px 14px; border-radius: 12px;
@@ -357,7 +350,6 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
       display: flex; flex-direction: column; align-items: flex-end;
       gap: 6px; flex-shrink: 0;
     }
-    /* Reutiliza .dash-estado-badge y .dash-estado-dot de styles.css */
     .eq-ticket-row__total {
       font-family: 'Montserrat', sans-serif;
       font-size: 11px; font-weight: 800; color: var(--txt-accent);
@@ -367,7 +359,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
       font-style: italic; margin-top: 4px; line-height: 1.55;
     }
 
-    /* Estado vacío dentro de historial */
+    /* estado vacío dentro del historial */
     .eq-historial__empty {
       text-align: center; padding: 18px 0 10px;
     }
@@ -383,7 +375,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
       font-size: 11px; color: #3a4470; display: block; margin-top: 3px;
     }
 
-    /* Estado vacío (sin equipos) */
+    /* estado vacío sin equipos registrados */
     .eq-empty-state {
       text-align: center; padding: 64px 24px;
     }
@@ -394,7 +386,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
     .eq-empty-state p { font-family: 'Montserrat', sans-serif; font-size: 14px; color: var(--txt-muted); font-weight: 600; }
     .eq-empty-state small { font-size: 12px; color: #3a4470; }
 
-    /* ── Modal editar equipo ── */
+    /* modal de edición de equipo */
     .eq-modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,.6);
       backdrop-filter: blur(4px); z-index: 1000;
@@ -450,7 +442,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
     .btn-modal-save:hover { opacity: .88; }
     .btn-modal-save:disabled { opacity: .5; cursor: not-allowed; }
 
-    /* ── Responsive ── */
+    /* estilos responsivos */
     @media (max-width: 700px) {
       .eq-grid { grid-template-columns: 1fr; }
       .eq-kpi-bar { gap: 6px; }
@@ -463,7 +455,6 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
 </head>
 <body>
 
-<!-- ══ NAVBAR DASHBOARD ══ -->
 <nav class="navbar dash-navbar" id="navbar">
   <div class="dash-container">
     <div class="nav-inner">
@@ -513,7 +504,6 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
   </div>
 </nav>
 
-<!-- Mobile menu dashboard -->
 <div class="dash-mobile-menu" id="mob-menu">
   <a href="inicio_clientes.php" onclick="closeDashMenu()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -538,10 +528,8 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
   </a>
 </div>
 
-<!-- ══ PAGE ══ -->
 <div class="dash-page">
 
-  <!-- ── LISTADO DE EQUIPOS ── -->
   <section class="dash-section dash-section--bottom" style="padding-top:32px;">
     <div class="dash-container">
 
@@ -552,7 +540,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             Mis equipos
           </div>
-          <!-- KPIs compactos -->
+
           <div class="eq-kpi-bar">
             <span class="eq-kpi-pill">
               <span class="eq-kpi-pill__val"><?= $total_equipos ?></span>
@@ -593,7 +581,6 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
             ?>
             <div class="eq-card" id="eq-card-<?= $idx ?>">
 
-              <!-- Cabecera de la tarjeta -->
               <div class="eq-card__head">
                 <div class="eq-card__icon-wrap">
                   <?= icono_equipo($eq['tipo']) ?>
@@ -610,7 +597,6 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
                 <div class="eq-card__id-badge"><?= htmlspecialchars($eq['id']) ?></div>
               </div>
 
-              <!-- Datos del equipo -->
               <div class="eq-card__body">
                 <div class="eq-card__fields">
                   <?php if ($eq['tipo'] === 'Laptop'): ?>
@@ -647,7 +633,6 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
                 </div>
               </div>
 
-              <!-- Pie: contador + botones -->
               <div class="eq-card__footer">
                 <span class="eq-tickets-count">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
@@ -679,7 +664,6 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
                 </div>
               </div>
 
-              <!-- Accordion: Historial de servicios -->
               <?php if ($num_tickets > 0): ?>
               <div class="eq-historial" id="historial-<?= $idx ?>" role="region" aria-labelledby="btn-historial-<?= $idx ?>">
                 <div class="eq-historial__inner">
@@ -717,32 +701,30 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
               </div>
               <?php endif; ?>
 
-            </div><!-- /eq-card -->
+            </div>
             <?php endforeach; ?>
-          </div><!-- /eq-grid -->
+          </div>
 
           <?php endif; ?>
 
-        </div><!-- /padding wrapper -->
+        </div>
 
         <div class="dash-table-footer">
           <?= $total_equipos ?> equipo<?= $total_equipos !== 1 ? 's' : '' ?> registrado<?= $total_equipos !== 1 ? 's' : '' ?>
           <?php if ($total_tickets > 0): echo ' &middot; ' . $total_tickets . ' servicio' . ($total_tickets !== 1 ? 's' : ''); endif; ?>
         </div>
 
-      </div><!-- /dash-panel -->
+      </div>
 
     </div>
   </section>
 
-</div><!-- /dash-page -->
+</div>
 
-<!-- WhatsApp flotante -->
 <a href="https://wa.me/51903208170" target="_blank" rel="noopener" class="float-wa" title="WhatsApp">
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
 </a>
 
-<!-- Modal editar equipo -->
 <div class="eq-modal-overlay" id="eq-modal-overlay" onclick="if(event.target===this)cerrarModal()">
   <div class="eq-modal">
     <div class="eq-modal__title">
@@ -752,7 +734,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
     <input type="hidden" id="eq-edit-id">
     <input type="hidden" id="eq-edit-tipo">
     <div class="eq-modal__grid" id="eq-modal-fields">
-      <!-- campos inyectados por JS -->
+
     </div>
     <div class="eq-modal__actions">
       <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
@@ -763,12 +745,10 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
 
 <script src="script.js" defer></script>
 <script>
-/* ══════════════════════════════════════════
-   EQUIPOS_CLIENTE.PHP — Accordion / Toggle
-   ══════════════════════════════════════════ */
+/* --- ACORDEÓN DE HISTORIAL --- */
 (function initEquiposAccordion() {
 
-  /* Cierra todos los accordions excepto el índice indicado (-1 = cierra todos) */
+  // cierra todos los acordeones excepto el indicado (-1 cierra todos)
   function closeAll(exceptIdx) {
     document.querySelectorAll('.eq-historial').forEach(function(panel) {
       var idx = panel.id.replace('historial-', '');
@@ -782,7 +762,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
     });
   }
 
-  /* Toggle público (llamado desde el onclick del PHP) */
+  // abre o cierra el acordeón del equipo indicado
   window.toggleHistorial = function(idx) {
     var panel = document.getElementById('historial-' + idx);
     var btn   = document.getElementById('btn-historial-' + idx);
@@ -791,19 +771,19 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
     var isOpen = panel.classList.contains('open');
 
     if (isOpen) {
-      /* Cerrar */
+      // cierra el acordeón si ya estaba abierto
       panel.classList.remove('open');
       btn.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
     } else {
-      /* Cerrar los demás primero (accordion exclusivo) */
+      // cierra los demás antes de abrir el actual
       closeAll(idx);
-      /* Abrir éste */
+      // abre el acordeón seleccionado
       panel.classList.add('open');
       btn.classList.add('open');
       btn.setAttribute('aria-expanded', 'true');
 
-      /* Scroll suave hacia la tarjeta si queda fuera de la vista */
+      // hace scroll suave si la tarjeta quedó fuera de pantalla
       var card = document.getElementById('eq-card-' + idx);
       if (card) {
         var rect = card.getBoundingClientRect();
@@ -816,7 +796,7 @@ $eq_activos     = count(array_filter($equipos, fn($eq) => count(array_filter($eq
 
 })();
 
-/* ── Modal: editar equipo ── */
+/* --- MODAL: EDITAR EQUIPO --- */
 var _soOpts = {
   Laptop: ['Windows 11','Windows 10','macOS','Linux','Sin SO'],
   PC:     ['Windows 11','Windows 10','Linux','Sin SO']
