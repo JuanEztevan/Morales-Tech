@@ -2,10 +2,8 @@
 require_once 'admin_protect.php';
 require_once 'conexion.php';
 
-/* ──────────────────────────────────────────────────────────
-   AJAX: búsqueda de cliente por DNI
-   GET nuevo_ticket.php?action=buscar_dni&dni=XXXXXXXX
-   ────────────────────────────────────────────────────────── */
+/* --- AJAX: BÚSQUEDA DE CLIENTE POR DNI --- */
+// GET nuevo_ticket.php?action=buscar_dni&dni=XXXXXXXX
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'buscar_dni') {
     header('Content-Type: application/json; charset=utf-8');
     $dni = trim($_GET['dni'] ?? '');
@@ -35,10 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'buscar_
     exit;
 }
 
-/* ──────────────────────────────────────────────────────────
-   AJAX: equipos guardados de un cliente (Paso 2)
-   GET nuevo_ticket.php?action=listar_equipos&idCliente=N
-   ────────────────────────────────────────────────────────── */
+/* --- AJAX: EQUIPOS GUARDADOS DE UN CLIENTE (PASO 2) --- */
+// GET nuevo_ticket.php?action=listar_equipos&idCliente=N
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'listar_equipos') {
     header('Content-Type: application/json; charset=utf-8');
     $idCliente = (int) ($_GET['idCliente'] ?? 0);
@@ -58,9 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'listar_
     exit;
 }
 
-/* ──────────────────────────────────────────────────────────
-   POST: guardar ticket
-   ────────────────────────────────────────────────────────── */
+/* --- POST: GUARDAR TICKET --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
     $datos = json_decode(file_get_contents('php://input'), true);
@@ -107,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idCotizacion = 0;
     $idCliente = 0;
 
-    // 1. CLIENTE: buscar por DNI o crear
+    /* --- 1. CLIENTE: BUSCAR POR DNI O CREAR --- */
     $stmtC = $conn->prepare("SELECT idCliente FROM CLIENTE WHERE numDNI = ? LIMIT 1");
     $stmtC->bind_param("s", $dni);
     $stmtC->execute();
@@ -128,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // 2. EQUIPO — reusar el seleccionado en el Paso 2 o crear uno nuevo
+    /* --- 2. EQUIPO: REUSAR EL SELECCIONADO EN EL PASO 2 O CREAR UNO NUEVO --- */
     $idEquipo = 0;
     if ($ok && $idEquipoExistente > 0) {
         $stmtV = $conn->prepare("SELECT idEquipo FROM EQUIPO WHERE idEquipo = ? AND idCliente = ? LIMIT 1");
@@ -152,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // 3. COTIZACION
+    /* --- 3. COTIZACIÓN --- */
     if ($ok) {
         $stmt = $conn->prepare(
             "INSERT INTO COTIZACION (idCliente, idEquipo, idAdmin, subtotal, igv, total)
@@ -164,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // 4. COTIZACION_SERVICIO
+    /* --- 4. COTIZACION_SERVICIO --- */
     if ($ok) {
         $stmtServicio = $conn->prepare("SELECT idServicio FROM SERVICIO WHERE nomServicio = ? LIMIT 1");
         $stmtRel      = $conn->prepare("INSERT INTO COTIZACION_SERVICIO (idCotizacion, idServicio) VALUES (?, ?)");
@@ -183,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmtRel->close();
     }
 
-    // 5. TICKET con código único MT-XXXXXX
+    /* --- 5. TICKET CON CÓDIGO ÚNICO MT-XXXXXX --- */
     if ($ok) {
         do {
             $codigo = 'MT-' . strtoupper(bin2hex(random_bytes(3)));
@@ -247,7 +241,6 @@ $nombre_corto   = $partes[0];
 
 <div class="dash-shell">
 
-  <!-- SIDEBAR -->
   <aside class="dash-sidebar">
     <div class="dash-sidebar__logo">
       <img src="img/isotipo-color.png" alt="Morales Tech" class="dash-sidebar__isotipo"
@@ -280,9 +273,11 @@ $nombre_corto   = $partes[0];
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="dash-main">
     <header class="dash-header">
+      <button class="dash-header__hamburger" id="dash-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
       <div class="dash-header__breadcrumb">
         Panel / <a href="tickets.php" class="dash-header__breadcrumb-link">Tickets</a> / <span>Nuevo Ticket</span>
       </div>
@@ -307,10 +302,8 @@ $nombre_corto   = $partes[0];
         </a>
       </div>
 
-      <!-- WIZARD -->
       <div class="ntk-wizard">
 
-        <!-- Panel de pasos -->
         <div class="ntk-steps-panel">
           <div class="ntk-steps-panel__header">Progreso</div>
           <div class="ntk-step-item active" id="nav-1" onclick="ntkGoStep(1)">
@@ -346,10 +339,8 @@ $nombre_corto   = $partes[0];
           </div>
         </div>
 
-        <!-- Contenido pasos -->
         <div>
 
-          <!-- PASO 1: CLIENTE -->
           <div class="ntk-step-content active" id="step-1">
             <div class="ntk-step-card">
               <div class="ntk-step-card__head">
@@ -364,7 +355,6 @@ $nombre_corto   = $partes[0];
               <div class="ntk-step-card__body">
                 <div class="ntk-form-grid">
 
-                  <!-- DNI con indicador de estado -->
                   <div class="ntk-form-group">
                     <label>DNI <span class="ntk-req">*</span></label>
                     <div class="ntk-input-wrap">
@@ -374,31 +364,26 @@ $nombre_corto   = $partes[0];
                     <span class="ntk-hint" id="ntk-dni-hint"></span>
                   </div>
 
-                  <!-- RUC -->
                   <div class="ntk-form-group">
                     <label>RUC <span class="ntk-label-opt">Opcional</span></label>
                     <input type="text" id="ntk-ruc" placeholder="11 dígitos" maxlength="11" class="ntk-input">
                   </div>
 
-                  <!-- Nombres (reemplaza "Nombre completo") -->
                   <div class="ntk-form-group">
                     <label>Nombres <span class="ntk-req">*</span></label>
                     <input type="text" id="ntk-nombres" placeholder="Ej. Juan Carlos" class="ntk-input" autocomplete="off">
                   </div>
 
-                  <!-- Apellidos -->
                   <div class="ntk-form-group">
                     <label>Apellidos <span class="ntk-req">*</span></label>
                     <input type="text" id="ntk-apellidos" placeholder="Ej. García López" class="ntk-input" autocomplete="off">
                   </div>
 
-                  <!-- Teléfono -->
                   <div class="ntk-form-group">
                     <label>Teléfono <span class="ntk-req">*</span></label>
                     <input type="text" id="ntk-telefono" placeholder="9 dígitos" maxlength="9" class="ntk-input" autocomplete="off">
                   </div>
 
-                  <!-- Correo -->
                   <div class="ntk-form-group">
                     <label>Correo <span class="ntk-label-opt">Opcional</span></label>
                     <input type="text" id="ntk-correo" placeholder="correo@email.com" class="ntk-input" autocomplete="off">
@@ -416,7 +401,6 @@ $nombre_corto   = $partes[0];
             </div>
           </div>
 
-          <!-- PASO 2: DISPOSITIVO -->
           <div class="ntk-step-content" id="step-2">
             <div class="ntk-step-card">
               <div class="ntk-step-card__head">
@@ -432,7 +416,6 @@ $nombre_corto   = $partes[0];
 
                 <input type="hidden" id="ntk-id-equipo" value="0">
 
-                <!-- Equipos guardados del cliente (se llena por AJAX al validar el DNI) -->
                 <div id="ntk-eq-saved-wrap" class="nv-hidden">
                   <div class="ntk-section-sm">Equipos del cliente</div>
                   <div id="ntk-eq-cards" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
@@ -444,7 +427,6 @@ $nombre_corto   = $partes[0];
                   <hr class="ntk-divider">
                 </div>
 
-                <!-- Resumen del equipo existente seleccionado -->
                 <div class="ntk-equipo-preview nv-hidden" id="ntk-equipo-preview">
                   <div class="ntk-equipo-preview__inner">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;color:var(--azul-tecnologico);flex-shrink:0;"><rect x="2" y="3" width="20" height="13" rx="2"/><polyline points="1 21 23 21"/></svg>
@@ -455,7 +437,6 @@ $nombre_corto   = $partes[0];
                   </div>
                 </div>
 
-                <!-- Formulario de equipo (tipo, marca, modelo, etc.) -->
                 <div id="ntk-equipo-form">
                   <div class="ntk-section-sm">Tipo de equipo</div>
                   <div class="ntk-device-grid">
@@ -470,7 +451,6 @@ $nombre_corto   = $partes[0];
                   </div>
                   <input type="hidden" id="ntk-tipo-dispositivo">
 
-                  <!-- Campos Laptop -->
                   <div class="ntk-extra-fields ntk-form-grid" id="extra-laptop">
                     <div class="ntk-form-group">
                       <label>Marca</label>
@@ -497,7 +477,6 @@ $nombre_corto   = $partes[0];
                     </div>
                   </div>
 
-                  <!-- Campos PC -->
                   <div class="ntk-extra-fields" id="extra-pc" style="margin-top:18px;">
                     <div class="ntk-form-group" style="max-width:260px;">
                       <label>Sistema operativo</label>
@@ -510,7 +489,7 @@ $nombre_corto   = $partes[0];
                       </select>
                     </div>
                   </div>
-                </div><!-- /ntk-equipo-form -->
+                </div>
 
                 <hr class="ntk-divider">
                 <div class="ntk-form-group">
@@ -531,7 +510,6 @@ $nombre_corto   = $partes[0];
             </div>
           </div>
 
-          <!-- PASO 3: SERVICIOS -->
           <div class="ntk-step-content" id="step-3">
             <div class="ntk-step-card">
               <div class="ntk-step-card__head">
@@ -614,7 +592,6 @@ $nombre_corto   = $partes[0];
             </div>
           </div>
 
-          <!-- PASO 4: RESUMEN -->
           <div class="ntk-step-content" id="step-4">
             <div class="ntk-step-card">
               <div class="ntk-step-card__head">
@@ -645,15 +622,38 @@ $nombre_corto   = $partes[0];
             </div>
           </div>
 
-        </div><!-- /wizard cols -->
-      </div><!-- /ntk-wizard -->
+        </div>
+      </div>
 
     </main>
-  </div><!-- /dash-main -->
+  </div>
 
-</div><!-- /dash-shell -->
+<div class="dash-admin-mob" id="admin-mob-menu">
+  <a href="dashboard.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+  <a href="tickets.php" class="dash-admin-mob--active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+    Tickets
+  </a>
+  <a href="inventario.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    Inventario
+  </a>
+  <a href="ventas.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Ventas
+  </a>
+  <hr class="dash-admin-mob__divider">
+  <a href="logout.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Cerrar sesión
+  </a>
+</div>
 
-<!-- MODAL ÉXITO -->
+</div>
+
 <div class="ntk-modal-overlay" id="ntk-modal-success">
   <div class="ntk-modal-box">
     <div class="ntk-modal-icon">

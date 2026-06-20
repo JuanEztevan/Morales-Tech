@@ -1,5 +1,5 @@
 <?php
-// session_start();
+
 session_start();
 require_once 'conexion.php';
 
@@ -59,7 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
-<!-- ══ NAVBAR ══ -->
 <nav class="navbar" id="navbar">
   <div class="container">
     <div class="nav-inner">
@@ -100,7 +99,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 </nav>
 
-<!-- Mobile Menu -->
 <div class="mobile-menu" id="mobile-menu">
   <a href="index.php#inicio"        onclick="closeMobileMenu()">Inicio</a>
   <a href="index.php#servicios"     onclick="closeMobileMenu()">Servicios</a>
@@ -112,14 +110,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <a href="registro.php" class="mobile-cta">Crear cuenta →</a>
 </div>
 
-<!-- ══ CONTENIDO ══ -->
 <div class="page-auth">
   <div class="sphere-left"></div>
   <div class="sphere-right"></div>
   <div class="bg-noise"></div>
 
   <div class="auth-card">
-    <!-- Isotipo -->
+
     <div class="auth-isotipo">
       <img src="img/isotipo-blanco.png" alt="Morales Tech"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -175,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
       </div>
       <a href="recuperar_contrasena.php" class="forgot-link">
-        ¿Olvidaste tu contraseña? <!-- Botón nuevo para redirigir a Recuperar contrasela -->
+        ¿Olvidaste tu contraseña?
       </a>
       <button type="submit" class="btn-auth-submit">
         Iniciar sesión

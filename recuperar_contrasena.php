@@ -5,7 +5,7 @@ $error     = '';
 $success   = '';
 $step      = intval($_POST['step'] ?? 1);
 $startStep = 1;
-// PASO 1 → verificar correo o DNI
+/* --- PASO 1: VERIFICAR CORREO O DNI --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
     $identificador = trim($_POST['identificador'] ?? '');
     if (!$identificador) {
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
                 $startStep = 1;
             } else {
                 $cliente = $res->fetch_assoc();
-                // Limpiar datos anteriores por si se reintenta el flujo
+                // limpia datos anteriores por si se reintenta el flujo
                 unset(
                     $_SESSION['recuperar_id'],
                     $_SESSION['recuperar_p1'],
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
         }
     }
 }
-// PASO 2 → verificar respuestas
+/* --- PASO 2: VERIFICAR RESPUESTAS --- */
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
     $r1 = trim($_POST['respuesta1'] ?? '');
     $r2 = trim($_POST['respuesta2'] ?? '');
@@ -90,7 +90,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
         }
     }
 }
-// PASO 3 → guardar nueva contraseña
+/* --- PASO 3: GUARDAR NUEVA CONTRASEÑA --- */
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 3) {
     $nueva   = $_POST['password'] ?? '';
     $confirm = $_POST['confirm']  ?? '';
@@ -114,7 +114,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 3) {
             $stmt->bind_param("si", $hash, $id);
             if ($stmt->execute() && $stmt->affected_rows > 0) {
                 $stmt->close();
-                // Limpiar datos de recuperación de la sesión
+                // limpia datos de recuperación de la sesión
                 unset(
                     $_SESSION['recuperar_id'],
                     $_SESSION['recuperar_p1'],
@@ -132,7 +132,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 3) {
         }
     }
 }
-// Leer preguntas de la sesión (disponibles desde el paso 2 en adelante)
+// lee las preguntas de la sesión (disponibles desde el paso 2 en adelante)
 $p1 = $_SESSION['recuperar_p1'] ?? '';
 $p2 = $_SESSION['recuperar_p2'] ?? '';
 $p3 = $_SESSION['recuperar_p3'] ?? '';
@@ -151,7 +151,6 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
   <link rel="icon" type="image/png" href="img/isotipo-blanco.png" media="(prefers-color-scheme: dark)">
 </head>
 <body>
-<!-- ══ NAVBAR ══ -->
 <nav class="navbar" id="navbar">
   <div class="container">
     <div class="nav-inner">
@@ -191,7 +190,6 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
     </div>
   </div>
 </nav>
-<!-- Mobile Menu -->
 <div class="mobile-menu" id="mobile-menu">
   <a href="index.php#inicio"        onclick="closeMobileMenu()">Inicio</a>
   <a href="index.php#servicios"     onclick="closeMobileMenu()">Servicios</a>
@@ -201,7 +199,6 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
   <a href="login.php">Iniciar sesión</a>
   <a href="registro.php" class="mobile-cta">Crear cuenta →</a>
 </div>
-<!-- ══ CONTENIDO ══ -->
 <div class="page-auth page-auth--registro">
   <div class="sphere-left"></div>
   <div class="sphere-right"></div>
@@ -214,7 +211,6 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
     </div>
     <h1 class="auth-heading">Recuperar contraseña</h1>
     <p class="auth-sub">Sigue los pasos para restablecer<br>el acceso a tu cuenta</p>
-    <!-- ══ Stepper ══ -->
     <div class="ms-stepper" id="ms-stepper">
       <div class="ms-step ms-step--active" id="ms-dot-1">
         <div class="ms-step__dot">
@@ -254,7 +250,6 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
     <form method="POST" action="recuperar_contrasena.php" autocomplete="off"
           id="rec-form" onsubmit="recSyncStep()">
       <input type="hidden" name="step" id="rec-step-hidden" value="<?= $startStep ?>">
-      <!-- ══════════ PASO 1 ══════════ -->
       <div class="ms-panel" id="ms-panel-1">
         <div class="section-divider">
           <div class="section-divider-line"></div>
@@ -280,8 +275,7 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
             <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
           </svg>
         </button>
-      </div><!-- /ms-panel-1 -->
-      <!-- ══════════ PASO 2 ══════════ -->
+      </div>
       <div class="ms-panel ms-panel--hidden" id="ms-panel-2">
         <div class="section-divider">
           <div class="section-divider-line"></div>
@@ -303,7 +297,6 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
                 <svg class="auth-input-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                 </svg>
-                <!-- SIN "required": evita el error de consola en paneles ocultos -->
                 <input type="text" id="respuesta<?= $i ?>" name="respuesta<?= $i ?>"
                        placeholder="Tu respuesta secreta"
                        autocomplete="off">
@@ -326,8 +319,7 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
             </svg>
           </button>
         </div>
-      </div><!-- /ms-panel-2 -->
-      <!-- ══════════ PASO 3 ══════════ -->
+      </div>
       <div class="ms-panel ms-panel--hidden" id="ms-panel-3">
         <div class="section-divider">
           <div class="section-divider-line"></div>
@@ -335,7 +327,6 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
           <div class="section-divider-line"></div>
         </div>
         <div class="form-grid-2col">
-          <!-- Nueva contraseña -->
           <div class="auth-form-group compact">
             <label for="password">Nueva contraseña <span class="label-required">*</span></label>
             <div class="auth-input-wrap">
@@ -365,7 +356,6 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
             </div>
             <div class="pw-strength-label" id="pw-label"></div>
           </div>
-          <!-- Confirmar contraseña -->
           <div class="auth-form-group compact">
             <label for="confirm">Confirmar contraseña <span class="label-required">*</span></label>
             <div class="auth-input-wrap">
@@ -404,7 +394,7 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
             Guardar contraseña
           </button>
         </div>
-      </div><!-- /ms-panel-3 -->
+      </div>
     </form>
     <div class="auth-divider"><span>o</span></div>
     <div class="auth-card-footer">
@@ -413,19 +403,19 @@ $p3 = $_SESSION['recuperar_p3'] ?? '';
   </div>
 </div>
 <script>
-/* RECUPERAR CONTRASEÑA — CLIENTES */
+/* --- RECUPERAR CONTRASEÑA: CLIENTES --- */
 var MS_START_STEP  = <?= (int)$startStep ?>;
 var MS_TOTAL_STEPS = 3;
 
-/* Panel actualmente visible (se mantiene sincronizado) */
+// panel actualmente visible (se mantiene sincronizado)
 var _recActivePanel = MS_START_STEP;
 
-/* ── Sincroniza el campo hidden con el panel visible antes de enviar ── */
+// sincroniza el campo hidden con el panel visible antes de enviar
 function recSyncStep() {
   document.getElementById('rec-step-hidden').value = _recActivePanel;
 }
 
-/* ── Muestra un panel y oculta los demás; actualiza stepper ── */
+// muestra un panel, oculta los demás y actualiza el stepper
 function recShowPanel(n) {
   for (var i = 1; i <= MS_TOTAL_STEPS; i++) {
     var panel = document.getElementById('ms-panel-' + i);
@@ -436,29 +426,29 @@ function recShowPanel(n) {
         panel.classList.add('ms-panel--hidden');
       }
     }
-    /* Actualizar dots del stepper */
+    // actualiza los dots del stepper
     var dot = document.getElementById('ms-dot-' + i);
     if (dot) {
       dot.classList.toggle('ms-step--active',    i === n);
       dot.classList.toggle('ms-step--completed', i < n);
     }
-    /* Actualizar conectores */
+    // actualiza los conectores
     if (i < MS_TOTAL_STEPS) {
       var conn = document.getElementById('ms-connector-' + i);
       if (conn) { conn.classList.toggle('ms-connector--active', i < n); }
     }
   }
   _recActivePanel = n;
-  /* Mantener el hidden sincronizado por si el usuario usa Enter */
+  // mantiene el hidden sincronizado por si el usuario presiona enter
   document.getElementById('rec-step-hidden').value = n;
 }
 
-/* ── Botón "Anterior" ── */
+// maneja el botón "anterior"
 function recBack(toStep) {
   recShowPanel(toStep);
 }
 
-/* ── Al cargar la página, muestra el panel que PHP indica ── */
+// al cargar la página, muestra el panel que indica PHP
 document.addEventListener('DOMContentLoaded', function () {
   recShowPanel(MS_START_STEP);
 });

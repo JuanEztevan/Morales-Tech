@@ -2,10 +2,7 @@
 require_once 'admin_protect.php';
 require_once 'conexion.php';
 
-/* ──────────────────────────────────────────────────────────
-   AJAX: búsqueda de cliente por DNI (autocompletado)
-   GET nueva_venta.php?action=buscar_dni&dni=XXXXXXXX
-   ────────────────────────────────────────────────────────── */
+/* --- AJAX: BÚSQUEDA DE CLIENTE POR DNI --- */
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'buscar_dni') {
     header('Content-Type: application/json; charset=utf-8');
     $dni = trim($_GET['dni'] ?? '');
@@ -34,12 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'buscar_
     exit;
 }
 
-/* ──────────────────────────────────────────────────────────
-   AJAX: actualizar datos del equipo (modo edición en
-   "Venta por ticket" → Detalles del Equipo)
-   POST nueva_venta.php?action=actualizar_equipo
-   Body: { idEquipo, tipo, marca, modelo, serie, so }
-   ────────────────────────────────────────────────────────── */
+/* --- AJAX: ACTUALIZAR DATOS DEL EQUIPO --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'actualizar_equipo') {
     header('Content-Type: application/json; charset=utf-8');
     $datos = json_decode(file_get_contents('php://input'), true);
@@ -72,9 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'actual
     exit;
 }
 
-/* ──────────────────────────────────────────────────────────
-   POST: registrar venta (por ticket o por producto)
-   ────────────────────────────────────────────────────────── */
+/* --- POST: REGISTRAR VENTA --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
     $datos = json_decode(file_get_contents('php://input'), true);
@@ -119,8 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $conn->begin_transaction();
     $ok = true;
     $message = '';
-
-    /* ── 1. Validar stock y calcular subtotal de productos ── */
+    // valida el stock disponible y calcula el subtotal
     $subtotalProd = 0.0;
     $componentesValidados = [];
 
@@ -161,8 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => $message ?: 'No se pudo validar el stock.']);
         exit;
     }
-
-    /* ── 2. Cliente: buscar/crear (solo Venta por Producto) ── */
+    // busca al cliente por DNI o lo crea si no existe
     $idClienteVenta = 0;
     if ($tipoVenta === 'producto') {
         $stmtC = $conn->prepare("SELECT idCliente FROM CLIENTE WHERE numDNI = ? LIMIT 1");
@@ -185,8 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmtIns->close();
         }
     }
-
-    /* ── 3. Si es venta por ticket: traer datos reales del ticket/cliente ── */
+    // trae los datos del ticket y verifica que no esté ya facturado
     $idTicketFinal    = 0;
     $servicioSubtotal = 0.0;
     $nombresFinal     = $nombres;
@@ -249,11 +236,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => $message ?: 'No se pudo procesar la venta.']);
         exit;
     }
-
-    /* ── 4. Calcular totales e insertar VENTA ──
-       Nota: la columna idTicket en VENTA es NOT NULL en el esquema actual.
-       Para "venta de producto" (sin ticket) se requiere la migración sugerida
-       en el análisis (permitir NULL). Aquí se asume ya aplicada. */
+    // calcula subtotal, IGV y total; inserta el registro en VENTA
+    // nota: para venta de producto, idTicket admite NULL
     $subtotal = round(($tipoVenta === 'ticket' ? $servicioSubtotal : 0) + $subtotalProd, 2);
     $igv      = round($subtotal * 0.18, 2);
     $total    = round($subtotal + $igv, 2);
@@ -278,8 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ok = $stmtV->execute();
     $idVenta = (int) $stmtV->insert_id;
     $stmtV->close();
-
-    /* ── 5. DETALLE_VENTA + descuento de stock ── */
+    // registra cada producto en DETALLE_VENTA y descuenta el stock
     if ($ok && $componentesValidados) {
         $stmtDet   = $conn->prepare("INSERT INTO DETALLE_VENTA (idVenta, idComponente, cantidad) VALUES (?, ?, ?)");
         $stmtStock = $conn->prepare("UPDATE COMPONENTE SET stockActual = stockActual - ? WHERE idComponente = ? AND stockActual >= ?");
@@ -293,8 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmtDet->close();
         $stmtStock->close();
     }
-
-    /* ── 6. Marcar ticket como facturado/completado ── */
+    // marca el ticket como "Completado"
     if ($ok && $tipoVenta === 'ticket') {
         $stmtEst = $conn->prepare("UPDATE TICKET SET estado = 'Completado' WHERE idTicket = ?");
         $stmtEst->bind_param("i", $idTicketFinal);
@@ -333,9 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-/* ──────────────────────────────────────────────────────────
-   Carga normal de la página
-   ────────────────────────────────────────────────────────── */
+/* --- CARGA DE LA PÁGINA --- */
 $stmt = $conn->prepare("SELECT nombres, apellidos FROM ADMIN WHERE idAdmin = ? LIMIT 1");
 $stmt->bind_param("i", $_SESSION['idAdmin']);
 $stmt->execute();
@@ -437,7 +417,6 @@ if ($resProd) {
 
 <div class="dash-shell">
 
-  <!-- SIDEBAR -->
   <aside class="dash-sidebar">
     <div class="dash-sidebar__logo">
       <img src="img/isotipo-color.png" alt="Morales Tech" class="dash-sidebar__isotipo"
@@ -470,9 +449,11 @@ if ($resProd) {
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="dash-main">
     <header class="dash-header">
+      <button class="dash-header__hamburger" id="dash-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
       <div class="dash-header__breadcrumb">
         Panel / <a href="ventas.php" class="dash-header__breadcrumb-link">Ventas</a> / <span>Nueva Venta</span>
       </div>
@@ -500,10 +481,8 @@ if ($resProd) {
 
       <div class="nv-content-grid">
 
-        <!-- ══ IZQUIERDA ══ -->
         <div>
 
-          <!-- 1. Tipo de venta -->
           <div class="nv-card">
             <div class="nv-card__header">
               <div class="ntk-step-card__icon">
@@ -532,7 +511,6 @@ if ($resProd) {
             </div>
           </div>
 
-          <!-- 2A. Ticket asociado -->
           <div class="nv-card" id="nv-bloque-ticket">
             <div class="nv-card__header">
               <div class="ntk-step-card__icon">
@@ -572,10 +550,8 @@ if ($resProd) {
             </div>
           </div>
 
-          <!-- 2A-EXTRA. Datos del dispositivo + Detalles del Equipo -->
           <div class="nv-card nv-hidden" id="nv-bloque-dispositivo">
 
-            <!-- Datos del Ticket -->
             <div class="nv-device-section">
               <div class="nv-device-section__title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
@@ -603,14 +579,13 @@ if ($resProd) {
 
             <div class="nv-device-divider"></div>
 
-            <!-- Detalles del Equipo -->
             <div class="nv-device-section">
               <div class="nv-device-section__head">
                 <div class="nv-device-section__title">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
                   Detalles del Equipo
                 </div>
-                <!-- Botón Editar / Guardar -->
+
                 <div class="nv-equipo-edit-btns" id="nv-equipo-edit-btns">
                   <button class="nv-equipo-btn nv-equipo-btn--edit" id="nv-btn-editar" onclick="nvEquipoEditar()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -627,7 +602,6 @@ if ($resProd) {
                 </div>
               </div>
 
-              <!-- MODO VISTA -->
               <div id="nv-equipo-view">
                 <div class="nv-device-info-grid" id="nv-equipo-view-grid">
                   <div class="nv-device-info-item nv-field-laptop-only" id="nv-view-marca-wrap">
@@ -653,7 +627,6 @@ if ($resProd) {
                 </div>
               </div>
 
-              <!-- MODO EDICIÓN -->
               <div id="nv-equipo-edit" class="nv-hidden">
                 <div class="ntk-form-group nv-field-laptop-only" id="nv-edit-marca-wrap">
                   <label>Marca</label>
@@ -680,7 +653,6 @@ if ($resProd) {
 
           </div>
 
-          <!-- 2B. Cliente directo (Venta por producto) -->
           <div class="nv-card nv-hidden" id="nv-bloque-cliente">
             <div class="nv-card__header">
               <div class="ntk-step-card__icon">
@@ -717,7 +689,6 @@ if ($resProd) {
             </div>
           </div>
 
-          <!-- 3. Productos -->
           <div class="nv-card" id="nv-bloque-productos">
             <div class="nv-card__header">
               <div class="ntk-step-card__icon">
@@ -738,9 +709,8 @@ if ($resProd) {
             </button>
           </div>
 
-        </div><!-- /izquierda -->
+        </div>
 
-        <!-- ══ DERECHA: RESUMEN ══ -->
         <div class="nv-sticky-right">
           <div class="nv-quote-card">
             <div class="nv-quote-card__title">
@@ -786,14 +756,37 @@ if ($resProd) {
           </div>
         </div>
 
-      </div><!-- /nv-content-grid -->
+      </div>
 
     </main>
-  </div><!-- /dash-main -->
+  </div>
 
-</div><!-- /dash-shell -->
+<div class="dash-admin-mob" id="admin-mob-menu">
+  <a href="dashboard.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+  <a href="tickets.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+    Tickets
+  </a>
+  <a href="inventario.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    Inventario
+  </a>
+  <a href="ventas.php" class="dash-admin-mob--active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Ventas
+  </a>
+  <hr class="dash-admin-mob__divider">
+  <a href="logout.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Cerrar sesión
+  </a>
+</div>
 
-<!-- MODAL ÉXITO -->
+</div>
+
 <div class="nv-modal-overlay" id="nv-modal-success">
   <div class="ntk-modal-box" style="max-width:400px;">
     <div class="ntk-modal-icon">
@@ -814,7 +807,6 @@ if ($resProd) {
   </div>
 </div>
 
-<!-- Datos PHP → JS -->
 <script>
   window.NV_TICKETS   = <?= json_encode($tickets_disponibles, JSON_UNESCAPED_UNICODE) ?>;
   window.NV_PRODUCTOS = <?= json_encode($productos, JSON_UNESCAPED_UNICODE) ?>;

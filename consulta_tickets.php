@@ -1,19 +1,19 @@
 <?php
 
-// ── Manejador AJAX ─────────────────────────────────────────────
+/* --- AJAX: CONSULTA PÚBLICA DE TICKET --- */
 if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
     header('Content-Type: application/json; charset=utf-8');
 
     $codigo = isset($_GET['codigo']) ? trim($_GET['codigo']) : '';
 
-    // Formato MT- seguido de letras y/o números (6-10 chars)
+    // valida el formato del código: MT- seguido de 4 a 10 caracteres
     if (!preg_match('/^MT-[A-F0-9]{4,10}$/i', $codigo)) {
         echo json_encode(['found' => false]);
         exit;
     }
     $codigo = strtoupper($codigo);
 
-    require_once 'conexion.php'; // usa el mysqli del proyecto
+    require_once 'conexion.php';
 
     $sql = "
         SELECT
@@ -61,7 +61,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
         exit;
     }
 
-    // ── Separar servicio principal de adicionales ───────────────
+    // separa el servicio principal de los servicios adicionales
     $nombresArr  = explode('||', $row['servicios']);
     $tiposArr    = explode('||', $row['tiposServicio']);
     $principal   = '';
@@ -76,7 +76,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
         }
     }
 
-    // ── Mapeo de estado → número de paso (1–4) ─────────────────
+    // convierte el estado del ticket a número de paso para la barra de progreso
     $estadoMap = [
         'Recibido'           => 1,
         'En proceso'         => 2,
@@ -107,7 +107,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
         4 => 'Servicio completado y entregado',
     ];
 
-    // ── Descripción del equipo (sin datos del cliente) ──────────
+    // construye la descripción del equipo sin exponer datos del cliente
     $tipoLabel = $row['tipoEquipo'] ?? '—';
     $modeloStr = '';
     if (!empty($row['marca']) && !empty($row['modelo'])) {
@@ -149,7 +149,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
 </head>
 <body>
 
-<!-- ══ NAVBAR ══ -->
 <nav class="navbar" id="navbar">
   <div class="container">
     <div class="nav-inner">
@@ -190,7 +189,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
   </div>
 </nav>
 
-<!-- Mobile Menu -->
 <div class="mobile-menu" id="mobile-menu">
   <a href="index.php"               onclick="closeMobileMenu()">Inicio</a>
   <a href="index.php#servicios"     onclick="closeMobileMenu()">Servicios</a>
@@ -202,7 +200,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
   <a href="registro.php" class="mobile-cta">Crear cuenta →</a>
 </div>
 
-<!-- ══ PAGE HEADER ══ -->
 <div class="page-header">
   <div class="container">
     <div class="page-header-tag reveal">Seguimiento de servicio</div>
@@ -211,12 +208,10 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
   </div>
 </div>
 
-<!-- ══ MAIN CONTENT ══ -->
 <div class="main-content">
   <div class="container">
     <div class="ct-grid reveal reveal-delay-2">
 
-      <!-- ─ PANEL IZQUIERDO ─ -->
       <div class="ct-input-panel">
         <div class="ct-panel-label">Código de Ticket</div>
         <div class="ct-panel-title">Busca tu ticket</div>
@@ -242,10 +237,8 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
         </div>
       </div>
 
-      <!-- ─ PANEL DERECHO ─ -->
       <div class="ct-result-panel">
 
-        <!-- Estado vacío -->
         <div class="result-empty" id="resultEmpty">
           <div class="result-empty-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -256,7 +249,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
           <p class="result-empty-text">Ingresa tu código de ticket en el formulario de la izquierda y presiona <strong style="color:var(--txt-main)">"Consultar estado"</strong> para ver el progreso de tu equipo aquí.</p>
         </div>
 
-        <!-- Card de resultado -->
         <div class="result-card" id="resultCard">
           <div class="rc-header">
             <div>
@@ -273,7 +265,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
             </div>
             <div class="rcp-steps">
 
-              <!-- Paso 1: Recibido -->
               <div class="rcp-step" id="step1">
                 <div class="rcp-step-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -283,7 +274,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
                 <div class="rcp-step-name">Recibido</div>
               </div>
 
-              <!-- Paso 2: En proceso -->
               <div class="rcp-step" id="step2">
                 <div class="rcp-step-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -293,7 +283,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
                 <div class="rcp-step-name">En proceso</div>
               </div>
 
-              <!-- Paso 3: Listo para entrega -->
               <div class="rcp-step" id="step3">
                 <div class="rcp-step-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -306,7 +295,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
                 <div class="rcp-step-name">Listo para entrega</div>
               </div>
 
-              <!-- Paso 4: Completado -->
               <div class="rcp-step" id="step4">
                 <div class="rcp-step-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -363,7 +351,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
   </div>
 </div>
 
-<!-- ══ FEATURES STRIP ══ -->
 <div class="features-strip">
   <div class="container">
     <div class="features-strip-grid">
@@ -398,7 +385,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
   </div>
 </div>
 
-<!-- ══ SOPORTE CTA ══ -->
 <div class="support-cta" id="contacto">
   <div class="container">
     <div class="support-cta-inner reveal">
@@ -423,7 +409,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === '1') {
   </div>
 </div>
 
-<!-- ══ FOOTER ══ -->
 <footer class="footer">
   <div class="container">
     <div class="footer-grid">

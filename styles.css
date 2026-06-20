@@ -1,43 +1,43 @@
-/* ── Variables de color ── */
+/* --- VARIABLES DE COLOR --- */
 :root {
   --azul-profundo:    #000019;
   --azul-tecnologico: #1746ea;
   --celeste:          #1883ed;
   --blanco:           #ffffff;
 
-  /* Superficies */
+  /* superficies */
   --surface-1:  #05061a;
   --surface-2:  #0b0d22;
   --surface-3:  #12142e;
   --surface-4:  #1a1d3d;
 
-  /* Bordes */
+  /* bordes */
   --borde:      rgba(255,255,255,.07);
   --borde-act:  rgba(23,70,234,.55);
 
-  /* Texto */
+  /* texto */
   --txt-main:   #e8ebff;
   --txt-muted:  #7a83b0;
   --txt-accent: #8db4ff;
 
-  /* Gradientes */
+  /* gradientes */
   --grad:       linear-gradient(135deg, var(--azul-tecnologico) 0%, var(--celeste) 100%);
   --grad-soft:  linear-gradient(135deg, rgba(23,70,234,.20) 0%, rgba(24,131,237,.14) 100%);
 
-  /* Sombras */
+  /* sombras */
   --shadow-sm:  0 2px 16px rgba(0,0,0,.4);
   --shadow-md:  0 8px 40px rgba(0,0,0,.5);
   --shadow-lg:  0 24px 80px rgba(0,0,0,.7);
   --glow-blue:  0 0 60px rgba(23,70,234,.25);
 
-  /* Radio */
+  /* radio */
   --r: 16px;
 
-  /* Card de auth (azul sólido) */
+  /* card de auth (azul sólido) */
   --azul-card: #184BEB;
 }
 
-/* ══ RESET ══ */
+/* --- RESET --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
@@ -50,7 +50,7 @@ body {
 img { display: block; max-width: 100%; }
 a   { text-decoration: none; color: inherit; }
 
-/* ══ LAYOUT ══ */
+/* --- LAYOUT --- */
 .container {
   width: 100%; max-width: 1160px;
   margin-inline: auto; padding-inline: 24px;
@@ -58,7 +58,7 @@ a   { text-decoration: none; color: inherit; }
 .section     { padding-block: 100px; }
 .section--alt { background: var(--surface-1); }
 
-/* ══ TIPOGRAFÍA ══ */
+/* --- TIPOGRAFÍA --- */
 h1, h2, h3 {
   font-family: 'Montserrat', sans-serif;
   line-height: 1.15; color: var(--txt-main);
@@ -68,9 +68,9 @@ h2 { font-size: clamp(2rem,  3.5vw, 2.9rem);  font-weight: 800;  letter-spacing:
 h3 { font-size: 1rem; font-weight: 700; }
 p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 
-/* ══ COMPONENTES COMUNES ══ */
+/* --- COMPONENTES COMUNES --- */
 
-/* Tag / chip */
+/* tag / chip */
 .tag {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: 'Montserrat', sans-serif;
@@ -85,7 +85,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   border-radius: 50%; background: var(--grad); flex-shrink: 0;
 }
 
-/* Eyebrow */
+/* eyebrow */
 .eyebrow {
   font-family: 'Montserrat', sans-serif;
   font-size: 11px; font-weight: 800;
@@ -98,7 +98,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   background: var(--grad); border-radius: 2px; flex-shrink: 0;
 }
 
-/* ── Botones ── */
+/* --- BOTONES --- */
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
   font-family: 'Montserrat', sans-serif;
@@ -165,7 +165,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .btn--whatsapp svg { width: 15px; height: 15px; flex-shrink: 0; }
 
-/* ══ NAVBAR ══ */
+/* --- NAVBAR --- */
 .navbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   background: rgba(0,0,20,.80);
@@ -220,7 +220,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   box-shadow: 0 2px 12px rgba(23,70,234,.25);
 }
 
-/* Botones de navbar */
+/* botones de navbar */
 .btn-nav-login {
   display: flex; align-items: center; gap: 7px;
   font-family: 'Montserrat', sans-serif;
@@ -254,7 +254,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .btn-nav-registro svg { width: 13px; height: 13px; }
 
-/* Hamburger */
+/* hamburger */
 .nav-hamburger {
   display: none; flex-direction: column; gap: 5px;
   cursor: pointer; padding: 6px; background: none; border: none;
@@ -264,7 +264,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   background: var(--txt-main); border-radius: 2px; transition: all .25s;
 }
 
-/* Mobile Menu */
+/* mobile menu */
 .mobile-menu {
   display: none; position: fixed;
   top: 68px; left: 0; right: 0; bottom: 0;
@@ -297,7 +297,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .mobile-divider { border: none; border-top: 1px solid var(--borde); margin-block: 8px; }
 
-/* ══ FOOTER ══ */
+/* --- FOOTER --- */
 .footer {
   background: var(--surface-1);
   border-top: 1px solid var(--borde);
@@ -354,7 +354,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .footer-legal a { font-size: 12px; color: var(--txt-muted); transition: color .15s; }
 .footer-legal a:hover { color: var(--txt-accent); }
 
-/* ══ ANIMACIONES ══ */
+/* --- ANIMACIONES --- */
 .reveal {
   opacity: 0; transform: translateY(30px);
   transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1);
@@ -365,9 +365,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .reveal-delay-3 { transition-delay: .3s; }
 .reveal-delay-4 { transition-delay: .4s; }
 
-/* ════════════════════════════════════════
-   INDEX.PHP — HERO
-   ════════════════════════════════════════ */
+/* --- INDEX.PHP: HERO --- */
 .hero {
   padding-top: 150px; padding-bottom: 0;
   position: relative; overflow: visible;
@@ -421,7 +419,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .check-dot svg { width: 10px; height: 10px; color: var(--blanco); }
 
-/* Shade circular hero */
+/* shade circular hero */
 .hero-shade-wrapper {
   position: relative; width: 100%;
   margin-top: -120px; z-index: 2;
@@ -435,7 +433,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   flex-shrink: 0;
 }
 
-/* ── CLIENTES ── */
+/* --- CLIENTES --- */
 .clients {
   padding-block: 56px;
   border-top: 1px solid var(--borde);
@@ -464,7 +462,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .client-logo:hover { transform: scale(1.10); }
 
-/* ── BENEFICIOS ── */
+/* --- BENEFICIOS --- */
 .benefits-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
 .benefits-title { margin-bottom: 18px; }
 .benefits-sub   { font-size: 15px; line-height: 1.8; margin-bottom: 36px; }
@@ -539,7 +537,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .bp-cta:hover { background: rgba(255,255,255,.26); transform: translateY(-2px); }
 .bp-cta svg { width: 14px; height: 14px; }
 
-/* ── CÓMO FUNCIONA ── */
+/* --- CÓMO FUNCIONA --- */
 .how-header       { text-align: center; margin-bottom: 72px; }
 .how-header h2    { margin-bottom: 14px; }
 .how-header .eyebrow { justify-content: center; }
@@ -567,7 +565,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .how-step-title { font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 700; color: var(--txt-main); margin-bottom: 10px; }
 .how-step-text  { font-size: 13px; color: var(--txt-muted); line-height: 1.7; }
 
-/* ── SERVICIOS ── */
+/* --- SERVICIOS --- */
 .services-header {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 32px; align-items: end; margin-bottom: 52px;
@@ -604,7 +602,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .service-card-text  { font-size: 13px; color: var(--txt-muted); line-height: 1.75; }
 .services-cta { text-align: center; }
 
-/* ── PORTAL MOCKUP ── */
+/* --- PORTAL MOCKUP --- */
 .portal-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
 .portal-title { margin-bottom: 16px; }
 .portal-sub   { font-size: 15px; line-height: 1.8; margin-bottom: 36px; }
@@ -663,7 +661,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .pm-status--rep  { background: rgba(201,74,0,.22);  color: #f5a07a; }
 .pm-status--done { background: rgba(26,122,74,.22); color: #5fc98a; }
 
-/* ── DIFERENCIAL ── */
+/* --- DIFERENCIAL --- */
 .diff-header { text-align: center; margin-bottom: 60px; }
 .diff-header h2 { margin-bottom: 14px; }
 .diff-header .eyebrow { justify-content: center; }
@@ -696,7 +694,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .diff-title { font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 800; color: var(--txt-main); margin-bottom: 10px; }
 .diff-text  { font-size: 13px; color: var(--txt-muted); line-height: 1.7; }
 
-/* ── CTA FINAL ── */
+/* --- CTA FINAL --- */
 .cta-section {
   background: var(--azul-profundo); padding-block: 100px;
   position: relative; overflow: hidden;
@@ -730,11 +728,9 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   gap: 14px; flex-wrap: wrap;
 }
 
-/* ════════════════════════════════════════
-   CONSULTA_TICKETS.PHP
-   ════════════════════════════════════════ */
+/* --- CONSULTA_TICKETS.PHP --- */
 
-/* Page Header */
+/* page header */
 .page-header {
   padding-top: 130px; padding-bottom: 56px;
   text-align: center; position: relative; overflow: hidden;
@@ -770,16 +766,16 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .page-header p { font-size: 15px; color: var(--txt-muted); max-width: 480px; margin-inline: auto; }
 
-/* Main content */
+/* main content */
 .main-content { padding-bottom: 80px; background: var(--azul-profundo); }
 
-/* Grid consulta */
+/* grid consulta */
 .ct-grid {
   display: grid; grid-template-columns: 380px 1fr;
   gap: 24px; align-items: start;
 }
 
-/* Panel izquierdo */
+/* panel izquierdo */
 .ct-input-panel {
   background: var(--surface-2); border: 1px solid var(--borde);
   border-radius: 20px; padding: 32px 28px;
@@ -856,7 +852,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .qt-chip:hover { background: rgba(23,70,234,.18); border-color: var(--azul-tecnologico); }
 
-/* Panel derecho */
+/* panel derecho */
 .ct-result-panel { display: flex; flex-direction: column; gap: 20px; }
 
 .result-empty {
@@ -979,7 +975,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .rc-detail-key { font-size: 11px; color: var(--txt-muted); margin-bottom: 4px; }
 .rc-detail-val { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: var(--txt-main); }
 
-/* Features strip */
+/* features strip */
 .features-strip {
   background: var(--surface-1);
   border-top: 1px solid var(--borde); border-bottom: 1px solid var(--borde);
@@ -996,7 +992,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .features-strip-title { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; color: var(--txt-main); margin-bottom: 4px; }
 .features-strip-text  { font-size: 13px; color: var(--txt-muted); line-height: 1.6; }
 
-/* Support CTA */
+/* support cta */
 .support-cta {
   background: var(--azul-profundo); padding: 72px 0;
   position: relative; overflow: hidden;
@@ -1047,9 +1043,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .btn-call:hover { background: rgba(23,70,234,.26); border-color: var(--azul-tecnologico); color: var(--blanco); transform: translateY(-2px); }
 .btn-call svg { width: 16px; height: 16px; }
 
-/* ════════════════════════════════════════
-   LOGIN.PHP & REGISTRO.PHP — AUTH PAGES
-   ════════════════════════════════════════ */
+/* --- LOGIN.PHP Y REGISTRO.PHP: PÁGINAS DE AUTENTICACIÓN --- */
 .page-auth {
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
@@ -1060,7 +1054,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   padding-top: 88px; padding-bottom: 40px;
 }
 
-/* Esferas de fondo */
+/* esferas de fondo */
 .sphere-left {
   position: absolute;
   width: 640px; height: 640px; border-radius: 50%;
@@ -1087,7 +1081,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   background-size: 48px 48px; opacity: .4;
 }
 
-/* Auth Card */
+/* auth card */
 .auth-card {
   position: relative; z-index: 1;
   width: 100%; max-width: 410px;
@@ -1109,7 +1103,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   border-radius: 50%;
 }
 
-/* Isotipo */
+/* isotipo */
 .auth-isotipo { display: flex; justify-content: center; margin-bottom: 18px; }
 .auth-isotipo img {
   height: 50px; width: auto;
@@ -1121,7 +1115,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .auth-isotipo-fallback span { color: rgba(255,255,255,.6); }
 
-/* Auth headings */
+/* auth headings */
 .auth-heading {
   text-align: center; margin-bottom: 6px;
   font-family: 'Montserrat', sans-serif;
@@ -1132,7 +1126,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   color: rgba(255,255,255,.60); margin-bottom: 28px; line-height: 1.55;
 }
 
-/* Alert */
+/* alert */
 .auth-alert {
   display: flex; align-items: center; gap: 9px;
   background: rgba(255,80,50,.18); border: 1px solid rgba(255,110,80,.35);
@@ -1141,7 +1135,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .auth-alert svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-/* Form groups */
+/* form groups */
 .auth-form-group { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
 .auth-form-group label {
   font-family: 'Montserrat', sans-serif;
@@ -1176,7 +1170,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   background: rgba(255,80,50,.10);
 }
 
-/* Password toggle */
+/* password toggle */
 .pw-toggle {
   position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
   background: none; border: none; cursor: pointer; padding: 4px;
@@ -1185,7 +1179,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .pw-toggle:hover { color: rgba(255,255,255,.80); }
 .pw-toggle svg { width: 15px; height: 15px; display: block; }
 
-/* Auth submit button */
+/* auth submit button */
 .btn-auth-submit {
   width: 100%; margin-top: 10px;
   padding: 14px; border-radius: 50px; border: none;
@@ -1203,7 +1197,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .btn-auth-submit:active { transform: translateY(0); }
 .btn-auth-submit svg { width: 15px; height: 15px; }
 
-/* Auth divider */
+/* auth divider */
 .auth-divider {
   display: flex; align-items: center; gap: 12px; margin-block: 20px;
 }
@@ -1211,7 +1205,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .auth-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.14); }
 .auth-divider span { font-size: 11px; color: rgba(255,255,255,.35); white-space: nowrap; }
 
-/* Auth card footer */
+/* auth card footer */
 .auth-card-footer {
   text-align: center; font-size: 12px;
   color: rgba(255,255,255,.50); line-height: 1.8;
@@ -1222,7 +1216,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .auth-card-footer a:hover { color: var(--blanco); border-color: rgba(255,255,255,.5); }
 
-/* ── REGISTRO — extras ── */
+/* --- REGISTRO — EXTRAS --- */
 .form-grid-2col {
   display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px;
 }
@@ -1255,7 +1249,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   color: rgba(255,255,255,.40); white-space: nowrap;
 }
 
-/* Password strength */
+/* password strength */
 .pw-strength { display: flex; gap: 5px; margin-top: 6px; padding: 0 4px; }
 .pw-strength-bar {
   flex: 1; height: 3px; border-radius: 3px;
@@ -1271,7 +1265,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   font-family: 'Montserrat', sans-serif; transition: color .3s;
 }
 
-/* Terms row */
+/* terms row */
 .terms-row {
   display: flex; align-items: flex-start; gap: 10px;
   margin-top: 18px; margin-bottom: 6px;
@@ -1291,9 +1285,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 
 .auth-btn-submit-registro { margin-top: 18px; }
 
-/* ════════════════════════════════════════
-   RESPONSIVE
-   ════════════════════════════════════════ */
+/* --- RESPONSIVE --- */
 @media (max-width: 1024px) {
   .diff-grid   { grid-template-columns: repeat(2,1fr); }
   .how-steps   { grid-template-columns: repeat(2,1fr); gap: 40px; }
@@ -1343,18 +1335,16 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   .auth-card { padding: 28px 18px 26px; border-radius: 20px; }
 }
 
-/* ════════════════════════════════════════
-   DASHBOARD — inicio_clientes, tickets_cliente, nuevo_ticket_cliente
-   ════════════════════════════════════════ */
+/* --- DASHBOARD DE CLIENTE: INICIO_CLIENTES, TICKETS_CLIENTE Y NUEVO_TICKET_CLIENTE --- */
 
-/* ── Contenedor y layout base ── */
+/* --- CONTENEDOR Y LAYOUT BASE --- */
 .dash-container {
   width: 100%; max-width: 1060px;
   margin-inline: auto; padding-inline: 24px;
 }
 .dash-page { padding-top: 64px; }
 
-/* ── Navbar dashboard (altura 64px) ── */
+/* --- NAVBAR DASHBOARD (ALTURA 64PX) --- */
 .dash-navbar { height: 64px; }
 .dash-navbar .nav-inner { height: 64px; }
 .dash-navbar .nav-logo { margin-right: 24px; }
@@ -1366,7 +1356,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   width: 13px; height: 13px; flex-shrink: 0;
 }
 
-/* Botón salir */
+/* botón salir */
 .btn-salir {
   display: flex; align-items: center; gap: 6px;
   font-family: 'Montserrat', sans-serif;
@@ -1382,7 +1372,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .btn-salir svg { width: 13px; height: 13px; }
 
-/* Mobile menu dashboard */
+/* mobile menu dashboard */
 .dash-mobile-menu {
   display: none; position: fixed;
   top: 64px; left: 0; right: 0; bottom: 0;
@@ -1404,7 +1394,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .dash-mobile-menu a svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-/* ── Hero / bienvenida ── */
+/* --- HERO / BIENVENIDA --- */
 .dash-hero {
   background: linear-gradient(160deg, #060720 0%, #0d1035 55%, #060720 100%);
   border-bottom: 1px solid var(--borde);
@@ -1460,7 +1450,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   font-size: 13px; color: var(--txt-muted); line-height: 1.7; max-width: 420px;
 }
 
-/* Botón volver */
+/* botón volver */
 .btn-back {
   display: inline-flex; align-items: center; gap: 7px;
   font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700;
@@ -1476,7 +1466,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .btn-back svg { width: 14px; height: 14px; }
 
-/* ── Secciones internas ── */
+/* --- SECCIONES INTERNAS --- */
 .dash-section { padding: 36px 0 0; }
 .dash-section--bottom { padding-bottom: 56px; }
 
@@ -1486,7 +1476,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   text-transform: uppercase; color: var(--txt-muted); margin-bottom: 16px;
 }
 
-/* ── Accesos rápidos ── */
+/* --- ACCESOS RÁPIDOS --- */
 .qa-grid { display: flex; gap: 12px; flex-wrap: wrap; }
 .qa-btn {
   display: flex; flex-direction: column; align-items: center;
@@ -1519,7 +1509,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   font-size: 11px; font-weight: 700; color: var(--txt-main); white-space: nowrap;
 }
 
-/* ── Panel / tabla ── */
+/* --- PANEL / TABLA --- */
 .dash-panel {
   background: var(--surface-2); border: 1px solid var(--borde);
   border-radius: 16px; overflow: hidden;
@@ -1601,7 +1591,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   font-size: 12px; color: var(--txt-muted); font-weight: 600;
 }
 
-/* ── Filtros ── */
+/* --- FILTROS --- */
 .dash-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .dash-filter-btn {
   font-family: 'Montserrat', sans-serif;
@@ -1619,7 +1609,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   color: var(--blanco); box-shadow: 0 3px 12px rgba(23,70,234,.35);
 }
 
-/* ── Ticket hero card (tickets_cliente) ── */
+/* --- TICKET HERO CARD (TICKETS_CLIENTE) --- */
 .ticket-hero-card {
   position: relative; z-index: 1;
   background: linear-gradient(135deg, rgba(23,70,234,.30) 0%, rgba(24,131,237,.20) 100%);
@@ -1672,7 +1662,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .btn-hero-detail:hover { background: rgba(255,255,255,.24); }
 .btn-hero-detail svg { width: 13px; height: 13px; }
 
-/* ── Modal dashboard (tickets_cliente) ── */
+/* --- MODAL DASHBOARD (TICKETS_CLIENTE) --- */
 .dash-modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,20,.70); backdrop-filter: blur(8px);
@@ -1760,7 +1750,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-modal-total__label { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; opacity: .8; }
 .dash-modal-total__val   { font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
 
-/* Modal éxito (nuevo_ticket) */
+/* modal éxito (nuevo_ticket) */
 .dash-modal-box--success {
   max-width: 380px; padding: 48px 40px 40px; text-align: center;
   border-radius: 24px; overflow: visible;
@@ -1775,7 +1765,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-modal-success-title { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 800; color: var(--txt-main); margin-bottom: 8px; }
 .dash-modal-success-sub   { font-size: 13px; color: var(--txt-muted); line-height: 1.6; margin-bottom: 28px; }
 
-/* ── WhatsApp flotante ── */
+/* --- WHATSAPP FLOTANTE --- */
 .float-wa {
   position: fixed; bottom: 26px; right: 26px; z-index: 200;
   width: 54px; height: 54px; border-radius: 50%; background: #25D366;
@@ -1792,15 +1782,13 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   50%      { box-shadow: 0 6px 28px rgba(37,211,102,.45), 0 0 0 10px rgba(37,211,102,.0); }
 }
 
-/* ════════════════════════════════════════
-   WIZARD — nuevo_ticket_cliente
-   ════════════════════════════════════════ */
+/* --- WIZARD DE NUEVO_TICKET_CLIENTE --- */
 .wizard {
   display: grid; grid-template-columns: 200px 1fr;
   gap: 22px; align-items: start;
 }
 
-/* Panel lateral de pasos */
+/* panel lateral de pasos */
 .wizard-steps-panel {
   background: var(--surface-2); border: 1px solid var(--borde);
   border-radius: 16px; overflow: hidden;
@@ -1839,7 +1827,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .wizard-progress-bar  { height: 3px; background: rgba(255,255,255,.06); }
 .wizard-progress-fill { height: 100%; background: var(--grad); border-radius: 2px; transition: width .3s; }
 
-/* Contenido de cada paso */
+/* contenido de cada paso */
 .wizard-step-content        { display: none; }
 .wizard-step-content.active { display: block; }
 
@@ -1868,7 +1856,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .wizard-divider { border: none; border-top: 1px solid var(--borde); margin: 18px 0; }
 
-/* Formulario del wizard */
+/* formulario del wizard */
 .wizard-form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .wizard-form-group label {
   font-family: 'Montserrat', sans-serif;
@@ -1907,7 +1895,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .wizard-form-group input::placeholder,
 .wizard-form-group textarea::placeholder { color: #3a4470; }
 
-/* Selector de dispositivo */
+/* selector de dispositivo */
 .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0; }
 .device-opt {
   border: 2px solid rgba(255,255,255,.09);
@@ -1938,7 +1926,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .wizard-extra-fields { display: none; margin-top: 20px; }
 .wizard-extra-fields.visible { display: grid; }
 
-/* Lista de servicios */
+/* lista de servicios */
 .wizard-service-list { display: flex; flex-direction: column; gap: 8px; }
 .wizard-service-item {
   display: flex; align-items: center; gap: 12px;
@@ -1959,7 +1947,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .wizard-service-item.selected .wizard-service-item__price,
 .wizard-service-item.sel-add  .wizard-service-item__price { color: var(--txt-accent); }
 
-/* Accordion adicionales */
+/* accordion adicionales */
 .wizard-add-toggle {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 18px; border: 1.5px solid rgba(255,255,255,.08);
@@ -2003,7 +1991,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .wizard-add-panel .wizard-service-item:last-child { border-bottom: none; }
 .wizard-add-panel .wizard-service-item:hover { background: rgba(23,70,234,.08); }
 
-/* Resumen paso 3 */
+/* resumen paso 3 */
 .wizard-summary-layout { display: grid; grid-template-columns: 1fr 1.1fr; gap: 16px; align-items: start; }
 .wizard-summary-left   { display: flex; flex-direction: column; gap: 12px; }
 .wizard-summary-block {
@@ -2033,7 +2021,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .wizard-q-total__amount { font-family: 'Montserrat', sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
 .wizard-quote-note { margin-top: 12px; font-size: 10px; opacity: .55; font-style: italic; text-align: center; line-height: 1.5; }
 
-/* Navegación wizard */
+/* navegación wizard */
 .wizard-nav {
   display: flex; justify-content: space-between; align-items: center;
   padding: 16px 22px; border-top: 1px solid var(--borde);
@@ -2071,9 +2059,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .btn-wizard-next svg,
 .btn-wizard-send svg { width: 14px; height: 14px; }
 
-/* ════════════════════════════════════════
-   RESPONSIVE — Dashboard
-   ════════════════════════════════════════ */
+/* --- RESPONSIVE DEL DASHBOARD --- */
 @media (max-width: 800px) {
   .wizard { grid-template-columns: 1fr; }
   .wizard-steps-panel { position: static; }
@@ -2094,12 +2080,9 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   .span-2         { grid-column: span 1; }
 }
 
-/* ════════════════════════════════════════
-   ADMIN PORTAL — login_staff, registro_staff, dashboard
-   Light mode. Variables adicionales de tema claro.
-   ════════════════════════════════════════ */
+/* --- ADMIN PORTAL: LOGIN_STAFF, REGISTRO_STAFF Y DASHBOARD (TEMA CLARO) --- */
 
-/* ── Variables del tema claro ── */
+/* --- VARIABLES DEL TEMA CLARO --- */
 :root {
   --admin-bg:       #ffffff;
   --admin-surface:  #f4f6fb;
@@ -2112,7 +2095,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   --admin-gray-700: #3a4470;
 }
 
-/* ── Base del admin ── */
+/* --- BASE DEL ADMIN --- */
 .admin-body {
   font-family: 'Montserrat', sans-serif;
   background: var(--admin-bg);
@@ -2122,10 +2105,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .admin-body a { text-decoration: none; color: inherit; }
 
-/* ════════════════════════════════════════
-   ADMIN AUTH — login_staff & registro_staff
-   Layout de dos paneles 50/50
-   ════════════════════════════════════════ */
+/* --- ADMIN AUTH: LOGIN_STAFF Y REGISTRO_STAFF (LAYOUT DE DOS PANELES 50/50) --- */
 
 .admin-split {
   display: grid;
@@ -2133,7 +2113,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   min-height: 100vh;
 }
 
-/* ── Panel oscuro (decorativo) ── */
+/* --- PANEL OSCURO (DECORATIVO) --- */
 .admin-panel--dark {
   background: linear-gradient(145deg, var(--azul-profundo) 0%, #060626 50%, #0c1660 100%);
   display: flex; flex-direction: column;
@@ -2156,7 +2136,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   filter: blur(32px); pointer-events: none;
 }
 
-/* ── Panel claro (formulario) ── */
+/* --- PANEL CLARO (FORMULARIO) --- */
 .admin-panel--light {
   background: var(--admin-bg);
   border-left: 1px solid var(--admin-border2);
@@ -2166,14 +2146,14 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   position: relative;
 }
 
-/* Puntos de fondo decorativo */
+/* puntos de fondo decorativo */
 .admin-panel-dots {
   position: absolute; inset: 0; pointer-events: none;
   background-image: radial-gradient(circle, rgba(255,255,255,.052) 1px, transparent 1px);
   background-size: 36px 36px;
 }
 
-/* Marca / logo en panel oscuro */
+/* marca / logo en panel oscuro */
 .admin-panel__brand { position: relative; z-index: 1; }
 .admin-panel__brand img { height: 34px; width: auto; }
 .admin-brand-fallback {
@@ -2182,10 +2162,10 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   letter-spacing: -.3px; display: none;
 }
 
-/* Centro del panel oscuro */
+/* centro del panel oscuro */
 .admin-panel__center { position: relative; z-index: 1; }
 
-/* Badge del panel */
+/* badge del panel */
 .admin-panel-badge {
   display: inline-flex; align-items: center; gap: 8px;
   background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16);
@@ -2224,7 +2204,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   line-height: 1.8; margin-bottom: 44px; max-width: 380px;
 }
 
-/* Stats en panel login */
+/* stats en panel login */
 .admin-panel-stats { display: flex; gap: 28px; align-items: center; }
 .admin-panel-stat  { display: flex; flex-direction: column; gap: 4px; }
 .admin-panel-stat__val {
@@ -2237,7 +2217,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .admin-stat-sep { width: 1px; height: 36px; background: rgba(255,255,255,.12); }
 
-/* Onboarding steps (registro) */
+/* onboarding steps (registro) */
 .admin-onboarding-steps { display: flex; flex-direction: column; gap: 16px; }
 .admin-onboarding-step  { display: flex; align-items: flex-start; gap: 14px; }
 .admin-step-num {
@@ -2253,17 +2233,17 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .admin-step-desc { font-size: 12px; color: rgba(255,255,255,.44); line-height: 1.6; }
 
-/* Footer del panel oscuro */
+/* footer del panel oscuro */
 .admin-panel__footer {
   position: relative; z-index: 1;
   font-size: 12px; color: rgba(255,255,255,.26);
 }
 
-/* ── Form wrap ── */
+/* --- FORM WRAP --- */
 .admin-form-wrap { width: 100%; max-width: 360px; }
 .admin-form-wrap--wide { max-width: 400px; }
 
-/* Isotipo */
+/* isotipo */
 .admin-form-isotipo { display: flex; justify-content: center; margin-bottom: 26px; }
 .admin-form-isotipo a {
   display: inline-flex; border-radius: 16px;
@@ -2281,7 +2261,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 900; color: var(--blanco);
 }
 
-/* Encabezado del formulario */
+/* encabezado del formulario */
 .admin-form-heading {
   font-family: 'Montserrat', sans-serif;
   font-size: 23px; font-weight: 800; letter-spacing: -.4px;
@@ -2292,7 +2272,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   text-align: center; line-height: 1.65; margin-bottom: 28px;
 }
 
-/* Alertas */
+/* alertas */
 .admin-alert {
   display: flex; align-items: flex-start; gap: 9px;
   border-radius: 12px; padding: 12px 16px;
@@ -2303,12 +2283,12 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .admin-alert--error   { background: #fff5f3; border: 1px solid #fbc8bd; color: #b03020; }
 .admin-alert--success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
 
-/* Fila de dos campos */
+/* fila de dos campos */
 .admin-form-row {
   display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;
 }
 
-/* Form group */
+/* form group */
 .admin-form-group { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
 .admin-form-group label {
   font-family: 'Montserrat', sans-serif;
@@ -2316,7 +2296,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   text-transform: uppercase; color: var(--admin-gray-600);
 }
 
-/* Input wrap */
+/* input wrap */
 .admin-input-wrap { position: relative; }
 .admin-input-ico {
   position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
@@ -2343,7 +2323,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   box-shadow: 0 0 0 3px rgba(224,80,64,.08);
 }
 
-/* Toggle password */
+/* toggle password */
 .admin-pw-toggle {
   position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
   background: none; border: none; cursor: pointer; padding: 4px;
@@ -2352,7 +2332,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .admin-pw-toggle:hover { color: var(--azul-tecnologico); }
 .admin-pw-toggle svg { width: 15px; height: 15px; display: block; }
 
-/* Hint de dominio */
+/* hint de dominio */
 .admin-domain-hint {
   display: none; align-items: center; gap: 7px;
   background: #fffbea; border: 1px solid #f5d97a;
@@ -2363,7 +2343,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .admin-domain-hint.visible { display: flex; }
 .admin-domain-hint svg { width: 13px; height: 13px; flex-shrink: 0; color: #c49a00; }
 
-/* Indicador de fuerza de contraseña */
+/* indicador de fuerza de contraseña */
 .admin-pw-strength {
   display: flex; gap: 5px; margin-top: 8px; align-items: center;
 }
@@ -2382,7 +2362,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .admin-strength-3 .admin-pw-strength__bar:nth-child(-n+3) { background: #3b82f6; }
 .admin-strength-4 .admin-pw-strength__bar { background: #22c55e; }
 
-/* Botón submit admin */
+/* botón submit admin */
 .admin-btn-submit {
   width: 100%; margin-top: 8px;
   padding: 14px; border-radius: 50px; border: none;
@@ -2397,7 +2377,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .admin-btn-submit:active { transform: translateY(0); }
 .admin-btn-submit svg { width: 15px; height: 15px; }
 
-/* Divisor */
+/* divisor */
 .admin-btn-divider {
   display: flex; align-items: center; gap: 12px; margin: 14px 0;
 }
@@ -2410,7 +2390,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
 }
 
-/* Botón outline (registro) */
+/* botón outline (registro) */
 .admin-btn-outline {
   width: 100%;
   padding: 13px; border-radius: 50px;
@@ -2428,7 +2408,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .admin-btn-outline svg { width: 15px; height: 15px; }
 
-/* Nota TI */
+/* nota ti */
 .admin-ti-note {
   margin-top: 20px; background: var(--admin-surface2);
   border: 1px solid var(--admin-border); border-radius: 14px;
@@ -2450,7 +2430,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .admin-ti-note__text a:hover { border-color: var(--azul-tecnologico); }
 
-/* Volver al login */
+/* volver al login */
 .admin-back-link {
   display: flex; align-items: center; justify-content: center; gap: 6px;
   margin-top: 18px; font-size: 12px; color: var(--admin-gray-400);
@@ -2459,7 +2439,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .admin-back-link svg { width: 13px; height: 13px; }
 .admin-back-link:hover { color: var(--azul-tecnologico); }
 
-/* ── Responsive admin auth ── */
+/* --- RESPONSIVE ADMIN AUTH --- */
 @media (max-width: 960px) {
   .admin-split         { grid-template-columns: 1fr; }
   .admin-panel--dark   { display: none; }
@@ -2471,17 +2451,15 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   .admin-form-row      { grid-template-columns: 1fr; }
 }
 
-/* ════════════════════════════════════════
-   DASHBOARD ADMIN — dashboard.php
-   ════════════════════════════════════════ */
+/* --- DASHBOARD ADMIN: DASHBOARD.PHP --- */
 
 .admin-body--dashboard { background: var(--admin-bg); }
 
-/* ── Shell ── */
+/* --- SHELL --- */
 .dash-shell { display: flex; min-height: 100vh; }
 .dash-main  { flex: 1; display: flex; flex-direction: column; min-width: 0; width: 0; background: var(--admin-bg); }
 
-/* ── Sidebar ── */
+/* --- SIDEBAR --- */
 .dash-sidebar {
   width: 80px; min-width: 80px;
   background: linear-gradient(180deg, var(--blanco) 0%, #edf1fd 100%);
@@ -2537,7 +2515,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-sidebar__logout:hover { background: rgba(255,255,255,.8); color: #c94a00; }
 .dash-sidebar__logout svg { width: 18px; height: 18px; }
 
-/* ── Header ── */
+/* --- HEADER --- */
 .dash-header {
   background: var(--blanco); border-bottom: 1px solid var(--admin-border);
   padding: 0 28px; height: 65px;
@@ -2559,10 +2537,10 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-header__username { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: var(--admin-navy); line-height: 1.1; }
 .dash-header__role     { font-size: 11px; font-weight: 500; color: #a0a8bb; }
 
-/* ── Contenido de página ── */
+/* --- CONTENIDO DE PÁGINA --- */
 .dash-page-content { padding: 28px; flex: 1; }
 
-/* ── Layout dos columnas ── */
+/* --- LAYOUT DOS COLUMNAS --- */
 .dash-layout {
   display: grid; grid-template-columns: 1fr 300px;
   gap: 22px; align-items: start;
@@ -2570,7 +2548,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-col-left  { display: flex; flex-direction: column; gap: 18px; }
 .dash-col-right { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 88px; }
 
-/* ── KPI cards ── */
+/* --- KPI CARDS --- */
 .dash-kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
 
 .dash-kpi-card {
@@ -2615,7 +2593,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-kpi-card__sub { font-size: 11px; font-weight: 500; color: #a0a8bb; margin-top: 5px; }
 .dash-kpi-card--highlight .dash-kpi-card__sub { color: rgba(255,255,255,.45); }
 
-/* ── Panel block ── */
+/* --- PANEL BLOCK --- */
 .dash-panel-block {
   background: var(--admin-bg); border: 1px solid var(--admin-border);
   border-radius: 16px; overflow: hidden;
@@ -2637,7 +2615,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .dash-panel-block__link:hover { text-decoration: underline; }
 
-/* ── Tabla admin ── */
+/* --- TABLA ADMIN --- */
 .dash-admin-table { width: 100%; border-collapse: collapse; min-width: 520px; }
 .dash-admin-table th {
   padding: 10px 18px;
@@ -2658,7 +2636,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-admin-t-svc     { font-size: 12px; color: #7a8096; }
 .dash-admin-t-fecha   { font-size: 11px; color: #a0a8bb; white-space: nowrap; }
 
-/* Badges de estado (light mode) */
+/* badges de estado (light mode) */
 .dash-admin-badge {
   display: inline-block;
   font-family: 'Montserrat', sans-serif;
@@ -2671,10 +2649,10 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-badge--completado  { background: #e6f8f0; color: #1a7a4a;  border-color: #a8dfc4; }
 .dash-badge--default     { background: #f4f6fb; color: #7a8096;  border-color: #e6e9f0; }
 
-/* ── Bottom row ── */
+/* --- BOTTOM ROW --- */
 .dash-bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-/* Stock */
+/* stock */
 .dash-stock-item {
   display: flex; align-items: center; justify-content: space-between;
   padding: 11px 18px; border-bottom: 1px solid var(--admin-border); gap: 10px;
@@ -2689,7 +2667,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-stock--min { background: #fff0eb; color: #c94a00; }
 .dash-stock--low { background: #fff8e6; color: #9a6c00; }
 
-/* Donut */
+/* donut */
 .dash-donut-wrap {
   padding: 18px 20px; display: flex; flex-direction: column;
   align-items: center; gap: 14px;
@@ -2703,7 +2681,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-legend-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .dash-legend-pct   { margin-left: auto; font-weight: 800; color: #7a8096; }
 
-/* ── Welcome card ── */
+/* --- WELCOME CARD --- */
 .dash-welcome-card {
   background: var(--grad); border-radius: 16px; padding: 24px 22px;
   color: var(--blanco); position: relative; overflow: hidden;
@@ -2745,7 +2723,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-welcome-card__btn:hover { background: rgba(255,255,255,.26); }
 .dash-welcome-card__btn svg { width: 14px; height: 14px; }
 
-/* ── Resumen del día ── */
+/* --- RESUMEN DEL DÍA --- */
 .dash-day-summary { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
 .dash-day-item {
   display: flex; align-items: center; justify-content: space-between;
@@ -2762,7 +2740,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-day-item__val--green   { color: #1a7a4a; }
 .dash-day-item__val--warn    { color: #c94a00; }
 
-/* ── Responsive dashboard ── */
+/* --- RESPONSIVE DASHBOARD --- */
 @media (max-width: 1150px) {
   .dash-layout   { grid-template-columns: 1fr; }
   .dash-col-right { position: static; }
@@ -2785,11 +2763,9 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   .dash-kpi-row      { grid-template-columns: 1fr 1fr; }
 }
 
-/* ════════════════════════════════════════
-   TICKETS.PHP — estilos específicos
-   ════════════════════════════════════════ */
+/* --- TICKETS.PHP: ESTILOS ESPECÍFICOS --- */
 
-/* Page header compartido con inventario y nuevo_ticket */
+/* page header compartido con inventario y nuevo_ticket */
 .tk-page-header {
   display: flex; align-items: flex-start; justify-content: space-between;
   margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
@@ -2801,21 +2777,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .tk-page-subtitle { font-size: 13px; color: var(--admin-gray-400); }
 
-/* Botón "Registrar / Nuevo" compartido 
-.dash-btn-new {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: var(--admin-navy); color: var(--blanco);
-  font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700;
-  padding: 10px 20px; border-radius: 50px; border: none;
-  cursor: pointer; text-decoration: none; white-space: nowrap;
-  box-shadow: 0 3px 10px rgba(0,0,25,.22);
-  transition: background .15s, transform .1s;
-}
-.dash-btn-new:hover { background: var(--azul-tecnologico); transform: translateY(-1px); }
-.dash-btn-new svg   { width: 14px; height: 14px; }
-*/
-
-/* DASH BTN NEW - VERSIÓN CORREGIDA */
+/* --- BOTÓN "REGISTRAR / NUEVO" (DASH-BTN-NEW) --- */
 .dash-btn-new,
 .dash-btn-new:link,
 .dash-btn-new:visited {
@@ -2839,7 +2801,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 
 .dash-btn-new svg { width: 14px; height: 14px; }
 
-/* Botón volver (nuevo_ticket) */
+/* botón volver (nuevo_ticket) */
 .dash-btn-back {
   display: inline-flex; align-items: center; gap: 7px;
   background: var(--blanco); color: var(--admin-gray-400);
@@ -2851,13 +2813,13 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .dash-btn-back:hover { border-color: var(--azul-tecnologico); color: var(--azul-tecnologico); }
 .dash-btn-back svg { width: 14px; height: 14px; }
 
-/* Link en breadcrumb */
+/* link en breadcrumb */
 .dash-header__breadcrumb-link {
   color: var(--admin-gray-400); text-decoration: none; transition: color .15s;
 }
 .dash-header__breadcrumb-link:hover { color: var(--azul-tecnologico); }
 
-/* Filtros de tickets */
+/* filtros de tickets */
 .tk-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .tk-filter-btn {
   font-family: 'Montserrat', sans-serif;
@@ -2867,23 +2829,23 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   background: var(--blanco); color: var(--admin-gray-400);
   text-decoration: none; transition: all .15s; cursor: pointer;
 }
-/* Todos */
+/* todos */
 .tk-filter--todos:hover                    { border-color: var(--azul-tecnologico); color: var(--azul-tecnologico); }
 .tk-filter--todos.tk-filter-btn--active    { background: var(--azul-tecnologico); border-color: var(--azul-tecnologico); color: var(--blanco); }
-/* Recibido */
+/* recibido */
 .tk-filter--recibido:hover                 { border-color: #e09a00; color: #9a6c00; }
 .tk-filter--recibido.tk-filter-btn--active { background: #f5a623; border-color: #f5a623; color: var(--blanco); }
-/* Diagnóstico */
+/* diagnóstico */
 .tk-filter--diagnostico:hover                    { border-color: var(--azul-tecnologico); color: var(--azul-tecnologico); }
 .tk-filter--diagnostico.tk-filter-btn--active    { background: var(--azul-tecnologico); border-color: var(--azul-tecnologico); color: var(--blanco); }
-/* Reparación */
+/* reparación */
 .tk-filter--reparacion:hover                   { border-color: #c94a00; color: #c94a00; }
 .tk-filter--reparacion.tk-filter-btn--active   { background: #e85d04; border-color: #e85d04; color: var(--blanco); }
-/* Completado */
+/* completado */
 .tk-filter--completado:hover                   { border-color: #1a7a4a; color: #1a7a4a; }
 .tk-filter--completado.tk-filter-btn--active   { background: #1a7a4a; border-color: #1a7a4a; color: var(--blanco); }
 
-/* Celdas específicas de tickets */
+/* celdas específicas de tickets */
 .tk-cliente-cell   { display: flex; align-items: center; gap: 9px; }
 .tk-cliente-avatar {
   width: 30px; height: 30px; border-radius: 50%;
@@ -2895,7 +2857,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .tk-marca-tipo     { font-size: 11px; color: var(--admin-gray-400); }
 .tk-marca-nombre   { font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--admin-navy); }
 
-/* Select de estado en tabla tickets */
+/* select de estado en tabla tickets */
 .tk-estado-select {
   font-family: 'Montserrat', sans-serif;
   font-size: 12px; font-weight: 600;
@@ -2906,23 +2868,21 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   background-repeat: no-repeat; background-position: right 9px center;
   background-size: 11px 11px; transition: background-color .2s, color .2s, border-color .2s;
 }
-/* Reutiliza los colores de dash-badge */
+/* reutiliza los colores de dash-badge */
 .tk-estado-select.dash-badge--recibido    { background-color: #fff8e6; color: #9a6c00;  border-color: #f0dfa0; }
 .tk-estado-select.dash-badge--diagnostico { background-color: #edf1fd; color: #1746EA;  border-color: #c4d0f8; }
 .tk-estado-select.dash-badge--reparacion  { background-color: #fff0eb; color: #c94a00;  border-color: #f5c4a8; }
 .tk-estado-select.dash-badge--completado  { background-color: #e6f8f0; color: #1a7a4a;  border-color: #a8dfc4; }
 .tk-estado-select.dash-badge--default     { background-color: var(--admin-surface); color: #7a8096; border-color: var(--admin-border); }
 
-/* ════════════════════════════════════════
-   NUEVO_TICKET.PHP — wizard staff
-   ════════════════════════════════════════ */
+/* --- NUEVO_TICKET.PHP: WIZARD STAFF --- */
 
 .ntk-wizard {
   display: grid; grid-template-columns: 220px 1fr;
   gap: 24px; align-items: start;
 }
 
-/* Panel lateral de pasos */
+/* panel lateral de pasos */
 .ntk-steps-panel {
   background: var(--blanco); border: 1px solid var(--admin-border);
   border-radius: 16px; overflow: hidden;
@@ -2965,7 +2925,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   border-radius: 2px; transition: width .3s ease;
 }
 
-/* Contenido de pasos */
+/* contenido de pasos */
 .ntk-step-content        { display: none; }
 .ntk-step-content.active { display: block; }
 
@@ -2987,7 +2947,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ntk-step-card__sub      { font-size: 11px; color: var(--admin-gray-400); margin-top: 2px; }
 .ntk-step-card__body     { padding: 24px; }
 
-/* Formulario del wizard */
+/* formulario del wizard */
 .ntk-form-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .ntk-span-2      { grid-column: span 2; }
 .ntk-form-group  { display: flex; flex-direction: column; gap: 6px; }
@@ -2999,7 +2959,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ntk-label-opt { font-size: 10px; font-weight: 500; color: #c0c8d8; text-transform: none; letter-spacing: 0; margin-left: 3px; }
 .ntk-req       { color: #c94a00; }
 
-/* Inputs reutilizables */
+/* inputs reutilizables */
 .ntk-input {
   font-family: 'Montserrat', sans-serif;
   width: 100%; padding: 11px 16px;
@@ -3040,7 +3000,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px;
 }
 
-/* Selector de dispositivo */
+/* selector de dispositivo */
 .ntk-device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px; }
 .ntk-device-opt {
   border: none; border-radius: 14px; padding: 22px 12px 18px;
@@ -3071,7 +3031,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ntk-extra-fields { display: none; margin-top: 18px; }
 .ntk-extra-fields.visible { display: grid; }
 
-/* Lista de servicios */
+/* lista de servicios */
 .ntk-service-list { display: flex; flex-direction: column; gap: 8px; }
 .ntk-service-item {
   display: flex; align-items: center; gap: 12px;
@@ -3090,7 +3050,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ntk-service-item__name  { flex: 1; font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; color: var(--admin-navy); }
 .ntk-service-item__price { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; color: var(--admin-gray-400); white-space: nowrap; }
 
-/* Accordion adicionales */
+/* accordion adicionales */
 .ntk-add-toggle {
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 18px; border: 1.5px solid var(--admin-border);
@@ -3117,7 +3077,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ntk-add-panel .ntk-service-item:last-child { border-bottom: none; }
 .ntk-add-panel .ntk-service-item:hover { background: rgba(23,70,234,.05); }
 
-/* Resumen paso 4 */
+/* resumen paso 4 */
 .ntk-summary-layout { display: grid; grid-template-columns: 1fr 1.1fr; gap: 16px; align-items: start; }
 .ntk-summary-left   { display: flex; flex-direction: column; gap: 12px; }
 .ntk-summary-block {
@@ -3146,7 +3106,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ntk-q-total__label  { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700; opacity: .9; }
 .ntk-q-total__amount { font-family: 'Montserrat', sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
 
-/* Navegación wizard */
+/* navegación wizard */
 .ntk-step-nav {
   display: flex; justify-content: space-between; align-items: center;
   padding: 18px 24px; border-top: 1px solid var(--admin-border);
@@ -3175,7 +3135,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ntk-btn-finish:hover { background: #145c38; transform: translateY(-1px); }
 .ntk-btn-prev svg, .ntk-btn-next svg, .ntk-btn-finish svg { width: 14px; height: 14px; }
 
-/* Modal éxito nuevo_ticket */
+/* modal éxito nuevo_ticket */
 .ntk-modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,25,.45); backdrop-filter: blur(6px);
@@ -3207,11 +3167,9 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .ntk-modal-btn:hover { background: #1238c2; transform: translateY(-1px); }
 
-/* ════════════════════════════════════════
-   INVENTARIO.PHP — estilos específicos
-   ════════════════════════════════════════ */
+/* --- INVENTARIO.PHP: ESTILOS ESPECÍFICOS --- */
 
-/* Filtros y buscador */
+/* filtros y buscador */
 .inv-filters-bar {
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
@@ -3238,7 +3196,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .inv-search-box input::placeholder { color: #c4c9d8; }
 .inv-search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--admin-gray-400); pointer-events: none; }
 
-/* Celdas de producto */
+/* celdas de producto */
 .inv-prod-cell { display: flex; align-items: center; gap: 12px; }
 .inv-prod-icon {
   width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
@@ -3248,7 +3206,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .inv-prod-name { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: var(--admin-navy); line-height: 1.2; }
 .inv-prod-id   { font-size: 10px; font-weight: 600; color: #b0b8cc; margin-top: 1px; }
 
-/* Badges de categoría */
+/* badges de categoría */
 .inv-cat-badge {
   display: inline-flex; align-items: center; gap: 5px;
   font-family: 'Montserrat', sans-serif;
@@ -3262,7 +3220,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 
 .inv-precio { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; color: var(--admin-navy); }
 
-/* Badges de stock */
+/* badges de stock */
 .inv-stock-badge {
   display: inline-flex; align-items: center;
   font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700;
@@ -3272,7 +3230,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .inv-stock--low { background: #fff8e6; color: #9a6c00; }
 .inv-stock--min { background: #fff0eb; color: #c94a00; }
 
-/* Control de cantidad */
+/* control de cantidad */
 .inv-qty-control { display: flex; align-items: center; gap: 6px; }
 .inv-qty-btn {
   width: 28px; height: 28px; border-radius: 50%;
@@ -3300,7 +3258,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .inv-btn-update:hover { opacity: .88; transform: translateY(-1px); }
 .inv-btn-update svg   { width: 13px; height: 13px; }
 
-/* Paginación */
+/* paginación */
 .inv-pagination { display: flex; align-items: center; gap: 6px; }
 .inv-pag-btn {
   display: inline-flex; align-items: center; gap: 5px;
@@ -3313,7 +3271,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .inv-pag-btn svg { width: 12px; height: 12px; }
 .inv-pag-info { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; color: var(--admin-gray-400); padding: 0 4px; }
 
-/* Modal inventario */
+/* modal inventario */
 .inv-modal-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,25,.35); backdrop-filter: blur(4px);
@@ -3371,7 +3329,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .inv-btn-save:hover { opacity: .88; transform: translateY(-1px); }
 
-/* ── Responsive nuevas páginas ── */
+/* --- RESPONSIVE NUEVAS PÁGINAS --- */
 @media (max-width: 1100px) { .ntk-summary-layout { grid-template-columns: 1fr; } }
 @media (max-width: 900px)  { .ntk-wizard { grid-template-columns: 1fr; } .ntk-steps-panel { position: static; } }
 @media (max-width: 700px)  {
@@ -3383,17 +3341,15 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   .inv-modal-field--full { grid-column: span 1; }
 }
 
-/* ════════════════════════════════════════
-   VENTAS.PHP — estilos específicos
-   ════════════════════════════════════════ */
+/* --- VENTAS.PHP: ESTILOS ESPECÍFICOS --- */
 
-/* Fila de gráfico + donut */
+/* fila de gráfico + donut */
 .vt-charts-row {
   display: grid; grid-template-columns: 1fr 300px;
   gap: 16px; margin-bottom: 24px; align-items: start;
 }
 
-/* Cabecera del bloque de gráfico */
+/* cabecera del bloque de gráfico */
 .vt-chart-header {
   display: flex; align-items: flex-start; justify-content: space-between;
   margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
@@ -3401,7 +3357,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .vt-chart-title { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; color: var(--admin-navy); }
 .vt-chart-sub   { font-size: 11px; color: var(--admin-gray-400); font-weight: 500; margin-top: 2px; }
 
-/* Selector de período */
+/* selector de período */
 .vt-period-selector {
   display: flex; background: var(--admin-surface); border-radius: 50px; padding: 3px; gap: 2px;
 }
@@ -3414,7 +3370,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .vt-period-btn.active { background: var(--azul-tecnologico); color: var(--blanco); box-shadow: 0 2px 8px rgba(23,70,234,.25); }
 .vt-period-btn:not(.active):hover { background: rgba(23,70,234,.07); color: var(--azul-tecnologico); }
 
-/* Gráfico de barras */
+/* gráfico de barras */
 .vt-chart-inner    { display: flex; gap: 0; align-items: stretch; }
 .vt-y-axis {
   display: flex; flex-direction: column; justify-content: space-between;
@@ -3475,7 +3431,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   opacity: 1; transform: translateX(-50%) translateY(-8px);
 }
 
-/* Donut de métodos de pago */
+/* donut de métodos de pago */
 .vt-donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .vt-donut-svg-wrap { position: relative; width: 120px; height: 120px; }
 .vt-donut-svg-wrap svg { width: 120px; height: 120px; transform: rotate(-90deg); }
@@ -3492,7 +3448,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .vt-leg-val  { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 800; color: var(--admin-navy); }
 .vt-leg-pct  { font-size: 10px; font-weight: 600; color: var(--admin-gray-400); margin-left: 3px; }
 
-/* Celdas de tabla ventas */
+/* celdas de tabla ventas */
 .vt-cliente-nombre { font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 13px; line-height: 1.2; }
 .vt-cliente-ticket { font-family: 'Montserrat', sans-serif; font-size: 10px; color: var(--admin-gray-400); font-weight: 600; }
 .vt-detalle-svc    { font-family: 'Montserrat', sans-serif; font-weight: 700; color: var(--admin-navy); font-size: 12px; }
@@ -3500,11 +3456,9 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .vt-total          { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; color: var(--admin-navy); white-space: nowrap; }
 .vt-metodo         { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; color: var(--admin-navy); }
 
-/* ════════════════════════════════════════
-   NUEVA_VENTA.PHP — estilos específicos
-   ════════════════════════════════════════ */
+/* --- NUEVA_VENTA.PHP: ESTILOS ESPECÍFICOS --- */
 
-/* Layout dos columnas */
+/* layout dos columnas */
 .nv-content-grid {
   display: grid; grid-template-columns: 1fr 340px;
   gap: 22px; align-items: start;
@@ -3512,7 +3466,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .nv-sticky-right { position: sticky; top: 93px; }
 .nv-hidden { display: none !important; }
 
-/* Cards de formulario */
+/* cards de formulario */
 .nv-card {
   background: var(--blanco); border: 1px solid var(--admin-border);
   border-radius: 16px; padding: 24px; margin-bottom: 16px;
@@ -3528,7 +3482,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .nv-card__title  { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; color: var(--admin-navy); }
 .nv-card__sub    { font-size: 11px; font-weight: 500; color: var(--admin-gray-400); margin-top: 1px; }
 
-/* Selector tipo de venta */
+/* selector tipo de venta */
 .nv-vtype-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .nv-vtype-opt {
   border: none; border-radius: 14px; padding: 22px 16px 18px;
@@ -3556,7 +3510,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .nv-vtype-opt:hover .nv-vtype-opt__desc    { color: var(--azul-tecnologico); }
 .nv-vtype-opt.selected .nv-vtype-opt__desc { color: rgba(255,255,255,.60); }
 
-/* Ticket info pill */
+/* ticket info pill */
 .nv-ticket-info {
   display: none; align-items: center; gap: 10px; margin-top: 14px;
   background: linear-gradient(90deg,#edf1fd,#e8f0ff);
@@ -3572,7 +3526,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .nv-ticket-info__value { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: var(--admin-navy); margin-top: 1px; }
 .nv-ticket-info__price { margin-left: auto; font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 800; color: var(--azul-tecnologico); white-space: nowrap; }
 
-/* Lista de productos */
+/* lista de productos */
 .nv-prod-list { display: flex; flex-direction: column; gap: 8px; }
 .nv-prod-row {
   display: flex; align-items: center; gap: 10px;
@@ -3623,7 +3577,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .nv-btn-add-prod:disabled { opacity: .45; cursor: not-allowed; }
 .nv-btn-add-prod:disabled:hover { border-color: var(--admin-border2); color: inherit; }
 
-/* Panel resumen (quote card) */
+/* panel resumen (quote card) */
 .nv-quote-card {
   background: var(--grad); border-radius: 20px; padding: 26px;
   color: var(--blanco); box-shadow: 0 12px 40px rgba(23,70,234,.30);
@@ -3659,7 +3613,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .nv-quote-total__label   { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; opacity: .85; }
 .nv-quote-total__amount  { font-family: 'Montserrat', sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
 
-/* Método de pago */
+/* método de pago */
 .nv-metodo-title {
   font-family: 'Montserrat', sans-serif;
   font-size: 11px; font-weight: 700; letter-spacing: .07em;
@@ -3684,7 +3638,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .nv-btn-create:hover { background: #edf1fd; transform: translateY(-1px); }
 
-/* Modal de éxito */
+/* modal de éxito */
 .nv-modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,25,.45); backdrop-filter: blur(6px);
@@ -3698,7 +3652,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .nv-modal-method { font-size: 12px; font-weight: 600; color: var(--admin-gray-400); margin-bottom: 28px; }
 
-/* Botones del modal de éxito: mismo ancho, jerarquía primario/secundario */
+/* botones del modal de éxito: mismo ancho, jerarquía primario/secundario */
 .nv-modal-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 700;
@@ -3721,7 +3675,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .nv-modal-btn--secondary:hover { border-color: var(--azul-tecnologico); color: var(--azul-tecnologico); transform: translateY(-1px); }
 
-/* ── Responsive ── */
+/* --- RESPONSIVE --- */
 @media (max-width: 1100px) { .vt-charts-row { grid-template-columns: 1fr; } }
 @media (max-width: 960px)  { .nv-content-grid { grid-template-columns: 1fr; } .nv-sticky-right { position: static; } }
 @media (max-width: 700px)  {
@@ -3744,12 +3698,9 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 
 
 
-/* ════════════════════════════════════════
-   NUEVA_VENTA.PHP — Sección Datos del Dispositivo / Detalles del Equipo
-   Reglas nuevas. Añadir al final de styles.css (antes del bloque Responsive).
-   ════════════════════════════════════════ */
+/* --- NUEVA_VENTA.PHP: SECCIÓN DATOS DEL DISPOSITIVO / DETALLES DEL EQUIPO --- */
 
-/* ── Bloque de datos del dispositivo ── */
+/* --- BLOQUE DE DATOS DEL DISPOSITIVO --- */
 .nv-device-section {
   padding: 4px 0;
 }
@@ -3757,7 +3708,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   padding-top: 0;
 }
 
-/* Título de sub-sección */
+/* título de sub-sección */
 .nv-device-section__title {
   display: flex; align-items: center; gap: 7px;
   font-family: 'Montserrat', sans-serif;
@@ -3767,19 +3718,19 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .nv-device-section__title svg { width: 14px; height: 14px; color: var(--azul-tecnologico); flex-shrink: 0; }
 
-/* Cabecera de la sección Detalles (título + botones) */
+/* cabecera de la sección detalles (título + botones) */
 .nv-device-section__head {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 14px; gap: 10px; flex-wrap: wrap;
 }
 .nv-device-section__head .nv-device-section__title { margin-bottom: 0; }
 
-/* Grid de info de ticket (2 columnas) */
+/* grid de info de ticket (2 columnas) */
 .nv-device-info-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px;
 }
 
-/* Item de dato */
+/* item de dato */
 .nv-device-info-item {
   display: flex; flex-direction: column; gap: 3px;
   background: var(--admin-surface); border-radius: 10px;
@@ -3802,13 +3753,13 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   color: var(--admin-gray-400); font-style: italic; font-weight: 500;
 }
 
-/* Divisor entre secciones */
+/* divisor entre secciones */
 .nv-device-divider {
   border: none; border-top: 1px dashed var(--admin-border);
   margin: 18px 0;
 }
 
-/* Badge tipo de equipo */
+/* badge tipo de equipo */
 .nv-equipo-type-badge {
   display: inline-flex; align-items: center; gap: 6px;
   background: linear-gradient(90deg, rgba(23,70,234,.08), rgba(24,131,237,.06));
@@ -3819,7 +3770,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .nv-equipo-type-badge svg { width: 13px; height: 13px; flex-shrink: 0; }
 
-/* ── Botones de edición del equipo ── */
+/* --- BOTONES DE EDICIÓN DEL EQUIPO --- */
 .nv-equipo-edit-btns { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
 .nv-equipo-btn {
@@ -3832,7 +3783,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .nv-equipo-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
 
-/* Botón Editar */
+/* botón editar */
 .nv-equipo-btn--edit {
   border-color: var(--admin-border2);
   background: var(--admin-surface);
@@ -3844,7 +3795,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   color: var(--azul-tecnologico);
 }
 
-/* Botón Guardar */
+/* botón guardar */
 .nv-equipo-btn--save {
   border-color: #22c55e;
   background: rgba(34,197,94,.08);
@@ -3856,7 +3807,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   color: #14532d;
 }
 
-/* Botón Cancelar */
+/* botón cancelar */
 .nv-equipo-btn--cancel {
   border-color: var(--admin-border2);
   background: transparent;
@@ -3868,7 +3819,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   color: #b91c1c;
 }
 
-/* ── Modo edición: formulario dentro del panel ── */
+/* --- MODO EDICIÓN: FORMULARIO DENTRO DEL PANEL --- */
 #nv-equipo-edit {
   display: flex; flex-direction: column; gap: 0;
 }
@@ -3879,7 +3830,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   margin-bottom: 6px;
 }
 
-/* Hint de edición */
+/* hint de edición */
 .nv-edit-hint {
   display: flex; align-items: flex-start; gap: 6px;
   font-size: 11px; font-weight: 500; color: var(--admin-gray-400);
@@ -3887,7 +3838,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .nv-edit-hint svg { width: 12px; height: 12px; flex-shrink: 0; margin-top: 1px; color: #a0b4f8; }
 
-/* Animación suave al mostrar/ocultar el bloque de dispositivo */
+/* animación suave al mostrar/ocultar el bloque de dispositivo */
 #nv-bloque-dispositivo {
   animation: nv-slide-in .22s ease;
 }
@@ -3896,17 +3847,15 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Ocultar campos solo-laptop por defecto (JS los mostrará según tipo) */
+/* ocultar campos solo-laptop por defecto (js los mostrará según tipo) */
 .nv-field-laptop-only { display: none; }
 .nv-field-laptop-only.nv-visible { display: flex; }      /* info-item uses flex */
 .nv-field-laptop-only.nv-form-visible { display: block; } /* ntk-form-group uses block */
 
 
-/* ════════════════════════════════════════════════════════════
-   MULTI-STEP FORMS — registro.php & registro_staff.php
-   ════════════════════════════════════════════════════════════ */
+/* --- MULTI-STEP FORMS: REGISTRO.PHP Y REGISTRO_STAFF.PHP --- */
 
-/* ── Ocultar/mostrar paneles de paso ── */
+/* --- OCULTAR/MOSTRAR PANELES DE PASO --- */
 .ms-panel { width: 100%; animation: ms-fade-in .28s ease; }
 .ms-panel--hidden { display: none !important; }
 @keyframes ms-fade-in {
@@ -3921,7 +3870,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   80%     { transform: translateX(4px); }
 }
 
-/* ── Stepper base (versión oscura — registro.php) ── */
+/* --- STEPPER BASE (VERSIÓN OSCURA — REGISTRO.PHP) --- */
 .ms-stepper {
   display: flex; align-items: center; gap: 0;
   margin-bottom: 26px; padding: 0 2px;
@@ -3936,7 +3885,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   display: flex; align-items: center; justify-content: center;
   transition: all .25s; flex-shrink: 0; overflow: hidden;
 }
-/* FIX CRÍTICO: tamaño fijo para SVG dentro del dot */
+/* fix crítico: tamaño fijo para svg dentro del dot */
 .ms-step__dot svg {
   width: 16px !important; height: 16px !important;
   min-width: 16px; min-height: 16px;
@@ -3966,7 +3915,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .ms-connector--done { background: #22c55e; }
 
-/* ── Stepper variante LIGHT (registro_staff.php) ── */
+/* --- STEPPER VARIANTE LIGHT (REGISTRO_STAFF.PHP) --- */
 .ms-stepper--light .ms-step__dot {
   border-color: rgba(0,0,50,.12); background: rgba(0,0,50,.04);
 }
@@ -3987,7 +3936,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ms-connector--light { background: rgba(0,0,50,.10); }
 .ms-connector--light.ms-connector--done { background: #22c55e; }
 
-/* ── Bloque pregunta de seguridad (dark) ── */
+/* --- BLOQUE PREGUNTA DE SEGURIDAD (DARK) --- */
 .ms-sq-block {
   display: flex; gap: 12px; align-items: flex-start;
   background: rgba(255,255,255,.05);
@@ -4006,7 +3955,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ms-sq-fields {
   flex: 1; display: flex; flex-direction: column; gap: 8px;
 }
-/* FIX: SVG dentro de auth-form-group en el bloque de pregunta */
+/* fix: svg dentro de auth-form-group en el bloque de pregunta */
 .ms-sq-fields .auth-input-ico {
   width: 14px !important; height: 14px !important;
 }
@@ -4014,7 +3963,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   width: 14px !important; height: 14px !important;
 }
 
-/* ── Bloque pregunta variante LIGHT ── */
+/* --- BLOQUE PREGUNTA VARIANTE LIGHT --- */
 .ms-sq-block--light {
   background: rgba(23,70,234,.04);
   border-color: rgba(23,70,234,.12);
@@ -4023,14 +3972,14 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   background: var(--grad); box-shadow: 0 2px 8px rgba(23,70,234,.20);
 }
 
-/* ── Hint de seguridad ── */
+/* --- HINT DE SEGURIDAD --- */
 .ms-security-hint {
   font-size: 12px; color: rgba(255,255,255,.50);
   margin-bottom: 14px; line-height: 1.6;
 }
 .ms-security-hint--light { color: #6b7280; }
 
-/* ── Etiqueta de sección (staff) ── */
+/* --- ETIQUETA DE SECCIÓN (STAFF) --- */
 .ms-sq-section-label {
   display: flex; align-items: center; gap: 7px;
   font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 800;
@@ -4041,7 +3990,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   width: 14px !important; height: 14px !important; flex-shrink: 0;
 }
 
-/* ── Select estilizado — versión oscura (registro.php) ── */
+/* --- SELECT ESTILIZADO — VERSIÓN OSCURA (REGISTRO.PHP) --- */
 .auth-input-wrap--select { position: relative; }
 .auth-select {
   width: 100%; appearance: none; -webkit-appearance: none;
@@ -4059,7 +4008,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .auth-select option { background: #0b1030; color: var(--txt-main); }
 
-/* ── Select estilizado — versión LIGHT (registro_staff.php) ── */
+/* --- SELECT ESTILIZADO — VERSIÓN LIGHT (REGISTRO_STAFF.PHP) --- */
 .admin-input-wrap--select { position: relative; }
 .admin-select {
   width: 100%; appearance: none; -webkit-appearance: none;
@@ -4076,7 +4025,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .admin-select option { background: #fff; color: #1a1a3d; }
 
-/* ── Fila de botones Anterior / Enviar ── */
+/* --- FILA DE BOTONES ANTERIOR / ENVIAR --- */
 .ms-btn-row {
   display: flex; gap: 10px; align-items: stretch; margin-top: 18px;
 }
@@ -4106,13 +4055,13 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .ms-btn-row--light { margin-top: 18px; }
 
-/* ── Campo con error (JS lo añade dinámicamente) ── */
+/* --- CAMPO CON ERROR (JS LO AÑADE DINÁMICAMENTE) --- */
 .ms-field--error {
   border-color: #ef4444 !important;
   box-shadow: 0 0 0 3px rgba(239,68,68,.18) !important;
 }
 
-/* ── Responsive multistep ── */
+/* --- RESPONSIVE MULTISTEP --- */
 @media (max-width: 520px) {
   .ms-step__label { display: none; }
   .ms-sq-block    { flex-direction: column; gap: 8px; }
@@ -4121,12 +4070,9 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   .ms-btn-back, .ms-btn-submit { width: 100%; justify-content: center; }
 }
 
-/* ════════════════════════════════════════════════════════════
-   RECUPERAR CONTRASEÑA — reglas nuevas
-   Agregar al final de styles.css
-   ════════════════════════════════════════════════════════════ */
+/* --- RECUPERAR CONTRASEÑA --- */
 
-/* ── Enlace "¿Olvidaste tu contraseña?" ── */
+/* --- ENLACE "¿OLVIDASTE TU CONTRASEÑA?" --- */
 .forgot-link {
   display: block;
   text-align: right;
@@ -4140,21 +4086,19 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 .forgot-link:hover { color: var(--blanco); }
 
-/* Variante modo claro (login_staff.php) */
+/* variante modo claro (login_staff.php) */
 .forgot-link--light {
   color: #6b7280;
 }
 .forgot-link--light:hover { color: var(--azul-tecnologico); }
 
-/* ── Hint de seguridad para paso 1 de recuperación
-   (ya existe .ms-security-hint en styles.css;
-    esta regla solo añade espaciado inferior) ── */
+/* hint de seguridad del paso 1 de recuperación (ya existe .ms-security-hint; esta regla solo añade espaciado inferior) */
 .ms-security-hint + .auth-form-group,
 .ms-security-hint + .admin-form-group {
   margin-top: 6px;
 }
 
-/* ── Estado de carga en el botón de submit durante el flujo ── */
+/* --- ESTADO DE CARGA EN EL BOTÓN DE SUBMIT DURANTE EL FLUJO --- */
 .btn-auth-submit.rec-loading,
 .admin-btn-submit.rec-loading {
   opacity: .7;
@@ -4162,13 +4106,9 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   cursor: not-allowed;
 }
 
-/* ════════════════════════════════════════════════════════════
-   AÑADIR AL FINAL DE styles.css
-   Clases del multi-step usadas en recuperar_contrasena.php
-   y recuperar_contra_staff.php que no estaban definidas.
-   ════════════════════════════════════════════════════════════ */
+/* --- CLASES DEL MULTI-STEP DE RECUPERAR_CONTRASENA.PHP Y RECUPERAR_CONTRA_STAFF.PHP --- */
 
-/* ── Stepper ── */
+/* --- STEPPER --- */
 .ms-stepper {
   display: flex;
   align-items: center;
@@ -4214,7 +4154,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   transition: color .25s;
 }
 
-/* Estado activo */
+/* estado activo */
 .ms-step--active .ms-step__dot {
   border-color: rgba(255, 255, 255, .80);
   background: rgba(255, 255, 255, .18);
@@ -4223,7 +4163,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ms-step--active .ms-step__dot svg { color: var(--blanco); }
 .ms-step--active .ms-step__label   { color: var(--blanco); font-weight: 800; }
 
-/* Estado completado */
+/* estado completado */
 .ms-step--done .ms-step__dot {
   border-color: rgba(40, 200, 80, .70);
   background: rgba(40, 200, 80, .18);
@@ -4231,7 +4171,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ms-step--done .ms-step__dot svg { color: #5fc98a; }
 .ms-step--done .ms-step__label   { color: #5fc98a; }
 
-/* Conector entre pasos */
+/* conector entre pasos */
 .ms-connector {
   flex: 1;
   height: 2px;
@@ -4244,7 +4184,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   background: rgba(40, 200, 80, .55);
 }
 
-/* ── Modal éxito: botón secundario fantasma ── */
+/* --- MODAL ÉXITO: BOTÓN SECUNDARIO FANTASMA --- */
 .dash-modal-box--success .btn-wizard-next[style*="background:transparent"] {
   font-size: 13px;
   padding: 10px 20px;
@@ -4255,11 +4195,9 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   background: rgba(255,255,255,0.06) !important;
 }
 
-/* ══════════════════════════════════════════════════════
-   NUEVO_TICKET.PHP — Sección "Equipo del Cliente"
-   ══════════════════════════════════════════════════════ */
+/* --- NUEVO_TICKET.PHP: SECCIÓN "EQUIPO DEL CLIENTE" --- */
 
-/* ── Tabs de modo de equipo ── */
+/* --- TABS DE MODO DE EQUIPO --- */
 .ntk-eq-tab {
   display: inline-flex;
   align-items: center;
@@ -4286,7 +4224,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   color: var(--azul-tecnologico);
 }
 
-/* ── Tarjetas de equipos guardados ── */
+/* --- TARJETAS DE EQUIPOS GUARDADOS --- */
 .ntk-eq-saved-card {
   display: inline-flex;
   flex-direction: column;
@@ -4327,7 +4265,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   background: rgba(23, 70, 234, .05);
 }
 
-/* ── Preview del equipo seleccionado ── */
+/* --- PREVIEW DEL EQUIPO SELECCIONADO --- */
 .ntk-equipo-preview {
   margin-top: 12px;
   border-radius: 10px;
@@ -4341,7 +4279,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   gap: 12px;
 }
 
-/* ── ntk-modal-code (código del ticket en el modal) ── */
+/* --- NTK-MODAL-CODE (CÓDIGO DEL TICKET EN EL MODAL) --- */
 .ntk-modal-code {
   font-family: 'Montserrat', sans-serif;
   font-size: 26px;
@@ -4351,19 +4289,16 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   margin-bottom: 8px;
 }
 
-/* ── Responsive ── */
+/* --- RESPONSIVE --- */
 @media (max-width: 600px) {
   #ntk-eq-cards { flex-direction: column; align-items: stretch; }
   .ntk-eq-saved-card { width: 100%; }
 }
 
 
-/* ══════════════════════════════════════════════════════════════
-   NUEVO_TICKET — Añadidos para autocompletado DNI
-   Agregar al final del bloque ntk en styles.css
-   ══════════════════════════════════════════════════════════════ */
+/* --- NUEVO_TICKET: AUTOCOMPLETADO DE DNI --- */
 
-/* Wrapper del input DNI con icono de estado */
+/* wrapper del input dni con icono de estado */
 .ntk-input-wrap {
   position: relative;
   display: flex;
@@ -4373,7 +4308,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
   padding-right: 42px; /* espacio para el ícono */
 }
 
-/* Ícono de estado (loading / found / notfound) */
+/* ícono de estado (loading / found / notfound) */
 .ntk-dni-status {
   position: absolute;
   right: 14px;
@@ -4392,7 +4327,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ntk-dni-status--found  svg { stroke: #22c55e; }
 .ntk-dni-status--notfound svg { stroke: #ef4444; }
 
-/* Spinner de carga */
+/* spinner de carga */
 .ntk-dni-spinner {
   display: inline-block;
   width: 14px;
@@ -4404,7 +4339,7 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 }
 @keyframes ntk-spin { to { transform: rotate(360deg); } }
 
-/* Hint debajo del campo DNI */
+/* hint debajo del campo dni */
 .ntk-hint {
   font-family: 'Montserrat', sans-serif;
   font-size: 11px;
@@ -4416,23 +4351,126 @@ p  { color: var(--txt-muted); font-size: 15px; line-height: 1.75; }
 .ntk-hint--ok  { color: #22c55e; }
 .ntk-hint--new { color: #f59e0b; }
 
-/* ══════════════════════════════════════════════════════════════
-   CONSULTA TICKETS — badges nuevas fases + spinner del botón
-   ══════════════════════════════════════════════════════════════ */
+/* --- CONSULTA_TICKETS: BADGES DE NUEVAS FASES Y SPINNER DEL BOTÓN --- */
 
-/* Fase 2: En proceso — amarillo/ámbar */
+/* fase 2: en proceso — amarillo/ámbar */
 .status-badge.proceso {
   background: rgba(201, 150, 0, .18);
   color: #f5c842;
   border: 1px solid rgba(201, 150, 0, .32);
 }
 
-/* Fase 3: Listo para entrega — azul tecnológico */
+/* fase 3: listo para entrega — azul tecnológico */
 .status-badge.entrega {
   background: rgba(23, 70, 234, .14);
   color: var(--txt-accent);
   border: 1px solid rgba(23, 70, 234, .32);
 }
 
-/* Spinner del botón Consultar estado */
+/* spinner del botón consultar estado */
 @keyframes ct-spin { to { transform: rotate(360deg); } }
+
+/* --- ADMIN PANEL: MENÚ HAMBURGUESA EN MÓVIL (≤ 480PX) --- */
+/* --- ADMIN PANEL: MENÚ HAMBURGUESA EN MÓVIL, TEMA CLARO (≤ 480PX) --- */
+
+/* --- BOTÓN HAMBURGUESA DENTRO DEL .DASH-HEADER --- */
+.dash-header__hamburger {
+  display: none;               /* oculto por defecto (desktop) */
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 6px;
+  background: none;
+  border: none;
+  flex-shrink: 0;
+}
+.dash-header__hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--admin-navy);
+  border-radius: 2px;
+  transition: transform .25s, opacity .25s;
+}
+
+/* --- OVERLAY DE NAVEGACIÓN MÓVIL (ADMIN) — TEMA CLARO --- */
+.dash-admin-mob {
+  display: none;               /* oculto por defecto */
+  position: fixed;
+  top: 65px;                   /* altura del .dash-header */
+  left: 0; right: 0; bottom: 0;
+  background: var(--blanco);
+  z-index: 200;
+  flex-direction: column;
+  padding: 20px 16px;
+  gap: 6px;
+  overflow-y: auto;
+  border-top: 1px solid var(--admin-border);
+  box-shadow: 0 18px 40px rgba(0, 0, 25, .12);
+}
+.dash-admin-mob.open { display: flex; }
+
+/* --- LINKS DENTRO DEL OVERLAY --- */
+.dash-admin-mob a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--admin-gray-700);
+  background: var(--admin-surface);
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  text-decoration: none;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.dash-admin-mob a svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--admin-gray-400);
+  transition: color .15s;
+}
+.dash-admin-mob a:hover {
+  background: var(--admin-surface2);
+  border-color: var(--admin-border2);
+  color: var(--admin-navy);
+}
+.dash-admin-mob a.dash-admin-mob--active {
+  background: rgba(23, 70, 234, .08);
+  color: var(--azul-tecnologico);
+  border-color: rgba(23, 70, 234, .30);
+  font-weight: 700;
+}
+.dash-admin-mob a.dash-admin-mob--active svg { color: var(--azul-tecnologico); }
+
+.dash-admin-mob__divider {
+  border: none;
+  border-top: 1px solid var(--admin-border);
+  margin: 6px 0;
+}
+
+/* --- ACTIVAR HAMBURGUESA + OCULTAR SIDEBAR EN ≤ 480PX --- */
+@media (max-width: 480px) {
+  /* ya existía: .dash-sidebar { display: none; }  ← no tocar */
+
+  /* mostrar el botón hamburguesa */
+  .dash-header__hamburger { display: flex; }
+
+  /* el breadcrumb puede scrollear en horizontal para no colapsar */
+  .dash-header__breadcrumb {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex: 1;
+    min-width: 0;
+  }
+  .dash-header__breadcrumb::-webkit-scrollbar { display: none; }
+
+  /* ajuste menor de padding para que quepa todo */
+  .dash-header { padding: 0 12px; gap: 10px; }
+}

@@ -36,7 +36,7 @@ $saludo = $hora < 12 ? 'Buenos días' : ($hora < 19 ? 'Buenas tardes' : 'Buenas 
 $meses_largo = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 $mes_actual  = $meses_largo[(int)date('n')] . ' ' . date('Y');
 
-// ── KPIs ──
+/* --- KPIS DEL MES --- */
 $r = $conn->query("SELECT COALESCE(SUM(c.total),0) AS v FROM COTIZACION c JOIN TICKET t ON t.idCotizacion=c.idCotizacion WHERE t.estado='Completado' AND DATE_FORMAT(t.fechaCreacion,'%Y-%m')=DATE_FORMAT(NOW(),'%Y-%m')");
 $ingresos_mes = (float) $r->fetch_assoc()['v'];
 
@@ -72,14 +72,14 @@ if ($tickets_completados_anterior > 0) {
     $completados_pct = null;
 }
 
-// ── Resumen del día ──
+/* --- RESUMEN DEL DÍA --- */
 $r = $conn->query("SELECT COUNT(*) AS v FROM TICKET WHERE estado='Completado' AND DATE(fechaCreacion)=CURDATE()");
 $completados_hoy = (int) $r->fetch_assoc()['v'];
 
 $r = $conn->query("SELECT COALESCE(SUM(c.total),0) AS v FROM COTIZACION c JOIN TICKET t ON t.idCotizacion=c.idCotizacion WHERE t.estado='Completado' AND DATE(t.fechaCreacion)=CURDATE()");
 $ingresos_hoy = (float) $r->fetch_assoc()['v'];
 
-// ── Tickets recientes (últimos 5) ──
+/* --- TICKETS RECIENTES --- */
 function fecha_dash($dt) {
     $ts   = strtotime($dt);
     $hora = date('H:i', $ts);
@@ -110,7 +110,7 @@ while ($f = $res->fetch_assoc()) {
     ];
 }
 
-// ── Stock bajo (componentes con stock ≤ mínimo) ──
+/* --- ALERTAS DE STOCK --- */
 $stock_alerta = [];
 $res = $conn->query(
     "SELECT nombre, stockActual, stockMinimo FROM COMPONENTE
@@ -127,7 +127,7 @@ while ($f = $res->fetch_assoc()) {
 }
 $alertas_stock = count($stock_alerta);
 
-// ── Donut: servicios más solicitados este mes ──
+/* --- GRÁFICO DONUT --- */
 $colores_donut = ['#1746EA','#1883ED','#f5a623','#1a7a4a'];
 $res = $conn->query(
     "SELECT s.nomServicio, COUNT(*) AS cnt
@@ -183,7 +183,6 @@ function clase_estado_dash($e) {
 
 <div class="dash-shell">
 
-  <!-- ══ SIDEBAR ══ -->
   <aside class="dash-sidebar">
     <div class="dash-sidebar__logo">
       <img src="img/isotipo-color.png" alt="Morales Tech" class="dash-sidebar__isotipo"
@@ -216,11 +215,12 @@ function clase_estado_dash($e) {
     </div>
   </aside>
 
-  <!-- ══ MAIN ══ -->
   <div class="dash-main">
 
-    <!-- Header -->
     <header class="dash-header">
+      <button class="dash-header__hamburger" id="dash-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
       <div class="dash-header__breadcrumb">Panel / <span>Dashboard</span></div>
       <div class="dash-header__user">
         <div class="dash-header__avatar"><?= $inicial ?></div>
@@ -231,14 +231,11 @@ function clase_estado_dash($e) {
       </div>
     </header>
 
-    <!-- Page content -->
     <main class="dash-page-content">
       <div class="dash-layout">
 
-        <!-- ── COLUMNA IZQUIERDA ── -->
         <div class="dash-col-left">
 
-          <!-- KPIs -->
           <div class="dash-kpi-row">
             <div class="dash-kpi-card dash-kpi-card--highlight">
               <div class="dash-kpi-card__top">
@@ -302,9 +299,8 @@ function clase_estado_dash($e) {
               <div class="dash-kpi-card__value"><?= $tickets_completados ?></div>
               <div class="dash-kpi-card__sub">este mes</div>
             </div>
-          </div><!-- /kpi-row -->
+          </div>
 
-          <!-- Tickets recientes -->
           <div class="dash-panel-block">
             <div class="dash-panel-block__head">
               <div class="dash-panel-block__title">
@@ -339,9 +335,8 @@ function clase_estado_dash($e) {
             </div>
           </div>
 
-          <!-- Bottom row: stock + donut -->
           <div class="dash-bottom-row">
-            <!-- Stock bajo -->
+
             <div class="dash-panel-block">
               <div class="dash-panel-block__head">
                 <div class="dash-panel-block__title">
@@ -365,7 +360,6 @@ function clase_estado_dash($e) {
               <?php endif; ?>
             </div>
 
-            <!-- Donut servicios -->
             <div class="dash-panel-block">
               <div class="dash-panel-block__head">
                 <div class="dash-panel-block__title">
@@ -400,14 +394,12 @@ function clase_estado_dash($e) {
                 <?php endif; ?>
               </div>
             </div>
-          </div><!-- /bottom-row -->
+          </div>
 
-        </div><!-- /col-left -->
+        </div>
 
-        <!-- ── COLUMNA DERECHA ── -->
         <div class="dash-col-right">
 
-          <!-- Welcome card -->
           <div class="dash-welcome-card">
             <div class="dash-welcome-card__avatar"><?= $inicial ?></div>
             <div class="dash-welcome-card__greeting"><?= $saludo ?>,</div>
@@ -423,7 +415,6 @@ function clase_estado_dash($e) {
             </a>
           </div>
 
-          <!-- Resumen del día -->
           <div class="dash-panel-block">
             <div class="dash-panel-block__head">
               <div class="dash-panel-block__title">
@@ -463,13 +454,37 @@ function clase_estado_dash($e) {
             </div>
           </div>
 
-        </div><!-- /col-right -->
+        </div>
 
-      </div><!-- /dash-layout -->
+      </div>
     </main>
-  </div><!-- /dash-main -->
+  </div>
 
-</div><!-- /dash-shell -->
+<div class="dash-admin-mob" id="admin-mob-menu">
+  <a href="dashboard.php" class="dash-admin-mob--active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+  <a href="tickets.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+    Tickets
+  </a>
+  <a href="inventario.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    Inventario
+  </a>
+  <a href="ventas.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    Ventas
+  </a>
+  <hr class="dash-admin-mob__divider">
+  <a href="logout.php">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Cerrar sesión
+  </a>
+</div>
+
+</div>
 
 <script src="script.js" defer></script>
 </body>

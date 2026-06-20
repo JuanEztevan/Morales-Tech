@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password  = $_POST['password']       ?? '';
     $confirm   = $_POST['confirm']        ?? '';
 
-    // Preguntas de seguridad
+    // preguntas de seguridad
     $pregunta1  = trim($_POST['pregunta1']  ?? '');
     $respuesta1 = trim($_POST['respuesta1'] ?? '');
     $pregunta2  = trim($_POST['pregunta2']  ?? '');
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($pregunta1 === $pregunta2 || $pregunta1 === $pregunta3 || $pregunta2 === $pregunta3) {
         $error = 'Las tres preguntas de seguridad deben ser diferentes.';
     } else {
-        // Verificar si el correo ya existe
+        // verifica si el correo ya existe
         $stmt = $conn->prepare("SELECT idCliente FROM CLIENTE WHERE email = ?");
         $stmt->bind_param("s", $correo);
         $stmt->execute();
@@ -48,10 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($resultado->num_rows > 0) {
             $error = "El correo ya está registrado.";
         } else {
-            // Encriptar contraseña
+            // encripta la contraseña
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
-            // Insertar cliente
+            // inserta al cliente
             $stmt = $conn->prepare("
                 INSERT INTO CLIENTE
                 (nombres, apellidos, email, password, numTelefono, numDNI, numRUC,
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Valores anteriores para repoblar el formulario en caso de error
+// valores anteriores para repoblar el formulario en caso de error
 $old = [
     'nombres'   => $_POST['nombres']   ?? '',
     'apellidos' => $_POST['apellidos'] ?? '',
@@ -102,10 +102,10 @@ $old = [
     'respuesta3'=> $_POST['respuesta3']?? '',
 ];
 
-// Determinar en qué paso re-aterrizar según dónde falló la validación
+// determina en qué paso re-aterrizar según dónde falló la validación
 $startStep = 1;
 if ($error && $old['nombres'] && $old['apellidos'] && $old['dni'] && $old['telefono'] && $old['correo']) {
-    // Paso 1 OK → el error está en paso 2 o paso 3
+    // si el paso 1 está bien, el error está en el paso 2 o 3
     $securityOk = $old['pregunta1'] && $old['respuesta1'] && $old['pregunta2'] && $old['respuesta2'] && $old['pregunta3'] && $old['respuesta3'];
     $startStep  = $securityOk ? 3 : 2;
 }
@@ -133,7 +133,6 @@ $preguntas = [
 </head>
 <body>
 
-<!-- ══ NAVBAR ══ -->
 <nav class="navbar" id="navbar">
   <div class="container">
     <div class="nav-inner">
@@ -174,7 +173,6 @@ $preguntas = [
   </div>
 </nav>
 
-<!-- Mobile Menu -->
 <div class="mobile-menu" id="mobile-menu">
   <a href="index.php#inicio"        onclick="closeMobileMenu()">Inicio</a>
   <a href="index.php#servicios"     onclick="closeMobileMenu()">Servicios</a>
@@ -185,14 +183,12 @@ $preguntas = [
   <a href="registro.php" class="mobile-cta">Crear cuenta →</a>
 </div>
 
-<!-- ══ CONTENIDO ══ -->
 <div class="page-auth page-auth--registro">
   <div class="sphere-left"></div>
   <div class="sphere-right"></div>
   <div class="bg-noise"></div>
 
   <div class="auth-card auth-card--wide">
-    <!-- Isotipo -->
     <div class="auth-isotipo">
       <img src="img/isotipo-blanco.png" alt="Morales Tech"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -202,10 +198,8 @@ $preguntas = [
     <h1 class="auth-heading">Crea tu cuenta</h1>
     <p class="auth-sub">Accede a tu portal de soporte técnico<br>en segundos, es gratuito</p>
 
-    <!-- ══ Indicador de 3 pasos ══ -->
     <div class="ms-stepper" id="ms-stepper">
 
-      <!-- Paso 1 -->
       <div class="ms-step ms-step--active" id="ms-dot-1">
         <div class="ms-step__dot">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -217,7 +211,6 @@ $preguntas = [
 
       <div class="ms-connector" id="ms-connector-1"></div>
 
-      <!-- Paso 2 -->
       <div class="ms-step" id="ms-dot-2">
         <div class="ms-step__dot">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -229,7 +222,6 @@ $preguntas = [
 
       <div class="ms-connector" id="ms-connector-2"></div>
 
-      <!-- Paso 3 -->
       <div class="ms-step" id="ms-dot-3">
         <div class="ms-step__dot">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -252,7 +244,6 @@ $preguntas = [
 
     <form method="POST" action="registro.php" autocomplete="off" id="reg-form">
 
-      <!-- ══════════ PASO 1: DATOS PERSONALES ══════════ -->
       <div class="ms-panel" id="ms-panel-1">
 
         <div class="section-divider">
@@ -262,7 +253,6 @@ $preguntas = [
         </div>
 
         <div class="form-grid-2col">
-          <!-- Nombres -->
           <div class="auth-form-group compact">
             <label for="nombres">Nombres <span class="label-required">*</span></label>
             <div class="auth-input-wrap">
@@ -276,7 +266,6 @@ $preguntas = [
             </div>
           </div>
 
-          <!-- Apellidos -->
           <div class="auth-form-group compact">
             <label for="apellidos">Apellidos <span class="label-required">*</span></label>
             <div class="auth-input-wrap">
@@ -290,7 +279,6 @@ $preguntas = [
             </div>
           </div>
 
-          <!-- DNI -->
           <div class="auth-form-group compact">
             <label for="dni">DNI <span class="label-required">*</span></label>
             <div class="auth-input-wrap">
@@ -304,7 +292,6 @@ $preguntas = [
             </div>
           </div>
 
-          <!-- Teléfono -->
           <div class="auth-form-group compact">
             <label for="telefono">Teléfono <span class="label-required">*</span></label>
             <div class="auth-input-wrap">
@@ -318,7 +305,6 @@ $preguntas = [
             </div>
           </div>
 
-          <!-- Correo -->
           <div class="auth-form-group compact span-2">
             <label for="correo">Correo electrónico <span class="label-required">*</span></label>
             <div class="auth-input-wrap">
@@ -332,7 +318,6 @@ $preguntas = [
             </div>
           </div>
 
-          <!-- RUC (opcional) -->
           <div class="auth-form-group compact span-2">
             <label for="ruc">RUC <span class="label-opt">Opcional — solo si facturas a empresa</span></label>
             <div class="auth-input-wrap">
@@ -348,7 +333,6 @@ $preguntas = [
           </div>
         </div>
 
-        <!-- Botón siguiente -->
         <button type="button" class="btn-auth-submit auth-btn-submit-registro" id="ms-btn-next-1"
                 onclick="msNext('reg-form', 1)">
           Siguiente
@@ -357,10 +341,9 @@ $preguntas = [
           </svg>
         </button>
 
-      </div><!-- /ms-panel-1 -->
+      </div>
 
 
-      <!-- ══════════ PASO 2: PREGUNTAS DE SEGURIDAD ══════════ -->
       <div class="ms-panel ms-panel--hidden" id="ms-panel-2">
 
         <div class="section-divider">
@@ -432,7 +415,6 @@ $preguntas = [
         })();
         </script>
 
-        <!-- Botones paso 2 -->
         <div class="ms-btn-row">
           <button type="button" class="ms-btn-back" onclick="msBack(1)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -449,10 +431,9 @@ $preguntas = [
           </button>
         </div>
 
-      </div><!-- /ms-panel-2 -->
+      </div>
 
 
-      <!-- ══════════ PASO 3: CONTRASEÑA ══════════ -->
       <div class="ms-panel ms-panel--hidden" id="ms-panel-3">
 
         <div class="section-divider">
@@ -462,7 +443,6 @@ $preguntas = [
         </div>
 
         <div class="form-grid-2col">
-          <!-- Contraseña -->
           <div class="auth-form-group compact">
             <label for="password">Contraseña <span class="label-required">*</span></label>
             <div class="auth-input-wrap">
@@ -493,7 +473,6 @@ $preguntas = [
             <div class="pw-strength-label" id="pw-label"></div>
           </div>
 
-          <!-- Confirmar contraseña -->
           <div class="auth-form-group compact">
             <label for="confirm">Confirmar contraseña <span class="label-required">*</span></label>
             <div class="auth-input-wrap">
@@ -519,7 +498,6 @@ $preguntas = [
           </div>
         </div>
 
-        <!-- Términos -->
         <div class="terms-row">
           <input type="checkbox" id="terminos" name="terminos" required>
           <label for="terminos">
@@ -528,7 +506,6 @@ $preguntas = [
           </label>
         </div>
 
-        <!-- Botones paso 3 -->
         <div class="ms-btn-row">
           <button type="button" class="ms-btn-back" onclick="msBack(2)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -547,7 +524,7 @@ $preguntas = [
           </button>
         </div>
 
-      </div><!-- /ms-panel-3 -->
+      </div>
 
     </form>
 
@@ -560,7 +537,7 @@ $preguntas = [
 </div>
 
 <script>
-  // Paso inicial según resultado del servidor
+  // paso inicial según el resultado del servidor
   var MS_START_STEP = <?= $startStep ?>;
   var MS_TOTAL_STEPS = 3;
 </script>
