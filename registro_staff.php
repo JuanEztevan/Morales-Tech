@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($old['pregunta1'] === $old['pregunta2'] || $old['pregunta1'] === $old['pregunta3'] || $old['pregunta2'] === $old['pregunta3']) {
         $error = 'Las tres preguntas de seguridad deben ser diferentes.';
     } else {
-        // Verificar si el correo ya existe
+        // verifica si el correo ya existe
         $stmt = $conn->prepare("SELECT idAdmin FROM ADMIN WHERE email = ?");
         $stmt->bind_param("s", $old['email']);
         $stmt->execute();
@@ -45,10 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($resultado->num_rows > 0) {
             $error = 'Ya existe una cuenta registrada con ese correo.';
         } else {
-            // Encriptar contraseña
+            // encripta la contraseña
             $passwordHash = password_hash($pass, PASSWORD_DEFAULT);
 
-            // Registrar administrador
+            // registra al administrador
             $stmt = $conn->prepare("
                 INSERT INTO ADMIN
                 (nombres, apellidos, email, password, dni,
@@ -80,10 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Determinar en qué paso re-aterrizar según dónde falló la validación
+// determina en qué paso re-aterrizar según dónde falló la validación
 $startStep = 1;
 if ($error && !empty($old['nombres']) && !empty($old['apellidos']) && !empty($old['email']) && !empty($old['dni'])) {
-    // Paso 1 OK → el error está en paso 2 o paso 3
+    // si el paso 1 está bien, el error está en el paso 2 o 3
     $securityOk = !empty($old['pregunta1']) && !empty($old['respuesta1']) &&
                   !empty($old['pregunta2']) && !empty($old['respuesta2']) &&
                   !empty($old['pregunta3']) && !empty($old['respuesta3']);
@@ -115,7 +115,6 @@ $preguntas = [
 
 <div class="admin-split">
 
-  <!-- ══ PANEL IZQUIERDO — formulario claro ══ -->
   <div class="admin-panel admin-panel--light">
     <div class="admin-form-wrap admin-form-wrap--wide">
 
@@ -130,10 +129,8 @@ $preguntas = [
       <h1 class="admin-form-heading">Crear cuenta de colaborador</h1>
       <p class="admin-form-sub">Completa los datos para solicitar acceso<br>al sistema interno de Morales Tech</p>
 
-      <!-- ══ Indicador de 3 pasos (variante light) ══ -->
       <div class="ms-stepper ms-stepper--light" id="ms-stepper">
 
-        <!-- Paso 1 -->
         <div class="ms-step ms-step--active ms-step--light" id="ms-dot-1">
           <div class="ms-step__dot">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -145,7 +142,6 @@ $preguntas = [
 
         <div class="ms-connector ms-connector--light" id="ms-connector-1"></div>
 
-        <!-- Paso 2 -->
         <div class="ms-step ms-step--light" id="ms-dot-2">
           <div class="ms-step__dot">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -157,7 +153,6 @@ $preguntas = [
 
         <div class="ms-connector ms-connector--light" id="ms-connector-2"></div>
 
-        <!-- Paso 3 -->
         <div class="ms-step ms-step--light" id="ms-dot-3">
           <div class="ms-step__dot">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -184,10 +179,8 @@ $preguntas = [
       <?php if (!$success): ?>
       <form method="POST" action="registro_staff.php" autocomplete="off" id="reg-form">
 
-        <!-- ══════════ PASO 1: DATOS PERSONALES ══════════ -->
         <div class="ms-panel" id="ms-panel-1">
 
-          <!-- Nombres y Apellidos -->
           <div class="admin-form-row">
             <div class="admin-form-group">
               <label for="nombres">Nombres</label>
@@ -211,7 +204,6 @@ $preguntas = [
             </div>
           </div>
 
-          <!-- Correo corporativo -->
           <div class="admin-form-group">
             <label for="email">Correo institucional</label>
             <div class="admin-input-wrap">
@@ -228,7 +220,6 @@ $preguntas = [
             </div>
           </div>
 
-          <!-- DNI -->
           <div class="admin-form-group">
             <label for="dni">DNI</label>
             <div class="admin-input-wrap">
@@ -241,7 +232,6 @@ $preguntas = [
             </div>
           </div>
 
-          <!-- Botón siguiente paso 1 -->
           <button type="button" class="admin-btn-submit" id="ms-btn-next-1"
                   onclick="msNext('reg-form', 1)">
             Siguiente
@@ -250,13 +240,11 @@ $preguntas = [
             </svg>
           </button>
 
-        </div><!-- /ms-panel-1 -->
+        </div>
 
 
-        <!-- ══════════ PASO 2: PREGUNTAS DE SEGURIDAD ══════════ -->
         <div class="ms-panel ms-panel--hidden" id="ms-panel-2">
 
-          <!-- Etiqueta de sección -->
           <div class="ms-sq-section-label">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             Preguntas de seguridad
@@ -320,7 +308,6 @@ $preguntas = [
           })();
           </script>
 
-          <!-- Botones paso 2 -->
           <div class="ms-btn-row ms-btn-row--light">
             <button type="button" class="ms-btn-back ms-btn-back--light" onclick="msBack(1)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -337,13 +324,11 @@ $preguntas = [
             </button>
           </div>
 
-        </div><!-- /ms-panel-2 -->
+        </div>
 
 
-        <!-- ══════════ PASO 3: CONTRASEÑA ══════════ -->
         <div class="ms-panel ms-panel--hidden" id="ms-panel-3">
 
-          <!-- Contraseña -->
           <div class="admin-form-group">
             <label for="password">Contraseña</label>
             <div class="admin-input-wrap">
@@ -368,7 +353,6 @@ $preguntas = [
             </div>
           </div>
 
-          <!-- Confirmar contraseña -->
           <div class="admin-form-group">
             <label for="password2">Confirmar contraseña</label>
             <div class="admin-input-wrap">
@@ -384,7 +368,6 @@ $preguntas = [
             </div>
           </div>
 
-          <!-- Botones paso 3 -->
           <div class="ms-btn-row ms-btn-row--light">
             <button type="button" class="ms-btn-back ms-btn-back--light" onclick="msBack(2)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -398,7 +381,7 @@ $preguntas = [
             </button>
           </div>
 
-        </div><!-- /ms-panel-3 -->
+        </div>
 
       </form>
       <?php endif; ?>
@@ -411,7 +394,6 @@ $preguntas = [
     </div>
   </div>
 
-  <!-- ══ PANEL DERECHO — decorativo oscuro ══ -->
   <div class="admin-panel admin-panel--dark">
     <div class="admin-panel-dots"></div>
     <div class="admin-panel__brand">
@@ -456,7 +438,7 @@ $preguntas = [
     </div>
   </div>
 
-</div><!-- /admin-split -->
+</div>
 
 <script>
   var MS_START_STEP  = <?= $startStep ?>;
