@@ -296,10 +296,11 @@ Para acceder al sistema:
 - **URL del sistema:** https://moralestech.xo.je/
 - **Portal Cliente:** Acceder desde `login.php` y registrarse en el sistema para realizar pruebas completas del flujo de usuario.
 - **Portal Administrador:** Acceder desde `login_staff.php` usando las siguientes credenciales:
-  Usuario: demo@moralestechs.com  
-  Contraseña: J0j0l10n!
-
-
+   ```bash
+   Usuario: demo@moralestechs.com
+   Contraseña: J0j0l10n!
+   ```
+  
 ## Capturas de Pantalla
 
 ### Landing Page
