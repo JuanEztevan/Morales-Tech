@@ -303,22 +303,23 @@ Para acceder al sistema:
 ## Capturas de Pantalla
 
 ### Landing Page
-img/capturas/landing.png
+![Landing Page](img/capturas/landing.png)
 
 ### Consulta de Tickets
-img/capturas/consulta_ticket.png
+![Consulta](img/capturas/consulta_ticket.png)
 
 ### Portal Cliente
-img/capturas/cliente_dashboard.png">
+![Cliente](img/capturas/cliente_dashboard.png)
 
 ### Cotización de Servicios
-img/capturas/cotizacion.png
+![Cotización](img/capturas/cotizacion.png)
 
 ### Portal Administrativo
-img/capturas/admin_dashboard.png
+![Admin](img/capturas/admin_dashboard.png)
 
 ### Módulo de Ventas
-img/capturas/ventas.png
+![Ventas](img/capturas/ventas.png)
+
 
 ## Encargados del GitHub
 - Juan Esteban Carmona Rodríguez – Frontend y Backend
